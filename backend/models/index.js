@@ -76,6 +76,19 @@ User.hasMany(Announcement, { foreignKey: "created_by" });
 Announcement.belongsTo(Institute, { foreignKey: "institute_id" });
 Institute.hasMany(Announcement, { foreignKey: "institute_id" });
 
+// Attendance Associations
+Attendance.belongsTo(Student, { foreignKey: "student_id" });
+Student.hasMany(Attendance, { foreignKey: "student_id" });
+
+Attendance.belongsTo(Class, { foreignKey: "class_id" });
+Class.hasMany(Attendance, { foreignKey: "class_id" });
+
+Attendance.belongsTo(Institute, { foreignKey: "institute_id" });
+Institute.hasMany(Attendance, { foreignKey: "institute_id" });
+
+Attendance.belongsTo(User, { as: "marker", foreignKey: "marked_by" });
+User.hasMany(Attendance, { foreignKey: "marked_by" });
+
 // Subscription Associations
 Institute.hasMany(Subscription, { foreignKey: "institute_id" });
 Subscription.belongsTo(Institute, { foreignKey: "institute_id" });

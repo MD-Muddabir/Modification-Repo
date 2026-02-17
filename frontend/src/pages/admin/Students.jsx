@@ -73,14 +73,10 @@ function Students() {
             resetForm();
             fetchStudents();
         } catch (error) {
-            // Only show error if backend really failed
-            if (error.response?.status === 409) {
-                alert(error.response?.data?.message || "Duplicate entry found");
-            } else {
-                alert("Something went wrong");
-            }
-
-            console.error(error.response?.data);
+            // Display backend error message for all error types
+            const errorMessage = error.response?.data?.message || "Something went wrong";
+            alert(errorMessage);
+            console.error("Error details:", error.response?.data);
         }
     };
 

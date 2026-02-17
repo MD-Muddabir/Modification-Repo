@@ -1,164 +1,421 @@
 /**
- * Attendance Controller
- * Handles attendance marking and tracking
+ * Attendance Controller - Professional Implementation
+ * Implements all features from attendance.md blueprint
  */
 
-const { Attendance, Student, Class, User } = require("../models");
+const { Attendance, Student, Class, User, Institute, Plan } = require("../models");
 const { Op } = require("sequelize");
 
 /**
- * Mark attendance
- * @route POST /api/attendance
+ * Mark Bulk Attendance for a Class
+ * @route POST /api/attendance/bulk
  * @access Admin, Faculty
  */
-exports.markAttendance = async (req, res) => {
+exports.markBulkAttendance = async (req, res) => {
     try {
-        const { student_id, class_id, date, status } = req.body;
+        const { class_id, date, attendance_data } = req.body;
         const institute_id = req.user.institute_id;
+        const marked_by = req.user.id;
 
-        // Check if attendance already marked
-        const existing = await Attendance.findOne({
-            where: { student_id, class_id, date, institute_id },
-        });
-
-        if (existing) {
-            await existing.update({ status });
-            return res.status(200).json({
-                success: true,
-                message: "Attendance updated successfully",
-                data: existing,
+        // Validate date is not in future
+        if (new Date(date) > new Date()) {
+            return res.status(400).json({
+                success: false,
+                message: "Cannot mark attendance for future dates"
             });
         }
 
-        const attendance = await Attendance.create({
+        // Check if attendance already exists for this date
+        const existingCount = await Attendance.count({
+            where: { class_id, date, institute_id }
+        });
+
+        if (existingCount > 0) {
+            return res.status(409).json({
+                success: false,
+                message: "Attendance already marked for this date. Use edit feature to update."
+            });
+        }
+
+        // Bulk create attendance records
+        const attendanceRecords = attendance_data.map(item => ({
             institute_id,
-            student_id,
+            student_id: item.student_id,
             class_id,
             date,
-            status,
-        });
+            status: item.status,
+            remarks: item.remarks || null,
+            marked_by
+        }));
+
+        const created = await Attendance.bulkCreate(attendanceRecords);
 
         res.status(201).json({
             success: true,
-            message: "Attendance marked successfully",
-            data: attendance,
+            message: `Attendance marked for ${created.length} students`,
+            data: created
         });
     } catch (error) {
+        console.error("Bulk attendance error:", error);
         res.status(500).json({
             success: false,
-            message: error.message,
+            message: error.message
         });
     }
 };
 
 /**
- * Get attendance records
- * @route GET /api/attendance
+ * Get Attendance for a specific date and class
+ * @route GET /api/attendance/class/:class_id/date/:date
  * @access Admin, Faculty
  */
-exports.getAttendance = async (req, res) => {
+exports.getClassAttendanceByDate = async (req, res) => {
     try {
-        const { student_id, class_id, start_date, end_date, page = 1, limit = 50 } = req.query;
+        const { class_id, date } = req.params;
         const institute_id = req.user.institute_id;
 
-        const offset = (page - 1) * limit;
-        const whereClause = { institute_id };
+        console.log('getClassAttendanceByDate called:', { class_id, date, institute_id });
 
-        if (student_id) whereClause.student_id = student_id;
-        if (class_id) whereClause.class_id = class_id;
-        if (start_date && end_date) {
-            whereClause.date = {
-                [Op.between]: [start_date, end_date],
-            };
-        }
-
-        const { count, rows } = await Attendance.findAndCountAll({
-            where: whereClause,
-            limit: parseInt(limit),
-            offset: parseInt(offset),
-            order: [["date", "DESC"]],
-            include: [
-                {
-                    model: Student,
-                    attributes: ["id", "roll_number"],
-                    include: [
-                        {
-                            model: User,
-                            attributes: ["name"],
-                        },
-                    ],
-                },
-                {
-                    model: Class,
-                    attributes: ["id", "name"],
-                },
-            ],
+        // Get all students in the class
+        const students = await Student.findAll({
+            where: { class_id, institute_id },
+            include: [{
+                model: User,
+                attributes: ['id', 'name', 'email']
+            }],
+            order: [['roll_number', 'ASC']]
         });
+
+        console.log('Found students:', students.length);
+
+        // Get attendance records for this date
+        const attendanceRecords = await Attendance.findAll({
+            where: { class_id, date, institute_id }
+        });
+
+        // Map attendance to students
+        const attendanceMap = {};
+        attendanceRecords.forEach(record => {
+            attendanceMap[record.student_id] = record;
+        });
+
+        const result = students.map(student => ({
+            student_id: student.id,
+            roll_number: student.roll_number,
+            name: student.User?.name,
+            email: student.User?.email,
+            attendance: attendanceMap[student.id] || null
+        }));
 
         res.status(200).json({
             success: true,
-            message: "Attendance retrieved successfully",
-            data: {
-                attendance: rows,
-                pagination: {
-                    total: count,
-                    page: parseInt(page),
-                    limit: parseInt(limit),
-                    totalPages: Math.ceil(count / limit),
-                },
-            },
+            data: result,
+            summary: {
+                total: students.length,
+                marked: attendanceRecords.length,
+                present: attendanceRecords.filter(r => r.status === 'present').length,
+                absent: attendanceRecords.filter(r => r.status === 'absent').length,
+                late: attendanceRecords.filter(r => r.status === 'late').length
+            }
         });
     } catch (error) {
+        console.error("Error in getClassAttendanceByDate:", error);
         res.status(500).json({
             success: false,
-            message: error.message,
+            message: error.message
         });
     }
 };
 
 /**
- * Get attendance percentage
- * @route GET /api/attendance/percentage/:student_id
- * @access Admin, Faculty, Student (own record)
+ * Update Attendance (Admin only, with restrictions)
+ * @route PUT /api/attendance/:id
+ * @access Admin only
  */
-exports.getAttendancePercentage = async (req, res) => {
+exports.updateAttendance = async (req, res) => {
     try {
-        const { student_id } = req.params;
-        const { start_date, end_date } = req.query;
+        const { id } = req.params;
+        const { status, remarks } = req.body;
         const institute_id = req.user.institute_id;
 
-        const whereClause = { institute_id, student_id };
+        const attendance = await Attendance.findOne({
+            where: { id, institute_id }
+        });
 
-        if (start_date && end_date) {
-            whereClause.date = {
-                [Op.between]: [start_date, end_date],
-            };
+        if (!attendance) {
+            return res.status(404).json({
+                success: false,
+                message: "Attendance record not found"
+            });
         }
 
-        const totalDays = await Attendance.count({
+        // Check if attendance is older than 7 days (configurable rule)
+        const daysDiff = Math.floor((new Date() - new Date(attendance.date)) / (1000 * 60 * 60 * 24));
+        if (daysDiff > 7 && req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: "Cannot edit attendance older than 7 days. Contact admin."
+            });
+        }
+
+        await attendance.update({ status, remarks });
+
+        res.status(200).json({
+            success: true,
+            message: "Attendance updated successfully",
+            data: attendance
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+/**
+ * Get Student Attendance Report
+ * @route GET /api/attendance/student/:student_id/report
+ * @access Admin, Faculty, Student (own)
+ */
+exports.getStudentAttendanceReport = async (req, res) => {
+    try {
+        const { student_id } = req.params;
+        const { start_date, end_date, month, year } = req.query;
+        const institute_id = req.user.institute_id;
+
+        // Build date filter
+        let dateFilter = {};
+        if (start_date && end_date) {
+            dateFilter = { [Op.between]: [start_date, end_date] };
+        } else if (month && year) {
+            const startOfMonth = new Date(year, month - 1, 1);
+            const endOfMonth = new Date(year, month, 0);
+            dateFilter = { [Op.between]: [startOfMonth, endOfMonth] };
+        }
+
+        const whereClause = { institute_id, student_id };
+        if (Object.keys(dateFilter).length > 0) {
+            whereClause.date = dateFilter;
+        }
+
+        const records = await Attendance.findAll({
             where: whereClause,
+            order: [['date', 'ASC']],
+            include: [{
+                model: Class,
+                attributes: ['id', 'name']
+            }]
         });
 
-        const presentDays = await Attendance.count({
-            where: { ...whereClause, status: "present" },
-        });
-
+        const totalDays = records.length;
+        const presentDays = records.filter(r => r.status === 'present').length;
+        const absentDays = records.filter(r => r.status === 'absent').length;
+        const lateDays = records.filter(r => r.status === 'late').length;
         const percentage = totalDays > 0 ? ((presentDays / totalDays) * 100).toFixed(2) : 0;
 
         res.status(200).json({
             success: true,
-            message: "Attendance percentage calculated successfully",
             data: {
-                total_days: totalDays,
-                present_days: presentDays,
-                absent_days: totalDays - presentDays,
-                percentage: parseFloat(percentage),
-            },
+                records,
+                summary: {
+                    total_days: totalDays,
+                    present_days: presentDays,
+                    absent_days: absentDays,
+                    late_days: lateDays,
+                    percentage: parseFloat(percentage)
+                }
+            }
         });
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: error.message,
+            message: error.message
+        });
+    }
+};
+
+/**
+ * Get Class Attendance Summary
+ * @route GET /api/attendance/class/:class_id/summary
+ * @access Admin, Faculty
+ */
+exports.getClassAttendanceSummary = async (req, res) => {
+    try {
+        const { class_id } = req.params;
+        const { start_date, end_date } = req.query;
+        const institute_id = req.user.institute_id;
+
+        const whereClause = { institute_id, class_id };
+        if (start_date && end_date) {
+            whereClause.date = { [Op.between]: [start_date, end_date] };
+        }
+
+        const students = await Student.findAll({
+            where: { class_id, institute_id },
+            include: [{ model: User, attributes: ['name'] }]
+        });
+
+        const attendanceData = await Promise.all(students.map(async (student) => {
+            const records = await Attendance.findAll({
+                where: { ...whereClause, student_id: student.id }
+            });
+
+            const total = records.length;
+            const present = records.filter(r => r.status === 'present').length;
+            const percentage = total > 0 ? ((present / total) * 100).toFixed(2) : 0;
+
+            return {
+                student_id: student.id,
+                roll_number: student.roll_number,
+                name: student.User?.name,
+                total_days: total,
+                present_days: present,
+                absent_days: records.filter(r => r.status === 'absent').length,
+                late_days: records.filter(r => r.status === 'late').length,
+                percentage: parseFloat(percentage)
+            };
+        }));
+
+        // Sort by percentage (lowest first to identify at-risk students)
+        attendanceData.sort((a, b) => a.percentage - b.percentage);
+
+        res.status(200).json({
+            success: true,
+            data: attendanceData,
+            at_risk_students: attendanceData.filter(s => s.percentage < 75)
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+/**
+ * Get Attendance Dashboard Stats
+ * @route GET /api/attendance/dashboard
+ * @access Admin, Faculty
+ */
+exports.getAttendanceDashboard = async (req, res) => {
+    try {
+        const institute_id = req.user.institute_id;
+        const today = new Date().toISOString().split('T')[0];
+
+        console.log('Dashboard request for institute:', institute_id, 'date:', today);
+
+        // Today's attendance
+        const todayAttendance = await Attendance.findAll({
+            where: { institute_id, date: today }
+        });
+
+        console.log('Today attendance records:', todayAttendance.length);
+
+        const todayPresent = todayAttendance.filter(r => r.status === 'present').length;
+        const todayTotal = todayAttendance.length;
+        const todayPercentage = todayTotal > 0 ? ((todayPresent / todayTotal) * 100).toFixed(2) : 0;
+
+        // This month's average
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const startOfMonthStr = startOfMonth.toISOString().split('T')[0];
+
+        console.log('Fetching month attendance from:', startOfMonthStr);
+
+        const monthAttendance = await Attendance.findAll({
+            where: {
+                institute_id,
+                date: { [Op.gte]: startOfMonthStr }
+            }
+        });
+
+        console.log('Month attendance records:', monthAttendance.length);
+
+        const monthPresent = monthAttendance.filter(r => r.status === 'present').length;
+        const monthTotal = monthAttendance.length;
+        const monthPercentage = monthTotal > 0 ? ((monthPresent / monthTotal) * 100).toFixed(2) : 0;
+
+        // Students below 75%
+        const students = await Student.findAll({ where: { institute_id } });
+        const lowAttendanceStudents = [];
+
+        console.log('Checking attendance for', students.length, 'students');
+
+        for (const student of students) {
+            const records = await Attendance.findAll({
+                where: { institute_id, student_id: student.id }
+            });
+            const total = records.length;
+            const present = records.filter(r => r.status === 'present').length;
+            const percentage = total > 0 ? (present / total) * 100 : 0;
+
+            if (percentage < 75 && total > 0) {
+                lowAttendanceStudents.push({
+                    student_id: student.id,
+                    roll_number: student.roll_number,
+                    percentage: percentage.toFixed(2)
+                });
+            }
+        }
+
+        res.status(200).json({
+            success: true,
+            data: {
+                today: {
+                    total: todayTotal,
+                    present: todayPresent,
+                    percentage: parseFloat(todayPercentage)
+                },
+                this_month: {
+                    total: monthTotal,
+                    present: monthPresent,
+                    percentage: parseFloat(monthPercentage)
+                },
+                low_attendance_count: lowAttendanceStudents.length,
+                low_attendance_students: lowAttendanceStudents.slice(0, 10) // Top 10
+            }
+        });
+    } catch (error) {
+        console.error("Error in getAttendanceDashboard:", error);
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+/**
+ * Delete Attendance Record
+ * @route DELETE /api/attendance/:id
+ * @access Admin only
+ */
+exports.deleteAttendance = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const institute_id = req.user.institute_id;
+
+        const attendance = await Attendance.findOne({
+            where: { id, institute_id }
+        });
+
+        if (!attendance) {
+            return res.status(404).json({
+                success: false,
+                message: "Attendance record not found"
+            });
+        }
+
+        await attendance.destroy();
+
+        res.status(200).json({
+            success: true,
+            message: "Attendance record deleted successfully"
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
         });
     }
 };
