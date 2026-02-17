@@ -31,6 +31,88 @@ exports.register = async (req, res) => {
 };
 
 /**
+ * Public Institute Registration
+ * Creates institute with pending status and admin user
+ */
+exports.registerInstitute = async (req, res) => {
+    try {
+        const { name, email, password, phone, address, city, state, pincode, plan_id } = req.body;
+
+        // Validation
+        if (!name || !email || !password || !phone || !plan_id) {
+            return res.status(400).json({
+                success: false,
+                message: "All required fields must be provided"
+            });
+        }
+
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid email format"
+            });
+        }
+
+        // Password validation
+        if (password.length < 8) {
+            return res.status(400).json({
+                success: false,
+                message: "Password must be at least 8 characters"
+            });
+        }
+
+        // Phone validation
+        const phoneRegex = /^[6-9]\d{9}$/;
+        if (!phoneRegex.test(phone.replace(/\s/g, ""))) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid phone number"
+            });
+        }
+
+        const result = await authService.registerInstitute({
+            name: name.trim(),
+            email: email.trim().toLowerCase(),
+            password,
+            phone: phone.replace(/\s/g, ""),
+            address: address?.trim(),
+            city: city?.trim(),
+            state: state?.trim(),
+            pincode: pincode?.trim(),
+            plan_id,
+            status: "pending" // Institute starts as pending until payment
+        });
+
+        res.status(201).json({
+            success: true,
+            message: "Registration successful! Please complete payment to activate your account.",
+            data: {
+                institute_id: result.institute.id,
+                email: result.institute.email,
+                name: result.institute.name
+            }
+        });
+    } catch (error) {
+        console.error("Public registration error:", error);
+
+        // Handle duplicate email
+        if (error.message && error.message.includes("email")) {
+            return res.status(400).json({
+                success: false,
+                message: "This email is already registered"
+            });
+        }
+
+        res.status(500).json({
+            success: false,
+            message: error.message || "Registration failed"
+        });
+    }
+};
+
+/**
  * Login user
  * Returns JWT token and user info
  */

@@ -258,6 +258,7 @@
 }
 
 .plan-btn:hover {
+    color: black;
     background: var(--secondary-color);
 }
 

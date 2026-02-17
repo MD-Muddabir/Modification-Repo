@@ -453,6 +453,37 @@ function Reports() {
                                     </table>
                                 </div>
                             </div>
+
+                            {/* Pending Students Table */}
+                            {feesReport.pending_students && feesReport.pending_students.length > 0 && (
+                                <div className="card" style={{ marginTop: "2rem" }}>
+                                    <div className="card-header">
+                                        <h3 className="card-title">Pending Students ({feesReport.pending_students.length})</h3>
+                                    </div>
+                                    <div className="table-container">
+                                        <table className="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Roll Number</th>
+                                                    <th>Student Name</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {feesReport.pending_students.map((student, index) => (
+                                                    <tr key={index}>
+                                                        <td>{student.roll_number}</td>
+                                                        <td><strong>{student.name}</strong></td>
+                                                        <td>
+                                                            <span className="badge badge-danger">Pending</span>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

@@ -16,8 +16,43 @@ function Subscriptions() {
     useEffect(() => {
         fetchSubscriptions();
     }, [statusFilter]);
-    // ...
-    // ...
+
+    const fetchSubscriptions = async () => {
+        setLoading(true);
+        try {
+            const params = statusFilter !== "all" ? `?status=${statusFilter}` : "";
+            const response = await api.get(`/subscriptions${params}`);
+            // API returns: { success: true, data: { subscriptions: [...], pagination: {...} } }
+            setSubscriptions(response.data.data?.subscriptions || []);
+        } catch (error) {
+            console.error("Error fetching subscriptions:", error);
+            setSubscriptions([]); // Set empty array on error
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleUpdateStatus = async (subscriptionId, newStatus) => {
+        if (!window.confirm(`Are you sure you want to mark this subscription as ${newStatus}?`)) {
+            return;
+        }
+
+        try {
+            await api.patch(`/subscriptions/${subscriptionId}/status`, {
+                payment_status: newStatus
+            });
+            alert(`Subscription status updated to ${newStatus}`);
+            fetchSubscriptions();
+        } catch (error) {
+            console.error("Error updating subscription:", error);
+            alert("Failed to update subscription status");
+        }
+    };
+
+    if (loading) {
+        return <div className="dashboard-container">Loading...</div>;
+    }
+
     return (
         <div className="dashboard-container">
             <div className="dashboard-header">
