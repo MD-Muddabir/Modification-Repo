@@ -10,6 +10,10 @@ import ProtectedRoute from "./ProtectedRoute";
 import LoadingSpinner from "../components/common/LoadingSpinner";
 
 // Lazy load pages for code splitting
+// Public Pages
+const Home = lazy(() => import("../pages/public/Home"));
+const Pricing = lazy(() => import("../pages/public/Pricing"));
+
 // Auth Pages
 const Login = lazy(() => import("../pages/auth/Login"));
 const Register = lazy(() => import("../pages/auth/Register"));
@@ -68,6 +72,11 @@ function AppRoutes() {
     <Suspense fallback={<PageLoader />}>
       <Routes>
         {/* Public Routes */}
+        <Route path="/" element={<Home />} />
+        <Route path="/pricing" element={<Pricing />} />
+        <Route path="/features" element={<Home />} />
+        <Route path="/about" element={<Home />} />
+        <Route path="/contact" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -147,7 +156,7 @@ function AppRoutes() {
         />
 
         {/* Default Route - Redirect based on role */}
-        <Route path="/" element={<Navigate to="/login" />} />
+
 
         {/* Error Routes */}
         <Route path="/unauthorized" element={<Unauthorized />} />

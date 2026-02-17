@@ -5,6 +5,7 @@ const Plan = sequelize.define("Plan", {
     name: DataTypes.STRING,
     price: DataTypes.DECIMAL(10, 2),
     student_limit: DataTypes.INTEGER,
+    faculty_limit: DataTypes.INTEGER,
     feature_attendance: DataTypes.BOOLEAN,
     feature_fees: DataTypes.BOOLEAN,
     feature_reports: DataTypes.BOOLEAN,

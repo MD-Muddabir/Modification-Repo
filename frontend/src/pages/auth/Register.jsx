@@ -3,18 +3,22 @@
  * Institute registration form
  */
 
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import api from "../../services/api";
 import "./Auth.css";
 
 function Register() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const planId = searchParams.get("plan");
 
   const [formData, setFormData] = useState({
     instituteName: "",
     email: "",
     phone: "",
+    address: "",
+    planId: planId || "",
     password: "",
     confirmPassword: "",
   });
@@ -22,6 +26,17 @@ function Register() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [showRedirect, setShowRedirect] = useState(false);
+
+  useEffect(() => {
+    if (!planId) {
+      setShowRedirect(true);
+      const timer = setTimeout(() => {
+        navigate("/pricing");
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [planId, navigate]);
 
   const handleChange = (e) => {
     setFormData({
@@ -54,7 +69,9 @@ function Register() {
         instituteName: formData.instituteName,
         email: formData.email,
         phone: formData.phone,
+        address: formData.address,
         password: formData.password,
+        planId: formData.planId,
       });
 
       setSuccess(true);
@@ -67,6 +84,22 @@ function Register() {
       setLoading(false);
     }
   };
+
+  if (showRedirect) {
+    return (
+      <div className="auth-container">
+        <div className="auth-card">
+          <div className="alert alert-error">
+            <span>⛔</span>
+            <div>
+              <strong>No Plan Selected!</strong>
+              <p>Please select a plan to register. Redirecting to Pricing...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (success) {
     return (
@@ -147,6 +180,22 @@ function Register() {
               onChange={handleChange}
               required
               minLength={10}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="address" className="form-label">
+              Address
+            </label>
+            <textarea
+              id="address"
+              name="address"
+              className="form-input"
+              placeholder="Institute Address"
+              value={formData.address}
+              onChange={handleChange}
+              required
+              rows="2"
             />
           </div>
 

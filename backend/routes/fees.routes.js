@@ -8,10 +8,12 @@ const feesController = require("../controllers/fees.controller");
 const verifyToken = require("../middlewares/auth.middleware");
 const allowRoles = require("../middlewares/role.middleware");
 
-router.post("/structure", verifyToken, allowRoles("admin"), feesController.createFeeStructure);
-router.get("/structure", verifyToken, allowRoles("admin", "faculty"), feesController.getAllFeeStructures);
-router.post("/pay", verifyToken, allowRoles("admin"), feesController.recordPayment);
-router.get("/payments", verifyToken, allowRoles("admin"), feesController.getAllPayments);
-router.get("/payment/:student_id", verifyToken, allowRoles("admin", "faculty", "student"), feesController.getStudentPayments);
+const checkFeatureAccess = require("../middlewares/checkFeatureAccess");
+
+router.post("/structure", verifyToken, allowRoles("admin"), checkFeatureAccess("feature_fees"), feesController.createFeeStructure);
+router.get("/structure", verifyToken, allowRoles("admin", "faculty"), checkFeatureAccess("feature_fees"), feesController.getAllFeeStructures);
+router.post("/pay", verifyToken, allowRoles("admin"), checkFeatureAccess("feature_fees"), feesController.recordPayment);
+router.get("/payments", verifyToken, allowRoles("admin"), checkFeatureAccess("feature_fees"), feesController.getAllPayments);
+router.get("/payment/:student_id", verifyToken, allowRoles("admin", "faculty", "student"), checkFeatureAccess("feature_fees"), feesController.getStudentPayments);
 
 module.exports = router;

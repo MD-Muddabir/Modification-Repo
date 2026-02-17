@@ -8,8 +8,10 @@ const attendanceController = require("../controllers/attendance.controller");
 const verifyToken = require("../middlewares/auth.middleware");
 const allowRoles = require("../middlewares/role.middleware");
 
-router.post("/", verifyToken, allowRoles("admin", "faculty"), attendanceController.markAttendance);
-router.get("/", verifyToken, allowRoles("admin", "faculty"), attendanceController.getAttendance);
-router.get("/percentage/:student_id", verifyToken, allowRoles("admin", "faculty", "student"), attendanceController.getAttendancePercentage);
+const checkFeatureAccess = require("../middlewares/checkFeatureAccess");
+
+router.post("/", verifyToken, allowRoles("admin", "faculty"), checkFeatureAccess("feature_attendance"), attendanceController.markAttendance);
+router.get("/", verifyToken, allowRoles("admin", "faculty"), checkFeatureAccess("feature_attendance"), attendanceController.getAttendance);
+router.get("/percentage/:student_id", verifyToken, allowRoles("admin", "faculty", "student"), checkFeatureAccess("feature_attendance"), attendanceController.getAttendancePercentage);
 
 module.exports = router;

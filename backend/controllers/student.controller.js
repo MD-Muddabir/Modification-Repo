@@ -4,7 +4,7 @@
  * Implements institute-level data isolation
  */
 
-const { Student, User, Class, Institute } = require("../models");
+const { Student, User, Class, Institute, Plan } = require("../models");
 const { Op } = require("sequelize");
 const { hashPassword } = require("../utils/hashPassword");
 
@@ -30,6 +30,22 @@ exports.createStudent = async (req, res) => {
         } = req.body;
 
         const institute_id = req.user.institute_id;
+
+
+        // Check Plan Limits
+        const institute = await Institute.findByPk(institute_id, {
+            include: [{ model: Plan }]
+        });
+
+        if (institute && institute.Plan) {
+            const studentCount = await Student.count({ where: { institute_id } });
+            if (institute.Plan.student_limit !== null && studentCount >= institute.Plan.student_limit) {
+                return res.status(403).json({
+                    success: false,
+                    message: `Plan limit reached. Your plan allows a maximum of ${institute.Plan.student_limit} students. Upgrade your plan to add more.`
+                });
+            }
+        }
 
         // Check if student email already exists in this institute
         const existingUser = await User.findOne({

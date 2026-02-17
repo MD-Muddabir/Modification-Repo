@@ -15,6 +15,8 @@ SELECT * FROM classes;
 
 SELECT * FROM subjects;
 
+SELECT * FROM plans;
+
 SELECT * FROM attendance;
 
 SELECT * FROM fees_structure;
