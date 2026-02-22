@@ -30,14 +30,16 @@ const checkStudentLimit = async (req, res, next) => {
             where: { institute_id }
         });
 
-        // Check limit
-        if (studentCount >= institute.Plan.max_students) {
+        // Determine limit (Snapshot first, then Plan fallback)
+        const limit_students = institute.current_limit_students || institute.Plan.max_students;
+
+        if (studentCount >= limit_students) {
             return res.status(403).json({
                 success: false,
-                message: `Student limit reached! Your ${institute.Plan.name} plan allows up to ${institute.Plan.max_students} students. Please upgrade your plan.`,
+                message: `Student limit reached! Your plan allows up to ${limit_students} students. Please upgrade your plan.`,
                 limit_reached: true,
                 current_count: studentCount,
-                max_limit: institute.Plan.max_students,
+                max_limit: limit_students,
                 upgrade_required: true
             });
         }
@@ -78,13 +80,15 @@ const checkFacultyLimit = async (req, res, next) => {
             }
         });
 
-        if (facultyCount >= institute.Plan.max_faculty) {
+        const limit_faculty = institute.current_limit_faculty || institute.Plan.max_faculty;
+
+        if (facultyCount >= limit_faculty) {
             return res.status(403).json({
                 success: false,
-                message: `Faculty limit reached! Your ${institute.Plan.name} plan allows up to ${institute.Plan.max_faculty} faculty members. Please upgrade your plan.`,
+                message: `Faculty limit reached! Your plan allows up to ${limit_faculty} faculty members. Please upgrade your plan.`,
                 limit_reached: true,
                 current_count: facultyCount,
-                max_limit: institute.Plan.max_faculty,
+                max_limit: limit_faculty,
                 upgrade_required: true
             });
         }
@@ -122,13 +126,15 @@ const checkClassLimit = async (req, res, next) => {
             where: { institute_id }
         });
 
-        if (classCount >= institute.Plan.max_classes) {
+        const limit_classes = institute.current_limit_classes || institute.Plan.max_classes;
+
+        if (classCount >= limit_classes) {
             return res.status(403).json({
                 success: false,
-                message: `Class limit reached! Your ${institute.Plan.name} plan allows up to ${institute.Plan.max_classes} classes. Please upgrade your plan.`,
+                message: `Class limit reached! Your plan allows up to ${limit_classes} classes. Please upgrade your plan.`,
                 limit_reached: true,
                 current_count: classCount,
-                max_limit: institute.Plan.max_classes,
+                max_limit: limit_classes,
                 upgrade_required: true
             });
         }
@@ -169,13 +175,15 @@ const checkAdminUserLimit = async (req, res, next) => {
             }
         });
 
-        if (adminCount >= institute.Plan.max_admin_users) {
+        const limit_admins = institute.current_limit_admins || institute.Plan.max_admin_users;
+
+        if (adminCount >= limit_admins) {
             return res.status(403).json({
                 success: false,
-                message: `Admin user limit reached! Your ${institute.Plan.name} plan allows up to ${institute.Plan.max_admin_users} admin users. Please upgrade your plan.`,
+                message: `Admin user limit reached! Your plan allows up to ${limit_admins} admin users. Please upgrade your plan.`,
                 limit_reached: true,
                 current_count: adminCount,
-                max_limit: institute.Plan.max_admin_users,
+                max_limit: limit_admins,
                 upgrade_required: true
             });
         }
@@ -211,33 +219,53 @@ const checkFeatureAccess = (featureName) => {
 
             const plan = institute.Plan;
 
+            // Determine feature access (Snapshot first, then Plan fallback)
+            const features = {
+                attendance: institute.current_feature_attendance !== 'none' ? institute.current_feature_attendance : plan.feature_attendance,
+                auto_attendance: institute.current_feature_auto_attendance !== null ? institute.current_feature_auto_attendance : plan.feature_auto_attendance,
+                fees: institute.current_feature_fees !== null ? institute.current_feature_fees : plan.feature_fees,
+                reports: institute.current_feature_reports || plan.feature_reports,
+                announcements: institute.current_feature_announcements !== null ? institute.current_feature_announcements : plan.feature_announcements,
+                export: institute.current_feature_export !== null ? institute.current_feature_export : plan.feature_export,
+                whatsapp: institute.current_feature_whatsapp !== null ? institute.current_feature_whatsapp : plan.feature_whatsapp,
+                custom_branding: institute.current_feature_custom_branding !== null ? institute.current_feature_custom_branding : plan.feature_custom_branding,
+                multi_branch: institute.current_feature_multi_branch !== null ? institute.current_feature_multi_branch : plan.feature_multi_branch,
+                api_access: institute.current_feature_api_access !== null ? institute.current_feature_api_access : plan.feature_api_access,
+            };
+
             // Check if feature is enabled
             let hasAccess = false;
 
             switch (featureName) {
+                case 'attendance':
+                    hasAccess = features.attendance !== 'none';
+                    break;
+                case 'auto_attendance':
+                    hasAccess = features.auto_attendance === true;
+                    break;
                 case 'fees':
-                    hasAccess = plan.feature_fees === true;
+                    hasAccess = features.fees === true;
                     break;
                 case 'reports':
-                    hasAccess = plan.feature_reports !== 'none';
+                    hasAccess = features.reports !== 'none';
                     break;
                 case 'announcements':
-                    hasAccess = plan.feature_announcements === true;
+                    hasAccess = features.announcements === true;
                     break;
                 case 'export':
-                    hasAccess = plan.feature_export === true;
+                    hasAccess = features.export === true;
                     break;
                 case 'whatsapp':
-                    hasAccess = plan.feature_whatsapp === true;
+                    hasAccess = features.whatsapp === true;
                     break;
                 case 'custom_branding':
-                    hasAccess = plan.feature_custom_branding === true;
+                    hasAccess = features.custom_branding === true;
                     break;
                 case 'multi_branch':
-                    hasAccess = plan.feature_multi_branch === true;
+                    hasAccess = features.multi_branch === true;
                     break;
                 case 'api_access':
-                    hasAccess = plan.feature_api_access === true;
+                    hasAccess = features.api_access === true;
                     break;
                 default:
                     hasAccess = true; // Unknown features are allowed by default
@@ -290,49 +318,55 @@ const getUsageStats = async (req, res) => {
             User.count({ where: { institute_id, role: 'admin' } })
         ]);
 
-        const plan = institute.Plan;
+        // Determine limits (Snapshot first, then Plan fallback)
+        const limit_students = institute.current_limit_students || institute.Plan.max_students;
+        const limit_faculty = institute.current_limit_faculty || institute.Plan.max_faculty;
+        const limit_classes = institute.current_limit_classes || institute.Plan.max_classes;
+        const limit_admins = institute.current_limit_admins || institute.Plan.max_admin_users;
 
         res.json({
             success: true,
             data: {
                 plan: {
-                    name: plan.name,
-                    price: plan.price
+                    name: institute.Plan.name,
+                    price: institute.Plan.price
                 },
                 usage: {
                     students: {
                         current: studentCount,
-                        limit: plan.max_students,
-                        percentage: Math.round((studentCount / plan.max_students) * 100),
-                        remaining: plan.max_students - studentCount
+                        limit: limit_students,
+                        percentage: Math.round((studentCount / limit_students) * 100),
+                        remaining: Math.max(0, limit_students - studentCount)
                     },
                     faculty: {
                         current: facultyCount,
-                        limit: plan.max_faculty,
-                        percentage: Math.round((facultyCount / plan.max_faculty) * 100),
-                        remaining: plan.max_faculty - facultyCount
+                        limit: limit_faculty,
+                        percentage: Math.round((facultyCount / limit_faculty) * 100),
+                        remaining: Math.max(0, limit_faculty - facultyCount)
                     },
                     classes: {
                         current: classCount,
-                        limit: plan.max_classes,
-                        percentage: Math.round((classCount / plan.max_classes) * 100),
-                        remaining: plan.max_classes - classCount
+                        limit: limit_classes,
+                        percentage: Math.round((classCount / limit_classes) * 100),
+                        remaining: Math.max(0, limit_classes - classCount)
                     },
                     admin_users: {
                         current: adminCount,
-                        limit: plan.max_admin_users,
-                        percentage: Math.round((adminCount / plan.max_admin_users) * 100),
-                        remaining: plan.max_admin_users - adminCount
+                        limit: limit_admins,
+                        percentage: Math.round((adminCount / limit_admins) * 100),
+                        remaining: Math.max(0, limit_admins - adminCount)
                     }
                 },
                 features: {
-                    fees: plan.feature_fees,
-                    reports: plan.feature_reports,
-                    announcements: plan.feature_announcements,
-                    export: plan.feature_export,
-                    whatsapp: plan.feature_whatsapp,
-                    custom_branding: plan.feature_custom_branding,
-                    multi_branch: plan.feature_multi_branch
+                    attendance: institute.current_feature_attendance !== 'none' ? institute.current_feature_attendance : institute.Plan.feature_attendance,
+                    auto_attendance: institute.current_feature_auto_attendance !== null ? institute.current_feature_auto_attendance : institute.Plan.feature_auto_attendance,
+                    fees: institute.current_feature_fees !== null ? institute.current_feature_fees : institute.Plan.feature_fees,
+                    reports: institute.current_feature_reports || institute.Plan.feature_reports,
+                    announcements: institute.current_feature_announcements !== null ? institute.current_feature_announcements : institute.Plan.feature_announcements,
+                    export: institute.current_feature_export !== null ? institute.current_feature_export : institute.Plan.feature_export,
+                    whatsapp: institute.current_feature_whatsapp !== null ? institute.current_feature_whatsapp : institute.Plan.feature_whatsapp,
+                    custom_branding: institute.current_feature_custom_branding !== null ? institute.current_feature_custom_branding : institute.Plan.feature_custom_branding,
+                    multi_branch: institute.current_feature_multi_branch !== null ? institute.current_feature_multi_branch : institute.Plan.feature_multi_branch
                 }
             }
         });

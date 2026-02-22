@@ -137,7 +137,24 @@ exports.verifyPayment = async (req, res) => {
                 status: "active",
                 plan_id: planId,
                 subscription_start: startDate,
-                subscription_end: endDate
+                subscription_end: endDate,
+                // Update Snapshot Limits to New Plan Limits
+                current_limit_students: plan.max_students,
+                current_limit_faculty: plan.max_faculty,
+                current_limit_classes: plan.max_classes,
+                current_limit_admins: plan.max_admin_users,
+
+                // Update Snapshot Features
+                current_feature_attendance: plan.feature_attendance,
+                current_feature_auto_attendance: plan.feature_auto_attendance,
+                current_feature_fees: plan.feature_fees,
+                current_feature_reports: plan.feature_reports,
+                current_feature_announcements: plan.feature_announcements,
+                current_feature_export: plan.feature_export,
+                current_feature_whatsapp: plan.feature_whatsapp,
+                current_feature_custom_branding: plan.feature_custom_branding,
+                current_feature_multi_branch: plan.feature_multi_branch,
+                current_feature_api_access: plan.feature_api_access,
             },
             { where: { id: instituteId } }
         );

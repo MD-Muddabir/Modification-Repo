@@ -49,6 +49,22 @@ exports.registerInstitute = async (data) => {
         status: instituteStatus,
         subscription_start: instituteStatus === 'active' ? subscriptionStart : null,
         subscription_end: instituteStatus === 'active' ? subscriptionEnd : null,
+        // Snapshot limits
+        current_limit_students: plan ? plan.max_students : 50,
+        current_limit_faculty: plan ? plan.max_faculty : 5,
+        current_limit_classes: plan ? plan.max_classes : 5,
+        current_limit_admins: plan ? plan.max_admin_users : 1,
+
+        // Snapshot features
+        current_feature_attendance: plan ? plan.feature_attendance : 'basic',
+        current_feature_fees: plan ? plan.feature_fees : false,
+        current_feature_reports: plan ? plan.feature_reports : 'none',
+        current_feature_announcements: plan ? plan.feature_announcements : false,
+        current_feature_export: plan ? plan.feature_export : false,
+        current_feature_whatsapp: plan ? plan.feature_whatsapp : false,
+        current_feature_custom_branding: plan ? plan.feature_custom_branding : false,
+        current_feature_multi_branch: plan ? plan.feature_multi_branch : false,
+        current_feature_api_access: plan ? plan.feature_api_access : false,
     });
 
     // Hash Password
@@ -86,14 +102,46 @@ exports.registerInstitute = async (data) => {
 exports.loginUser = async (email, password) => {
     const user = await User.findOne({
         where: { email },
-        include: [{ model: Institute, attributes: ['name'] }]
+        include: [
+            {
+                model: Institute,
+                include: [{ model: Plan }] // Include Plan to check limits
+            }
+        ]
     });
 
     if (!user) throw new Error("User not found");
 
+    // Check Password match
     const isMatch = await comparePassword(password, user.password_hash);
-
     if (!isMatch) throw new Error("Invalid credentials");
+
+    // --- Admin Limit Enforcement ---
+    // If user is an admin, check if they are within the allowed limit (Grandfathering Logic)
+    if (user.role === 'admin' && user.Institute) {
+        const institute = user.Institute;
+        // Determine Limit (Snapshot > Plan)
+        const adminLimit = institute.current_limit_admins || (institute.Plan ? institute.Plan.max_admin_users : 1);
+
+        // Fetch all active admins sorted by creation time (Oldest first)
+        const allAdmins = await User.findAll({
+            where: {
+                institute_id: user.institute_id,
+                role: 'admin',
+                status: 'active'
+            },
+            order: [['created_at', 'ASC']],
+            attributes: ['id', 'created_at']
+        });
+
+        // The first 'adminLimit' users are allowed. Others are blocked.
+        const allowedAdmins = allAdmins.slice(0, adminLimit);
+        const isAllowed = allowedAdmins.some(admin => admin.id === user.id);
+
+        if (!isAllowed) {
+            throw new Error(`Your plan allows only ${adminLimit} admin(s). You are restricted as an additional admin. Please upgrade your plan.`);
+        }
+    }
 
     return user;
 };

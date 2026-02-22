@@ -70,6 +70,10 @@ const Plan = sequelize.define("Plan", {
         type: DataTypes.ENUM('none', 'basic', 'advanced'),
         defaultValue: 'basic'
     },
+    feature_auto_attendance: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
     feature_fees: {
         type: DataTypes.BOOLEAN,
         defaultValue: false

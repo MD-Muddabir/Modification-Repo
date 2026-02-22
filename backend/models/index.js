@@ -16,6 +16,9 @@ const Announcement = require("./announcement");
 const Exam = require("./exam");
 const Mark = require("./mark");
 const Subscription = require("./subscription");
+const StudentSubject = require("./studentSubject");
+const StudentClass = require("./studentClass");
+const ClassSession = require("./classSession");
 
 // Associations
 
@@ -37,14 +40,17 @@ Student.belongsTo(Institute, { foreignKey: "institute_id" });
 Institute.hasMany(Faculty, { foreignKey: "institute_id" });
 Faculty.belongsTo(Institute, { foreignKey: "institute_id" });
 
-Class.hasMany(Student, { foreignKey: "class_id" });
-Student.belongsTo(Class, { foreignKey: "class_id" });
+Student.belongsToMany(Class, { through: StudentClass, foreignKey: "student_id" });
+Class.belongsToMany(Student, { through: StudentClass, foreignKey: "class_id" });
 
 Faculty.hasMany(Subject, { foreignKey: "faculty_id" });
 Subject.belongsTo(Faculty, { foreignKey: "faculty_id" });
 
 Class.hasMany(Subject, { foreignKey: "class_id" });
 Subject.belongsTo(Class, { foreignKey: "class_id" });
+
+Student.belongsToMany(Subject, { through: StudentSubject, foreignKey: "student_id" });
+Subject.belongsToMany(Student, { through: StudentSubject, foreignKey: "subject_id" });
 
 Exam.hasMany(Mark, { foreignKey: "exam_id" });
 Mark.belongsTo(Exam, { foreignKey: "exam_id" });
@@ -85,6 +91,9 @@ Student.hasMany(Attendance, { foreignKey: "student_id" });
 Attendance.belongsTo(Class, { foreignKey: "class_id" });
 Class.hasMany(Attendance, { foreignKey: "class_id" });
 
+Attendance.belongsTo(Subject, { foreignKey: "subject_id" });
+Subject.hasMany(Attendance, { foreignKey: "subject_id" });
+
 Attendance.belongsTo(Institute, { foreignKey: "institute_id" });
 Institute.hasMany(Attendance, { foreignKey: "institute_id" });
 
@@ -94,6 +103,16 @@ User.hasMany(Attendance, { foreignKey: "marked_by" });
 // Subscription Associations
 Institute.hasMany(Subscription, { foreignKey: "institute_id" });
 Subscription.belongsTo(Institute, { foreignKey: "institute_id" });
+
+// ClassSession Associations
+ClassSession.belongsTo(Institute, { foreignKey: "institute_id" });
+Institute.hasMany(ClassSession, { foreignKey: "institute_id" });
+
+ClassSession.belongsTo(Class, { foreignKey: "class_id" });
+Class.hasMany(ClassSession, { foreignKey: "class_id" });
+
+ClassSession.belongsTo(Faculty, { foreignKey: "faculty_id" });
+Faculty.hasMany(ClassSession, { foreignKey: "faculty_id" });
 
 module.exports = {
     sequelize,
@@ -111,4 +130,7 @@ module.exports = {
     Exam,
     Mark,
     Subscription,
+    StudentSubject,
+    StudentClass,
+    ClassSession,
 };

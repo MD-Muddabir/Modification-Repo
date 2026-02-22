@@ -100,6 +100,12 @@ function AdminDashboard() {
                     featureName = "Announcements";
                 }
                 break;
+            case 'auto_attendance':
+                if (!features.auto_attendance) {
+                    hasAccess = false;
+                    featureName = "Smart Attendance (QR)";
+                }
+                break;
             default:
                 hasAccess = true;
         }
@@ -121,7 +127,8 @@ function AdminDashboard() {
                 (featureKey === 'fees' && !planDetails.features.fees) ||
                 (featureKey === 'announcements' && !planDetails.features.announcements) ||
                 (featureKey === 'attendance' && planDetails.features.attendance === 'none') ||
-                (featureKey === 'reports' && planDetails.features.reports === 'none')
+                (featureKey === 'reports' && planDetails.features.reports === 'none') ||
+                (featureKey === 'auto_attendance' && !planDetails.features.auto_attendance)
             ) && (
                     <span style={{ position: 'absolute', top: 5, right: 5, fontSize: '10px', background: '#e5e7eb', padding: '2px 5px', borderRadius: '4px' }}>🔒</span>
                 )}
@@ -200,6 +207,7 @@ function AdminDashboard() {
                     <ActionCard path="/admin/subjects" icon="📖" title="Manage Subjects" featureKey="subjects" />
 
                     <ActionCard path="/admin/attendance" icon="📋" title="Manage Attendance" featureKey="attendance" />
+                    <ActionCard path="/admin/smart-attendance" icon="⚡" title="Smart Attendance" featureKey="auto_attendance" />
                     <ActionCard path="/admin/reports" icon="📊" title="Reports & Analytics" featureKey="reports" />
                     <ActionCard path="/admin/fees" icon="💰" title="Fee Management" featureKey="fees" />
                     <ActionCard path="/admin/announcements" icon="📢" title="Announcements" featureKey="announcements" />

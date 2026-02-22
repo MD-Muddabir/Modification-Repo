@@ -16,8 +16,8 @@ router.use(verifyToken, checkFeatureAccess("feature_attendance"));
 // Bulk mark attendance for a class
 router.post("/bulk", allowRoles("admin", "faculty"), attendanceController.markBulkAttendance);
 
-// Get attendance for specific class and date
-router.get("/class/:class_id/date/:date", allowRoles("admin", "faculty"), attendanceController.getClassAttendanceByDate);
+// Get attendance for specific class, subject, and date
+router.get("/class/:class_id/subject/:subject_id/date/:date", allowRoles("admin", "faculty"), attendanceController.getClassAttendanceByDate);
 
 // Update attendance (admin only)
 router.put("/:id", allowRoles("admin"), attendanceController.updateAttendance);
@@ -30,6 +30,12 @@ router.get("/student/:student_id/report", allowRoles("admin", "faculty", "studen
 
 // Class attendance summary
 router.get("/class/:class_id/summary", allowRoles("admin", "faculty"), attendanceController.getClassAttendanceSummary);
+
+// --- SMART ATTENDANCE ROUTES ---
+router.post("/start-session", checkFeatureAccess("feature_auto_attendance"), allowRoles("admin", "faculty"), attendanceController.startSmartSession);
+router.post("/end-session/:id", checkFeatureAccess("feature_auto_attendance"), allowRoles("admin", "faculty"), attendanceController.endSmartSession);
+router.get("/active-session/:class_id", checkFeatureAccess("feature_auto_attendance"), allowRoles("admin", "faculty"), attendanceController.getActiveSession);
+router.post("/mark-by-qr", checkFeatureAccess("feature_auto_attendance"), allowRoles("student"), attendanceController.markAttendanceByQR);
 
 // Attendance dashboard stats
 router.get("/dashboard", allowRoles("admin", "faculty"), attendanceController.getAttendanceDashboard);

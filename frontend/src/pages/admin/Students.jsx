@@ -19,6 +19,7 @@ function Students() {
     const [editMode, setEditMode] = useState(false);
     const [search, setSearch] = useState("");
     const [classFilter, setClassFilter] = useState("all");
+    const [availableSubjects, setAvailableSubjects] = useState([]); // Add specific subjects based on class
 
     const [formData, setFormData] = useState({
         name: "",
@@ -26,11 +27,12 @@ function Students() {
         phone: "",
         password: "",
         roll_number: "",
-        class_id: "",
+        class_ids: [],
         date_of_birth: "",
         gender: "male",
         address: "",
         admission_date: "",
+        subject_ids: [],
     });
 
     useEffect(() => {
@@ -56,6 +58,36 @@ function Students() {
             setClasses(response.data.data || []);
         } catch (error) {
             console.error("Error fetching classes:", error);
+        }
+    };
+
+    const fetchSubjects = async (classIds) => {
+        if (!classIds || classIds.length === 0) {
+            setAvailableSubjects([]);
+            return;
+        }
+        try {
+            // Fetch subjects for each class and combine them
+            // Depending on the backend route implementation it might not accept multiple, so we do it iteratively
+            let allSubjects = [];
+            for (let id of classIds) {
+                const response = await api.get(`/subjects?class_id=${id}`);
+                allSubjects = [...allSubjects, ...(response.data.data || [])];
+            }
+
+            // Remove duplicates
+            const uniqueSubjects = [];
+            const seen = new Set();
+            for (let subject of allSubjects) {
+                if (!seen.has(subject.id)) {
+                    seen.add(subject.id);
+                    uniqueSubjects.push(subject);
+                }
+            }
+
+            setAvailableSubjects(uniqueSubjects);
+        } catch (error) {
+            console.error("Error fetching subjects:", error);
         }
     };
 
@@ -88,12 +120,20 @@ function Students() {
             phone: student.User?.phone || "",
             password: "",
             roll_number: student.roll_number || "",
-            class_id: student.class_id || "",
+            class_ids: student.Classes ? student.Classes.map(c => c.id.toString()) : [],
             admission_date: student.admission_date || "",
             date_of_birth: student.date_of_birth || "",
             gender: student.gender || "male",
             address: student.address || "",
+            subject_ids: student.Subjects ? student.Subjects.map(sub => sub.id.toString()) : []
         });
+
+        const c_ids = student.Classes ? student.Classes.map(c => c.id.toString()) : [];
+        if (c_ids.length > 0) {
+            fetchSubjects(c_ids);
+        } else {
+            setAvailableSubjects([]);
+        }
         setEditMode(true);
         setShowModal(true);
     };
@@ -117,12 +157,14 @@ function Students() {
             phone: "",
             password: "",
             roll_number: "",
-            class_id: "",
+            class_ids: [],
             date_of_birth: "",
             gender: "male",
             address: "",
             admission_date: "",
+            subject_ids: [],
         });
+        setAvailableSubjects([]);
         setEditMode(false);
     };
 
@@ -130,6 +172,38 @@ function Students() {
         setFormData({
             ...formData,
             [e.target.name]: e.target.value,
+        });
+    };
+
+    const handleClassChange = (e) => {
+        const options = e.target.options;
+        const selectedClasses = [];
+        for (let i = 0; i < options.length; i++) {
+            if (options[i].selected) {
+                selectedClasses.push(options[i].value);
+            }
+        }
+
+        fetchSubjects(selectedClasses);
+
+        setFormData({
+            ...formData,
+            class_ids: selectedClasses,
+            subject_ids: [],
+        });
+    };
+
+    const handleSubjectChange = (e) => {
+        const options = e.target.options;
+        const selectedSubjects = [];
+        for (let i = 0; i < options.length; i++) {
+            if (options[i].selected) {
+                selectedSubjects.push(options[i].value);
+            }
+        }
+        setFormData({
+            ...formData,
+            subject_ids: selectedSubjects,
         });
     };
 
@@ -141,7 +215,7 @@ function Students() {
             s.roll_number.toLowerCase().includes(search.toLowerCase());
 
         const matchesClass =
-            classFilter === "all" || s.class_id === parseInt(classFilter);
+            classFilter === "all" || (s.Classes && s.Classes.some(c => c.id === parseInt(classFilter)));
 
         return matchesSearch && matchesClass;
     });
@@ -229,7 +303,7 @@ function Students() {
                         <h3>
                             {students.length > 0
                                 ? Math.round(
-                                    (students.filter((s) => s.class_id).length / students.length) * 100
+                                    (students.filter((s) => s.Classes && s.Classes.length > 0).length / students.length) * 100
                                 )
                                 : 0}
                             %
@@ -278,13 +352,17 @@ function Students() {
                                         </td>
                                         <td>{student.User?.email}</td>
                                         <td>
-                                            {student.Class ? (
+                                            {student.Classes && student.Classes.length > 0 ? (
                                                 <>
-                                                    {student.Class.name}
-                                                    {student.Class.section && ` - ${student.Class.section}`}
+                                                    {student.Classes.map(c => `${c.name}${c.section ? ` - ${c.section}` : ""}`).join(", ")}
                                                 </>
                                             ) : (
                                                 <span style={{ color: "#9ca3af" }}>Unassigned</span>
+                                            )}
+                                            {student.Subjects && student.Subjects.length > 0 && (
+                                                <div style={{ fontSize: "0.80rem", color: "#6b7280", marginTop: "4px" }}>
+                                                    {student.Subjects.map(sub => sub.name).join(", ")}
+                                                </div>
                                             )}
                                         </td>
                                         <td style={{ textTransform: "capitalize" }}>{student.gender}</td>
@@ -403,23 +481,48 @@ function Students() {
                                 )}
 
                                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                                    <div className="form-group">
-                                        <label className="form-label">Class</label>
+                                    <div className="form-group" style={{ gridColumn: "1 / -1", marginTop: "1rem" }}>
+                                        <label className="form-label">Classes (Multiple selection allowed)</label>
                                         <select
-                                            name="class_id"
+                                            name="class_ids"
                                             className="form-select"
-                                            value={formData.class_id}
-                                            onChange={handleChange}
+                                            multiple
+                                            value={formData.class_ids}
+                                            onChange={handleClassChange}
+                                            style={{ height: "100px" }}
                                         >
-                                            <option value="">Select Class</option>
                                             {classes.map((c) => (
                                                 <option key={c.id} value={c.id}>
                                                     {c.name} {c.section && `- ${c.section}`}
                                                 </option>
                                             ))}
                                         </select>
+                                        <small style={{ color: "#6b7280" }}>Hold Ctrl (Windows) or Cmd (Mac) to select multiple classes</small>
                                     </div>
+                                </div>
 
+                                {formData.class_ids && formData.class_ids.length > 0 && (
+                                    <div className="form-group" style={{ marginTop: "1rem" }}>
+                                        <label className="form-label">Subjects (Multiple selection allowed)</label>
+                                        <select
+                                            name="subject_ids"
+                                            className="form-select"
+                                            multiple
+                                            value={formData.subject_ids}
+                                            onChange={handleSubjectChange}
+                                            style={{ height: "100px" }}
+                                        >
+                                            {availableSubjects.map((sub) => (
+                                                <option key={sub.id} value={sub.id}>
+                                                    {sub.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <small style={{ color: "#6b7280" }}>Hold Ctrl (Windows) or Cmd (Mac) to select multiple subjects</small>
+                                    </div>
+                                )}
+
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginTop: "1rem" }}>
                                     <div className="form-group">
                                         <label className="form-label">Gender</label>
                                         <select
@@ -433,9 +536,7 @@ function Students() {
                                             <option value="other">Other</option>
                                         </select>
                                     </div>
-                                </div>
 
-                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                                     <div className="form-group">
                                         <label className="form-label">Date of Birth</label>
                                         <input

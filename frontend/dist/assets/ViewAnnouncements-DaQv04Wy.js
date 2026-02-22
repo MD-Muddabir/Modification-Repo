@@ -1,0 +1,1 @@
+import{j as e}from"./index-CFM2Lay8.js";/* empty css                  */function r(){return e.jsxs("div",{className:"dashboard-container",children:[e.jsx("div",{className:"dashboard-header",children:e.jsx("h1",{children:"View Announcements"})}),e.jsx("div",{className:"card",children:e.jsx("p",{children:"Coming soon..."})})]})}export{r as default};

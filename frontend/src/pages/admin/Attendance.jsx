@@ -13,6 +13,8 @@ function Attendance() {
     const { user } = useContext(AuthContext);
     const [classes, setClasses] = useState([]);
     const [selectedClass, setSelectedClass] = useState("");
+    const [subjects, setSubjects] = useState([]);
+    const [selectedSubject, setSelectedSubject] = useState("");
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [students, setStudents] = useState([]);
     const [attendanceData, setAttendanceData] = useState({});
@@ -27,10 +29,21 @@ function Attendance() {
     }, []);
 
     useEffect(() => {
-        if (selectedClass && selectedDate) {
-            fetchClassAttendance();
+        if (selectedClass) {
+            fetchSubjects();
+        } else {
+            setSubjects([]);
+            setSelectedSubject("");
         }
-    }, [selectedClass, selectedDate]);
+    }, [selectedClass]);
+
+    useEffect(() => {
+        if (selectedClass && selectedSubject && selectedDate) {
+            fetchClassAttendance();
+        } else {
+            setStudents([]);
+        }
+    }, [selectedClass, selectedSubject, selectedDate]);
 
     const fetchClasses = async () => {
         try {
@@ -38,6 +51,16 @@ function Attendance() {
             setClasses(response.data.data || []);
         } catch (error) {
             console.error("Error fetching classes:", error);
+        }
+    };
+
+    const fetchSubjects = async () => {
+        try {
+            const response = await api.get(`/subjects?class_id=${selectedClass}`);
+            setSubjects(response.data.data || []);
+            setSelectedSubject("");
+        } catch (error) {
+            console.error("Error fetching subjects:", error);
         }
     };
 
@@ -53,7 +76,7 @@ function Attendance() {
     const fetchClassAttendance = async () => {
         setLoading(true);
         try {
-            const response = await api.get(`/attendance/class/${selectedClass}/date/${selectedDate}`);
+            const response = await api.get(`/attendance/class/${selectedClass}/subject/${selectedSubject}/date/${selectedDate}`);
             setStudents(response.data.data || []);
 
             // Initialize attendance data
@@ -103,8 +126,8 @@ function Attendance() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!selectedClass || !selectedDate) {
-            alert("Please select class and date");
+        if (!selectedClass || !selectedSubject || !selectedDate) {
+            alert("Please select class, subject and date");
             return;
         }
 
@@ -117,6 +140,7 @@ function Attendance() {
 
             await api.post("/attendance/bulk", {
                 class_id: parseInt(selectedClass),
+                subject_id: parseInt(selectedSubject),
                 date: selectedDate,
                 attendance_data
             });
@@ -219,7 +243,7 @@ function Attendance() {
             {/* Filters */}
             <div className="card" style={{ marginBottom: "2rem" }}>
                 <div style={{ padding: "1.5rem" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
                         <div className="form-group">
                             <label className="form-label">Select Class *</label>
                             <select
@@ -231,6 +255,22 @@ function Attendance() {
                                 {classes.map((cls) => (
                                     <option key={cls.id} value={cls.id}>
                                         {cls.name} {cls.section && `- ${cls.section}`}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label className="form-label">Select Subject *</label>
+                            <select
+                                className="form-select"
+                                value={selectedSubject}
+                                onChange={(e) => setSelectedSubject(e.target.value)}
+                                disabled={!selectedClass}
+                            >
+                                <option value="">Choose a subject</option>
+                                {subjects.map((sub) => (
+                                    <option key={sub.id} value={sub.id}>
+                                        {sub.name}
                                     </option>
                                 ))}
                             </select>
@@ -250,7 +290,7 @@ function Attendance() {
             </div>
 
             {/* Attendance Marking */}
-            {selectedClass && selectedDate && (
+            {selectedClass && selectedSubject && selectedDate && (
                 <div className="card">
                     <div className="card-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <h3 className="card-title">Mark Attendance ({students.length} students)</h3>

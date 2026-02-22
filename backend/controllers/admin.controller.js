@@ -102,10 +102,12 @@ exports.createAdmin = async (req, res) => {
             where: { institute_id, role: 'admin' }
         });
 
-        if (currentAdminCount >= institute.Plan.max_admin_users) {
+        const limit_admins = institute.current_limit_admins || institute.Plan.max_admin_users;
+
+        if (currentAdminCount >= limit_admins) {
             return res.status(403).json({
                 success: false,
-                message: `Plan limit reached. Your plan allows ${institute.Plan.max_admin_users} admins. Please upgrade.`
+                message: `Plan limit reached. Your plan allows ${limit_admins} admins. Please upgrade.`
             });
         }
 

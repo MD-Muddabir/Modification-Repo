@@ -3,8 +3,9 @@
  * Implements all features from attendance.md blueprint
  */
 
-const { Attendance, Student, Class, User, Institute, Plan } = require("../models");
+const { Attendance, Student, Class, User, Institute, Plan, ClassSession } = require("../models");
 const { Op } = require("sequelize");
+const crypto = require("crypto");
 
 /**
  * Mark Bulk Attendance for a Class
@@ -13,7 +14,7 @@ const { Op } = require("sequelize");
  */
 exports.markBulkAttendance = async (req, res) => {
     try {
-        const { class_id, date, attendance_data } = req.body;
+        const { class_id, subject_id, date, attendance_data } = req.body;
         const institute_id = req.user.institute_id;
         const marked_by = req.user.id;
 
@@ -27,7 +28,7 @@ exports.markBulkAttendance = async (req, res) => {
 
         // Check if attendance already exists for this date
         const existingCount = await Attendance.count({
-            where: { class_id, date, institute_id }
+            where: { class_id, subject_id, date, institute_id }
         });
 
         if (existingCount > 0) {
@@ -42,6 +43,7 @@ exports.markBulkAttendance = async (req, res) => {
             institute_id,
             student_id: item.student_id,
             class_id,
+            subject_id,
             date,
             status: item.status,
             remarks: item.remarks || null,
@@ -71,10 +73,10 @@ exports.markBulkAttendance = async (req, res) => {
  */
 exports.getClassAttendanceByDate = async (req, res) => {
     try {
-        const { class_id, date } = req.params;
+        const { class_id, subject_id, date } = req.params;
         const institute_id = req.user.institute_id;
 
-        console.log('getClassAttendanceByDate called:', { class_id, date, institute_id });
+        console.log('getClassAttendanceByDate called:', { class_id, subject_id, date, institute_id });
 
         // Get all students in the class
         const students = await Student.findAll({
@@ -90,7 +92,7 @@ exports.getClassAttendanceByDate = async (req, res) => {
 
         // Get attendance records for this date
         const attendanceRecords = await Attendance.findAll({
-            where: { class_id, date, institute_id }
+            where: { class_id, subject_id, date, institute_id }
         });
 
         // Map attendance to students
@@ -202,10 +204,16 @@ exports.getStudentAttendanceReport = async (req, res) => {
         const records = await Attendance.findAll({
             where: whereClause,
             order: [['date', 'ASC']],
-            include: [{
-                model: Class,
-                attributes: ['id', 'name']
-            }]
+            include: [
+                {
+                    model: Class,
+                    attributes: ['id', 'name']
+                },
+                {
+                    model: require('../models').Subject,
+                    attributes: ['id', 'name']
+                }
+            ]
         });
 
         const totalDays = records.length;
@@ -417,6 +425,181 @@ exports.deleteAttendance = async (req, res) => {
             success: false,
             message: error.message
         });
+    }
+};
+
+/**
+ * --- SMART ATTENDANCE (QR) ---
+ */
+
+exports.startSmartSession = async (req, res) => {
+    try {
+        const { class_id } = req.body;
+        const institute_id = req.user.institute_id;
+        const faculty_id = req.user.id;
+
+        // Check if there's already an active session for this class
+        const existingSession = await ClassSession.findOne({
+            where: {
+                class_id,
+                institute_id,
+                is_active: true,
+                expires_at: { [Op.gt]: new Date() }
+            }
+        });
+
+        if (existingSession) {
+            return res.status(400).json({
+                success: false,
+                message: "A smart attendance session is already active for this class",
+                data: existingSession
+            });
+        }
+
+        // Generate token
+        const session_token = crypto.randomBytes(32).toString("hex");
+        const expires_at = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+        const newSession = await ClassSession.create({
+            institute_id,
+            class_id,
+            faculty_id,
+            session_token,
+            expires_at
+        });
+
+        res.status(201).json({
+            success: true,
+            message: "Smart session started successfully",
+            data: {
+                session_token: newSession.session_token,
+                expires_at: newSession.expires_at,
+                id: newSession.id
+            }
+        });
+    } catch (error) {
+        console.error("Start smart session error:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.getActiveSession = async (req, res) => {
+    try {
+        const { class_id } = req.params;
+        const institute_id = req.user.institute_id;
+
+        const session = await ClassSession.findOne({
+            where: {
+                class_id,
+                institute_id,
+                is_active: true,
+                expires_at: { [Op.gt]: new Date() }
+            }
+        });
+
+        if (!session) {
+            return res.status(404).json({ success: false, message: "No active session found" });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: session
+        });
+    } catch (error) {
+        console.error("Get active session error:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.endSmartSession = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const institute_id = req.user.institute_id;
+
+        const session = await ClassSession.findOne({
+            where: { id, institute_id, is_active: true }
+        });
+
+        if (!session) {
+            return res.status(404).json({ success: false, message: "Session not found or already ended" });
+        }
+
+        await session.update({
+            is_active: false,
+            end_time: new Date()
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Session ended successfully"
+        });
+    } catch (error) {
+        console.error("End smart session error:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.markAttendanceByQR = async (req, res) => {
+    try {
+        const { session_token, subject_id, date } = req.body;
+        const student_user_id = req.user.id;
+        const institute_id = req.user.institute_id;
+
+        // Find Student record
+        const student = await Student.findOne({ where: { user_id: student_user_id, institute_id } });
+        if (!student) {
+            return res.status(404).json({ success: false, message: "Student record not found" });
+        }
+        const student_id = student.id;
+
+        // Verify session
+        const session = await ClassSession.findOne({
+            where: {
+                session_token,
+                institute_id,
+                is_active: true,
+                expires_at: { [Op.gt]: new Date() }
+            }
+        });
+
+        if (!session) {
+            return res.status(400).json({ success: false, message: "Invalid or expired session token" });
+        }
+
+        // Check if already marked today for this subjective class
+        // Notice: `subject_id` should ideally be sent by frontend, but QR only has class
+        // Default to a null subject or rely on UI to pass it alongside the scan. 
+        const existingAttendance = await Attendance.findOne({
+            where: {
+                student_id,
+                institute_id,
+                class_id: session.class_id,
+                date: date || new Date().toISOString().split('T')[0],
+                status: "present"
+            }
+        });
+
+        if (existingAttendance) {
+            return res.status(400).json({ success: false, message: "Attendance already marked for today!" });
+        }
+
+        // Mark attendance
+        await Attendance.create({
+            institute_id,
+            student_id,
+            class_id: session.class_id,
+            subject_id: subject_id || null, // Optional for smart attendance scope
+            date: date || new Date().toISOString().split('T')[0],
+            status: "present",
+            marked_by: session.faculty_id,
+            remarks: "Smart Attendance (QR)"
+        });
+
+        res.status(200).json({ success: true, message: "Attendance marked successfully! ✅" });
+
+    } catch (error) {
+        console.error("Mark by QR error:", error);
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 

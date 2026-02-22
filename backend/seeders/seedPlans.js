@@ -35,6 +35,7 @@ const seedPlans = async () => {
 
                 // Advanced Features
                 feature_attendance: 'basic',
+                feature_auto_attendance: false,
                 feature_fees: false,
                 feature_reports: 'none',
                 feature_announcements: false,
@@ -73,6 +74,7 @@ const seedPlans = async () => {
 
                 // Advanced Features
                 feature_attendance: 'advanced',
+                feature_auto_attendance: true,
                 feature_fees: true,
                 feature_reports: 'basic',
                 feature_announcements: true,
@@ -111,6 +113,7 @@ const seedPlans = async () => {
 
                 // Advanced Features
                 feature_attendance: 'advanced',
+                feature_auto_attendance: true,
                 feature_fees: true,
                 feature_reports: 'advanced',
                 feature_announcements: true,

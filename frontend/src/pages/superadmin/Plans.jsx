@@ -40,6 +40,7 @@ function Plans() {
         feature_reports: 'none',   // none, basic, advanced
 
         // Boolean Features
+        feature_auto_attendance: false,
         feature_fees: false,
         feature_announcements: false,
         feature_export: false,
@@ -195,6 +196,9 @@ function Plans() {
                             <ul style={{ listStyle: "none", padding: 0, margin: 0, fontSize: "0.85rem" }}>
                                 <li style={{ marginBottom: "0.3rem", display: "flex", justifyContent: "space-between" }}>
                                     Attendance: <strong>{plan.feature_attendance !== 'none' ? plan.feature_attendance.toUpperCase() : "❌"}</strong>
+                                </li>
+                                <li style={{ marginBottom: "0.3rem", display: "flex", justifyContent: "space-between" }}>
+                                    Smart Attendance: <span>{plan.feature_auto_attendance ? "✅" : "❌"}</span>
                                 </li>
                                 <li style={{ marginBottom: "0.3rem", display: "flex", justifyContent: "space-between" }}>
                                     Reports: <strong>{plan.feature_reports !== 'none' ? plan.feature_reports.toUpperCase() : "❌"}</strong>
@@ -398,6 +402,7 @@ function Plans() {
                                     <h3 className="form-section-title">Feature Toggles</h3>
                                     <div className="feature-grid">
                                         {[
+                                            { key: 'feature_auto_attendance', label: 'Smart Attendance' },
                                             { key: 'feature_fees', label: 'Fees Management' },
                                             { key: 'feature_announcements', label: 'Announcements' },
                                             { key: 'feature_export', label: 'Export Data' },

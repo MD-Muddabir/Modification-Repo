@@ -4,7 +4,7 @@
  * Implements institute-level data isolation
  */
 
-const { Student, User, Class, Institute, Plan } = require("../models");
+const { Student, User, Class, Institute, Plan, Subject, StudentSubject, StudentClass } = require("../models");
 const { Op } = require("sequelize");
 const { hashPassword } = require("../utils/hashPassword");
 
@@ -27,6 +27,8 @@ exports.createStudent = async (req, res) => {
             date_of_birth,
             gender,
             address,
+            subject_ids, // New array of selected subject ids
+            class_ids // New array of selected class ids
         } = req.body;
 
         const institute_id = req.user.institute_id;
@@ -79,12 +81,31 @@ exports.createStudent = async (req, res) => {
             institute_id,
             user_id: user.id || user.user_id,
             roll_number,
-            class_id: class_id && class_id !== "" ? parseInt(class_id) : null, // Handle empty string from frontend
             admission_date: admission_date || new Date(),
             date_of_birth,
             gender: gender ? gender.toLowerCase() : null,
             address,
         });
+
+        // Add classes if provided
+        if (class_ids && Array.isArray(class_ids) && class_ids.length > 0) {
+            const studentClasses = class_ids.map(c_id => ({
+                student_id: student.id,
+                class_id: parseInt(c_id),
+                institute_id: institute_id
+            }));
+            await StudentClass.bulkCreate(studentClasses);
+        }
+
+        // Add subjects if provided
+        if (subject_ids && Array.isArray(subject_ids) && subject_ids.length > 0) {
+            const studentSubjects = subject_ids.map(sub_id => ({
+                student_id: student.id,
+                subject_id: parseInt(sub_id),
+                institute_id: institute_id
+            }));
+            await StudentSubject.bulkCreate(studentSubjects);
+        }
 
         res.status(201).json({
             success: true,
@@ -142,6 +163,18 @@ exports.getAllStudents = async (req, res) => {
             }
             : {};
 
+        // If class_id filter is specific, we still need to filter students that belong to this class
+        const classIncludeOptions = {
+            model: Class,
+            attributes: ["id", "name", "section"],
+            through: { attributes: [] },
+            required: class_id ? true : false,
+        };
+
+        if (class_id) {
+            classIncludeOptions.where = { id: class_id };
+        }
+
         const { count, rows } = await Student.findAndCountAll({
             where: whereClause,
             limit: parseInt(limit),
@@ -155,10 +188,13 @@ exports.getAllStudents = async (req, res) => {
                     required: search ? true : false, // Use INNER JOIN only when searching
                 },
                 {
-                    model: Class,
-                    attributes: ["id", "name", "section"],
-                    required: false,
+                    ...classIncludeOptions
                 },
+                {
+                    model: Subject,
+                    attributes: ["id", "name"],
+                    through: { attributes: [] }
+                }
             ],
         });
 
@@ -197,7 +233,13 @@ exports.getStudentById = async (req, res) => {
                 {
                     model: Class,
                     attributes: ["id", "name"],
+                    through: { attributes: [] }
                 },
+                {
+                    model: Subject,
+                    attributes: ["id", "name"],
+                    through: { attributes: [] }
+                }
             ],
         });
 
@@ -248,6 +290,8 @@ exports.updateStudent = async (req, res) => {
             date_of_birth,
             gender,
             address,
+            subject_ids,
+            class_ids
         } = req.body;
 
         const student = await Student.findOne({
@@ -274,12 +318,41 @@ exports.updateStudent = async (req, res) => {
         // Update student details
         await student.update({
             roll_number: roll_number || student.roll_number,
-            class_id: class_id || student.class_id,
             admission_date: admission_date || student.admission_date,
             date_of_birth: date_of_birth || student.date_of_birth,
             gender: gender || student.gender,
             address: address || student.address,
         });
+
+        // Update classes if provided
+        if (class_ids && Array.isArray(class_ids)) {
+            await StudentClass.destroy({ where: { student_id: id } });
+
+            if (class_ids.length > 0) {
+                const studentClasses = class_ids.map(c_id => ({
+                    student_id: student.id,
+                    class_id: parseInt(c_id),
+                    institute_id: institute_id
+                }));
+                await StudentClass.bulkCreate(studentClasses);
+            }
+        }
+
+        // Update subjects if provided
+        if (subject_ids && Array.isArray(subject_ids)) {
+            // Remove existing subjects for this student
+            await StudentSubject.destroy({ where: { student_id: id } });
+
+            // Add new ones
+            if (subject_ids.length > 0) {
+                const studentSubjects = subject_ids.map(sub_id => ({
+                    student_id: student.id,
+                    subject_id: parseInt(sub_id),
+                    institute_id: institute_id
+                }));
+                await StudentSubject.bulkCreate(studentSubjects);
+            }
+        }
 
         res.status(200).json({
             success: true,
