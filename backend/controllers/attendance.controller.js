@@ -80,11 +80,19 @@ exports.getClassAttendanceByDate = async (req, res) => {
 
         // Get all students in the class
         const students = await Student.findAll({
-            where: { class_id, institute_id },
-            include: [{
-                model: User,
-                attributes: ['id', 'name', 'email']
-            }],
+            where: { institute_id },
+            include: [
+                {
+                    model: User,
+                    attributes: ['id', 'name', 'email']
+                },
+                {
+                    model: Class,
+                    where: { id: class_id },
+                    attributes: [],
+                    through: { attributes: [] }
+                }
+            ],
             order: [['roll_number', 'ASC']]
         });
 
@@ -260,8 +268,11 @@ exports.getClassAttendanceSummary = async (req, res) => {
         }
 
         const students = await Student.findAll({
-            where: { class_id, institute_id },
-            include: [{ model: User, attributes: ['name'] }]
+            where: { institute_id },
+            include: [
+                { model: User, attributes: ['name'] },
+                { model: Class, where: { id: class_id }, attributes: [], through: { attributes: [] } }
+            ]
         });
 
         const attendanceData = await Promise.all(students.map(async (student) => {

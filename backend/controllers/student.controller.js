@@ -149,10 +149,6 @@ exports.getAllStudents = async (req, res) => {
         // Build where clause
         const whereClause = { institute_id };
 
-        if (class_id) {
-            whereClause.class_id = class_id;
-        }
-
         // Search filter
         const userWhereClause = search
             ? {
@@ -218,6 +214,50 @@ exports.getAllStudents = async (req, res) => {
  * @route GET /api/students/:id
  * @access Admin, Faculty, Student (own record)
  */
+exports.getMe = async (req, res) => {
+    try {
+        const institute_id = req.user.institute_id;
+        const user_id = req.user.id;
+
+        const student = await Student.findOne({
+            where: { user_id, institute_id },
+            include: [
+                {
+                    model: User,
+                    attributes: ["id", "name", "email", "phone", "status"],
+                },
+                {
+                    model: Class,
+                    attributes: ["id", "name"],
+                    through: { attributes: [] }
+                },
+                {
+                    model: Subject,
+                    attributes: ["id", "name"],
+                    through: { attributes: [] }
+                }
+            ],
+        });
+
+        if (!student) {
+            return res.status(404).json({
+                success: false,
+                message: "Student record not found",
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Student retrieved successfully",
+            data: student,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
 exports.getStudentById = async (req, res) => {
     try {
         const { id } = req.params;

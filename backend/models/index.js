@@ -55,6 +55,24 @@ Subject.belongsToMany(Student, { through: StudentSubject, foreignKey: "subject_i
 Exam.hasMany(Mark, { foreignKey: "exam_id" });
 Mark.belongsTo(Exam, { foreignKey: "exam_id" });
 
+Institute.hasMany(Exam, { foreignKey: "institute_id" });
+Exam.belongsTo(Institute, { foreignKey: "institute_id" });
+
+Class.hasMany(Exam, { foreignKey: "class_id" });
+Exam.belongsTo(Class, { foreignKey: "class_id" });
+
+Subject.hasMany(Exam, { foreignKey: "subject_id" });
+Exam.belongsTo(Subject, { foreignKey: "subject_id" });
+
+Student.hasMany(Mark, { foreignKey: "student_id" });
+Mark.belongsTo(Student, { foreignKey: "student_id" });
+
+Institute.hasMany(Mark, { foreignKey: "institute_id" });
+Mark.belongsTo(Institute, { foreignKey: "institute_id" });
+
+Subject.hasMany(Mark, { foreignKey: "subject_id" });
+Mark.belongsTo(Subject, { foreignKey: "subject_id" });
+
 // User <-> Faculty Association
 User.hasOne(Faculty, { foreignKey: "user_id" });
 Faculty.belongsTo(User, { foreignKey: "user_id" });

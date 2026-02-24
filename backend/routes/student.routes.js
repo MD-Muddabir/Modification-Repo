@@ -14,6 +14,7 @@ router.get("/stats", allowRoles("super_admin", "admin", "faculty"), studentContr
 
 // CRUD Routes
 // router.post("/", allowRoles("admin", "faculty"), studentController.createStudent);
+router.get("/me", allowRoles("student"), studentController.getMe);
 router.post("/", allowRoles("super_admin", "admin", "faculty"), checkStudentLimit, studentController.createStudent);
 
 router.get("/", allowRoles("super_admin", "admin", "faculty"), studentController.getAllStudents);

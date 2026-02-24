@@ -210,6 +210,7 @@ function AdminDashboard() {
                     <ActionCard path="/admin/smart-attendance" icon="⚡" title="Smart Attendance" featureKey="auto_attendance" />
                     <ActionCard path="/admin/reports" icon="📊" title="Reports & Analytics" featureKey="reports" />
                     <ActionCard path="/admin/fees" icon="💰" title="Fee Management" featureKey="fees" />
+                    <ActionCard path="/admin/exams" icon="📝" title="Manage Exams" />
                     <ActionCard path="/admin/announcements" icon="📢" title="Announcements" featureKey="announcements" />
 
                     <div onClick={() => navigate("/admin/settings")} className="action-card" style={{ cursor: 'pointer' }}>

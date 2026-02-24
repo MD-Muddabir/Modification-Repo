@@ -38,8 +38,16 @@ exports.getAllFeeStructures = async (req, res) => {
         const { class_id } = req.query;
         const institute_id = req.user.institute_id;
 
-        const whereClause = { institute_id };
+        let whereClause = { institute_id };
         if (class_id) whereClause.class_id = class_id;
+
+        if (req.user.role === "student") {
+            // Find the student's primary class or use their linked classes
+            const studentObj = await Student.findOne({ where: { user_id: req.user.id, institute_id }, include: [{ model: require("../models").Class }] });
+            if (studentObj && studentObj.Classes && studentObj.Classes.length > 0) {
+                whereClause.class_id = studentObj.Classes.map(c => c.id); // matches any of their classes
+            }
+        }
 
         const feeStructures = await FeesStructure.findAll({
             where: whereClause,
@@ -65,12 +73,21 @@ exports.recordPayment = async (req, res) => {
         const { student_id, amount, payment_method, transaction_id, payment_date, remarks } = req.body;
         const institute_id = req.user.institute_id;
 
+        let actual_student_id = student_id;
+        if (req.user.role === "student") {
+            const studentObj = await Student.findOne({ where: { user_id: req.user.id, institute_id } });
+            if (!studentObj) {
+                return res.status(404).json({ success: false, message: "Student record not found" });
+            }
+            actual_student_id = studentObj.id;
+        }
+
         const payment = await Payment.create({
             institute_id,
-            student_id,
+            student_id: actual_student_id,
             amount_paid: amount,
-            payment_method,
-            transaction_id,
+            payment_method: payment_method || "Credit Card", // Default if not provided
+            transaction_id: transaction_id || "TXN_" + Date.now(),
             payment_date: payment_date || new Date(),
             status: "success",
         });
@@ -130,7 +147,7 @@ exports.getStudentPayments = async (req, res) => {
             order: [["payment_date", "DESC"]],
         });
 
-        const totalPaid = payments.reduce((sum, payment) => sum + parseFloat(payment.amount), 0);
+        const totalPaid = payments.reduce((sum, payment) => sum + (parseFloat(payment.amount_paid) || 0), 0);
 
         res.status(200).json({
             success: true,

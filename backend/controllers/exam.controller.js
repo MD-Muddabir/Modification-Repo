@@ -84,16 +84,30 @@ exports.enterMarks = async (req, res) => {
         const { exam_id, student_id, marks_obtained } = req.body;
         const institute_id = req.user.institute_id;
 
-        const mark = await Mark.create({
-            institute_id,
-            exam_id,
-            student_id,
-            marks_obtained,
+        // Find existing mark or create
+        let mark = await Mark.findOne({
+            where: {
+                institute_id,
+                exam_id,
+                student_id
+            }
         });
+
+        if (mark) {
+            mark.marks_obtained = marks_obtained;
+            await mark.save();
+        } else {
+            mark = await Mark.create({
+                institute_id,
+                exam_id,
+                student_id,
+                marks_obtained,
+            });
+        }
 
         res.status(201).json({
             success: true,
-            message: "Marks entered successfully",
+            message: "Marks saved successfully",
             data: mark,
         });
     } catch (error) {
