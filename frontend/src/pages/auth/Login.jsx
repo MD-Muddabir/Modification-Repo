@@ -1,24 +1,30 @@
 /**
  * Login Page — Premium Design
- * Beautiful glassmorphism card with animated gradient background
- * Supports dark mode and pro theme
+ * Phase 5: ThemeSelector with loginMode (light/dark only, always pro theme)
  */
 
-import { useState, useContext } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
-import ThemeToggle from "../../components/ThemeToggle";
-import ThemeStyleToggle from "../../components/ThemeStyleToggle";
+import { ThemeContext } from "../../context/ThemeContext";
+import ThemeSelector from "../../components/ThemeSelector";
 import "./Auth.css";
 
 function Login() {
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
+  const { setTheme, isDark } = useContext(ThemeContext);
 
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPass, setShowPass] = useState(false);
+
+  // Force pro theme for auth pages
+  useEffect(() => {
+    setTheme(isDark, "pro");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -53,10 +59,9 @@ function Login() {
       <div className="auth-orb auth-orb--2" />
       <div className="auth-orb auth-orb--3" />
 
-      {/* Top-right theme toggles */}
+      {/* Top-right theme controls — loginMode: only light/dark */}
       <div className="auth-theme-controls">
-        <ThemeStyleToggle />
-        <ThemeToggle />
+        <ThemeSelector loginMode />
       </div>
 
       <div className="auth-container">

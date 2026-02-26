@@ -4,10 +4,9 @@
  */
 
 import { useState, useEffect } from "react";
+import ThemeSelector from "../../components/ThemeSelector";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../services/api";
-import ThemeToggle from "../../components/ThemeToggle";
-import ThemeStyleToggle from "../../components/ThemeStyleToggle";
 import "../admin/Dashboard.css";
 import "../../components/common/Buttons.css";
 
@@ -66,8 +65,7 @@ function SuperAdminDashboard() {
                     <p>Platform-wide management and analytics</p>
                 </div>
                 <div className="dashboard-header-right">
-                    <ThemeStyleToggle />
-                    <ThemeToggle />
+                    <ThemeSelector />
                     <button className="animated-btn danger" onClick={handleLogout}>
                         <span className="icon icon-logout">🔒</span>
                         Logout

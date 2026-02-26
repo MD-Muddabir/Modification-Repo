@@ -1,8 +1,9 @@
 import { useContext } from "react";
+import ThemeSelector from "../../components/ThemeSelector";
 import { Link, useNavigate } from "react-router-dom";
+import ThemeSelector from "../../components/ThemeSelector";
 import { AuthContext } from "../../context/AuthContext";
-import ThemeToggle from "../../components/ThemeToggle";
-import ThemeStyleToggle from "../../components/ThemeStyleToggle";
+import ThemeSelector from "../../components/ThemeSelector";
 import "../admin/Dashboard.css";
 
 function FacultyDashboard() {
@@ -24,8 +25,7 @@ function FacultyDashboard() {
                     <p>Welcome back, {user?.name || "Professor"}! Have a great day.</p>
                 </div>
                 <div className="dashboard-header-right">
-                    <ThemeStyleToggle />
-                    <ThemeToggle />
+                    <ThemeSelector />
                     <button onClick={logout} className="btn btn-danger">
                         Logout
                     </button>

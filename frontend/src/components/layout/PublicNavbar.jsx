@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
-import ThemeToggle from "../ThemeToggle";
-import ThemeStyleToggle from "../ThemeStyleToggle";
+import ThemeSelector from "../ThemeSelector";
 import "../../pages/public/Public.css";
 
 const PublicNavbar = () => {
@@ -16,10 +15,9 @@ const PublicNavbar = () => {
                 <Link to="/about" className="nav-link">About</Link>
                 <Link to="/contact" className="nav-link">Contact</Link>
 
-                {/* ── Theme Toggle Buttons ── */}
+                {/* ── Theme Selector ── */}
                 <div className="nav-theme-controls">
-                    <ThemeStyleToggle />
-                    <ThemeToggle />
+                    <ThemeSelector />
                 </div>
 
                 <Link to="/login" className="nav-link nav-login-link">Login</Link>

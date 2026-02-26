@@ -7,6 +7,7 @@ import { useState, useEffect, useContext } from "react";
 import { Link } from "react-router-dom";
 import api from "../../services/api";
 import { AuthContext } from "../../context/AuthContext";
+import ThemeSelector from "../../components/ThemeSelector";
 import "./Dashboard.css";
 
 function Settings() {
@@ -82,9 +83,12 @@ function Settings() {
                 <div>
                     <h1>⚙️ Settings</h1>
                 </div>
-                <Link to="/admin/dashboard" className="btn" style={{ backgroundColor: "#6b7280", color: "white" }}>
-                    ← Back to Dashboard
-                </Link>
+                <div className="dashboard-header-right">
+                    <ThemeSelector />
+                    <Link to="/admin/dashboard" className="btn btn-secondary">
+                        ← Back to Dashboard
+                    </Link>
+                </div>
             </div>
 
             <div className="tabs" style={{ marginBottom: "20px", borderBottom: "1px solid #ddd" }}>

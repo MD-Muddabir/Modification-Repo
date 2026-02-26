@@ -1,12 +1,10 @@
 /**
- * ThemeContext — Phase 2 Enhanced
+ * ThemeContext — Simplified & Reliable
+ *
  * Manages dark/light + simple/pro theme preferences.
- *
- * On login:  reads saved preferences FROM the database (via login response user object)
- * On change: saves to the database (PUT /auth/theme) AND localStorage (for quick load)
- * On logout: clears in-memory state; next login restores from DB
- *
- * Isolation: each user's preference is completely separate.
+ * - On login:  reads persisted preference from user object (DB) or localStorage
+ * - On change: immediately applies CSS classes + saves to localStorage + DB
+ * - On logout: resets to default (light, simple)
  */
 
 import { createContext, useState, useEffect, useContext, useCallback } from "react";
@@ -15,100 +13,116 @@ import api from "../services/api";
 
 export const ThemeContext = createContext();
 
+// Helper: stable LS key for a user
+const darkKey = (u) => u ? `tc_dark_${u.role}_${u.id}` : null;
+const styleKey = (u) => u ? `tc_style_${u.role}_${u.id}` : null;
+
+// Helper: apply CSS classes to <html>
+const applyClasses = (isDark, style) => {
+    const root = document.documentElement;
+    isDark ? root.classList.add("dark-mode") : root.classList.remove("dark-mode");
+    if (style === "pro") {
+        root.classList.add("theme-pro");
+        root.classList.remove("theme-simple");
+    } else {
+        root.classList.add("theme-simple");
+        root.classList.remove("theme-pro");
+    }
+};
+
 export const ThemeProvider = ({ children }) => {
     const { user } = useContext(AuthContext);
 
-    /* ── localStorage keys (cache only, DB is source of truth) ── */
-    const lsDarkKey = useCallback((u) => u ? `tc_dark_${u.role}_${u.id}` : null, []);
-    const lsStyleKey = useCallback((u) => u ? `tc_style_${u.role}_${u.id}` : null, []);
-
-    /* ── State ── */
     const [isDark, setIsDark] = useState(false);
     const [themeStyle, setThemeStyle] = useState("simple");
 
-    /* ── Load preferences when user changes (login/logout) ── */
+    const lsDarkKey = useCallback(() => darkKey(user), [user]);
+    const lsStyleKey = useCallback(() => styleKey(user), [user]);
+
+    /* ── Apply CSS classes whenever state changes ── */
+    useEffect(() => {
+        applyClasses(isDark, themeStyle);
+    }, [isDark, themeStyle]);
+
+    /* ── Load preferences when user logs in/out ── */
     useEffect(() => {
         if (!user) {
-            // Logged out — reset to defaults
+            // Logged out → reset
             setIsDark(false);
             setThemeStyle("simple");
             return;
         }
 
-        // 1. Try DB values from the login response (fastest, already in user object)
+        // DB values supplied by the login response
         const dbDark = user.theme_dark ?? false;
         const dbStyle = user.theme_style ?? "simple";
 
-        // 2. Override with localStorage if DB says false/simple but LS has something more recent
-        //    (edge case: user changed theme then connection dropped before DB sync)
-        const dk = lsDarkKey(user);
-        const sk = lsStyleKey(user);
+        // Prefer localStorage cache (more recent than DB if user changed while offline)
+        const dk = lsDarkKey();
+        const sk = lsStyleKey();
         try {
             const lsDark = dk ? localStorage.getItem(dk) : null;
             const lsStyle = sk ? localStorage.getItem(sk) : null;
-            setIsDark(lsDark !== null ? lsDark === "dark" : dbDark);
-            setThemeStyle(lsStyle !== null ? lsStyle : dbStyle);
+            const resolvedDark = lsDark !== null ? lsDark === "dark" : dbDark;
+            const resolvedStyle = lsStyle !== null ? lsStyle : dbStyle;
+            setIsDark(resolvedDark);
+            setThemeStyle(resolvedStyle);
         } catch {
             setIsDark(dbDark);
             setThemeStyle(dbStyle);
         }
     }, [user, lsDarkKey, lsStyleKey]);
 
-    /* ── Apply classes on <html> ── */
-    useEffect(() => {
-        const root = document.documentElement;
-        isDark ? root.classList.add("dark-mode") : root.classList.remove("dark-mode");
-        if (themeStyle === "pro") {
-            root.classList.add("theme-pro");
-            root.classList.remove("theme-simple");
-        } else {
-            root.classList.add("theme-simple");
-            root.classList.remove("theme-pro");
-        }
-    }, [isDark, themeStyle]);
-
     /* ── Persist to localStorage + DB ── */
-    const persist = useCallback(async (darkVal, styleVal) => {
-        if (!user) return;
-        // localStorage (instant)
-        const dk = lsDarkKey(user);
-        const sk = lsStyleKey(user);
+    const persist = async (darkVal, styleVal, currentUser) => {
+        if (!currentUser) return;
+        // localStorage (sync, instant)
+        const dk = darkKey(currentUser);
+        const sk = styleKey(currentUser);
         try {
             if (dk) localStorage.setItem(dk, darkVal ? "dark" : "light");
             if (sk) localStorage.setItem(sk, styleVal);
-        } catch { }
-        // Database (reliable, survives logout)
+        } catch { /* storage unavailable */ }
+        // Database (async, survives logout/login)
         try {
             await api.put("/auth/theme", {
                 theme_dark: darkVal,
                 theme_style: styleVal,
             });
         } catch (e) {
-            // Non-critical: theme still works via localStorage
-            console.warn("Theme DB sync failed:", e.message);
+            console.warn("Theme DB save failed (non-critical):", e.message);
         }
-    }, [user, lsDarkKey, lsStyleKey]);
+    };
 
-    /* ── Toggle dark / light ── */
-    const toggleTheme = useCallback(() => {
-        setIsDark((prev) => {
+    /* ── Public API ── */
+
+    // Toggle dark ↔ light
+    const toggleTheme = () => {
+        setIsDark(prev => {
             const next = !prev;
-            persist(next, themeStyle);
+            persist(next, themeStyle, user);
             return next;
         });
-    }, [persist, themeStyle]);
+    };
 
-    /* ── Toggle simple / pro ── */
-    const toggleThemeStyle = useCallback(() => {
-        setThemeStyle((prev) => {
+    // Toggle simple ↔ pro
+    const toggleThemeStyle = () => {
+        setThemeStyle(prev => {
             const next = prev === "simple" ? "pro" : "simple";
-            persist(isDark, next);
+            persist(isDark, next, user);
             return next;
         });
-    }, [persist, isDark]);
+    };
+
+    // Set both at once (ThemeSelector primary API)
+    const setTheme = (darkVal, styleVal) => {
+        setIsDark(darkVal);
+        setThemeStyle(styleVal);
+        persist(darkVal, styleVal, user);
+    };
 
     return (
-        <ThemeContext.Provider value={{ isDark, toggleTheme, themeStyle, toggleThemeStyle }}>
+        <ThemeContext.Provider value={{ isDark, themeStyle, toggleTheme, toggleThemeStyle, setTheme }}>
             {children}
         </ThemeContext.Provider>
     );

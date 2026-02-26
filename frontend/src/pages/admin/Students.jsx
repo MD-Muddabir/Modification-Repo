@@ -4,11 +4,10 @@
  */
 
 import { useState, useEffect, useContext } from "react";
+import ThemeSelector from "../../components/ThemeSelector";
 import { Link } from "react-router-dom";
 import api from "../../services/api";
 import { AuthContext } from "../../context/AuthContext";
-import ThemeToggle from "../../components/ThemeToggle";
-import ThemeStyleToggle from "../../components/ThemeStyleToggle";
 import "./Dashboard.css";
 
 function Students() {
@@ -95,6 +94,17 @@ function Students() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Frontend validation for mandatory date fields
+        if (!formData.date_of_birth) {
+            alert("Date of Birth is required. Please enter the student's date of birth.");
+            return;
+        }
+        if (!formData.admission_date) {
+            alert("Admission Date is required. Please enter the student's admission date.");
+            return;
+        }
+
         try {
             if (editMode) {
                 await api.put(`/students/${formData.id}`, formData);
@@ -237,8 +247,7 @@ function Students() {
                     <p>Manage students and enrollments</p>
                 </div>
                 <div className="dashboard-header-right">
-                    <ThemeStyleToggle />
-                    <ThemeToggle />
+                    <ThemeSelector />
                     <Link to="/admin/dashboard" className="btn btn-secondary">
                         ← Back
                     </Link>
@@ -331,7 +340,7 @@ function Students() {
                                 <th>Email</th>
                                 <th>Class</th>
                                 <th>Gender</th>
-                                <th>Join Date</th>
+                                <th>Admission Date</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -370,7 +379,15 @@ function Students() {
                                             )}
                                         </td>
                                         <td style={{ textTransform: "capitalize" }}>{student.gender}</td>
-                                        <td>{new Date(student.created_at).toLocaleDateString()}</td>
+                                        <td>
+                                            {student.admission_date ? (
+                                                <span style={{ color: '#374151', fontWeight: 500 }}>
+                                                    {new Date(student.admission_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                </span>
+                                            ) : (
+                                                <span style={{ color: '#9ca3af' }}>N/A</span>
+                                            )}
+                                        </td>
                                         <td>
                                             <span
                                                 className={`badge badge-${student.User?.status === "active" ? "success" : "danger"
@@ -542,24 +559,28 @@ function Students() {
                                     </div>
 
                                     <div className="form-group">
-                                        <label className="form-label">Date of Birth</label>
+                                        <label className="form-label">Date of Birth <span style={{ color: 'red' }}>*</span></label>
                                         <input
                                             type="date"
                                             name="date_of_birth"
                                             className="form-input"
                                             value={formData.date_of_birth}
                                             onChange={handleChange}
+                                            required
+                                            max={new Date().toISOString().split('T')[0]}
                                         />
                                     </div>
 
                                     <div className="form-group">
-                                        <label className="form-label">Admission Date</label>
+                                        <label className="form-label">Admission Date <span style={{ color: 'red' }}>*</span></label>
                                         <input
                                             type="date"
                                             name="admission_date"
                                             className="form-input"
                                             value={formData.admission_date}
                                             onChange={handleChange}
+                                            required
+                                            max={new Date().toISOString().split('T')[0]}
                                         />
                                     </div>
                                 </div>

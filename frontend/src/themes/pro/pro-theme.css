@@ -46,7 +46,7 @@ html.theme-pro.dark-mode {
     --pro-text-muted: #818cf8;
 }
 
-/* ── Body: animated gradient background ─────────────────────── */
+/* ── Body: animated gradient background (DASHBOARD PAGES ONLY) ─ */
 html.theme-pro body {
     font-family: 'Inter', 'Outfit', -apple-system, sans-serif !important;
     background: linear-gradient(135deg,
@@ -58,6 +58,8 @@ html.theme-pro body {
     min-height: 100vh;
     color: var(--pro-text-primary) !important;
 }
+
+
 
 @keyframes proGradientShift {
     0% {

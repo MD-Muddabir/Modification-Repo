@@ -177,12 +177,66 @@ const syncDatabase = async () => {
     await sequelize.authenticate();
     console.log("✅ Database connection established successfully");
 
-    // Disable foreign key checks
-    // await sequelize.query("SET FOREIGN_KEY_CHECKS = 0");
+    // ─────────────────────────────────────────────────────────────────
+    // AUTO-CLEANUP: Drop duplicate indexes before syncing.
+    // Sequelize's alter:true was adding a new copy of every index on
+    // every restart, quickly hitting MySQL's 64-key limit.
+    // This cleanup runs on every startup and is a no-op when clean.
+    // ─────────────────────────────────────────────────────────────────
+    try {
+      const DB_NAME = process.env.DB_NAME || "student_saas";
 
-    // Use { alter: true } to update existing tables without dropping data
-    // Use { force: true } to drop and recreate tables (WARNING: deletes all data)
-    await sequelize.sync({ alter: true });
+      // Get tables with too many indexes
+      const [tables] = await sequelize.query(
+        `SELECT TABLE_NAME, COUNT(DISTINCT INDEX_NAME) as idx_count
+         FROM information_schema.STATISTICS
+         WHERE TABLE_SCHEMA = '${DB_NAME}'
+         GROUP BY TABLE_NAME
+         HAVING idx_count > 30`
+      );
+
+      for (const row of tables) {
+        const tableName = row.TABLE_NAME;
+        console.log(`🔧 Cleaning duplicate indexes on '${tableName}'...`);
+
+        const [indexRows] = await sequelize.query(
+          `SELECT INDEX_NAME, NON_UNIQUE, COLUMN_NAME, SEQ_IN_INDEX
+           FROM information_schema.STATISTICS
+           WHERE TABLE_SCHEMA = '${DB_NAME}' AND TABLE_NAME = '${tableName}'
+           ORDER BY INDEX_NAME, SEQ_IN_INDEX`
+        );
+
+        const indexMap = {};
+        for (const idx of indexRows) {
+          if (!indexMap[idx.INDEX_NAME]) {
+            indexMap[idx.INDEX_NAME] = { unique: idx.NON_UNIQUE === 0, columns: [] };
+          }
+          indexMap[idx.INDEX_NAME].columns.push(idx.COLUMN_NAME);
+        }
+
+        const seen = new Set();
+        for (const [name, idx] of Object.entries(indexMap)) {
+          if (name === "PRIMARY") continue;
+          const sig = [...idx.columns].sort().join(",") + (idx.unique ? "|u" : "|n");
+          if (seen.has(sig)) {
+            try {
+              await sequelize.query(`ALTER TABLE \`${tableName}\` DROP INDEX \`${name}\``);
+              console.log(`   ✓ Dropped duplicate index: ${name}`);
+            } catch (_) { /* ignore if already gone */ }
+          } else {
+            seen.add(sig);
+          }
+        }
+      }
+    } catch (cleanupErr) {
+      console.warn("⚠️  Index cleanup skipped:", cleanupErr.message);
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // SAFE SYNC: alter:false only creates missing tables,
+    // never modifies existing tables (prevents index duplication)
+    // ─────────────────────────────────────────────────────────────────
+    await sequelize.sync({ alter: false });
     console.log("✅ Database synchronized successfully");
 
     // Seed plans if not exists

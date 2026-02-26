@@ -2,7 +2,9 @@ import { useState, useEffect, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { AuthContext } from "../../context/AuthContext";
+import ThemeSelector from "../../components/ThemeSelector";
 import "./ManageAdmins.css";
+import "./Dashboard.css";
 
 function ManageAdmins() {
     const { user } = useContext(AuthContext); // Current user
@@ -108,15 +110,17 @@ function ManageAdmins() {
     if (loading) return <div className="manage-admins-container">Loading admins...</div>;
 
     return (
-        <div className="manage-admins-container">
-            <header className="page-header">
+        <div className="manage-admins-container dashboard-container">
+            <header className="page-header dashboard-header">
                 <div>
-                    <h1>Manage Admins</h1>
+                    <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ fontSize: '2rem' }}>👑</span> Manage Admins
+                    </h1>
                     <p>Add and manage additional administrators for your institute.</p>
-                    <Link to="/admin/dashboard" className="btn btn-secondary">
-                        ← Back
-                    </Link>
-                    &nbsp;&nbsp;&nbsp;&nbsp;
+                </div>
+                <div className="dashboard-header-right">
+                    <ThemeSelector />
+                    <Link to="/admin/dashboard" className="btn btn-secondary">← Back</Link>
                     <button
                         className="btn btn-primary btn-animated"
                         onClick={() => { setShowModal(true); setModalMode("add"); }}>

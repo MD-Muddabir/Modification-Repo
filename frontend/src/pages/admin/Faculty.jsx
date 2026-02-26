@@ -4,11 +4,12 @@
  */
 
 import { useState, useEffect, useContext } from "react";
+import ThemeSelector from "../../components/ThemeSelector";
 import { Link } from "react-router-dom";
+import ThemeSelector from "../../components/ThemeSelector";
 import api from "../../services/api";
 import { AuthContext } from "../../context/AuthContext";
-import ThemeToggle from "../../components/ThemeToggle";
-import ThemeStyleToggle from "../../components/ThemeStyleToggle";
+import ThemeSelector from "../../components/ThemeSelector";
 import "./Dashboard.css";
 
 function Faculty() {
@@ -158,8 +159,7 @@ function Faculty() {
                     <p>Manage faculty members</p>
                 </div>
                 <div className="dashboard-header-right">
-                    <ThemeStyleToggle />
-                    <ThemeToggle />
+                    <ThemeSelector />
                     <Link to="/admin/dashboard" className="btn btn-secondary">
                         ← Back
                     </Link>

@@ -606,6 +606,23 @@ exports.markAttendanceByQR = async (req, res) => {
             return res.status(400).json({ success: false, message: "Invalid or expired session token" });
         }
 
+        // Phase 1: Check if student is enrolled in the session's subject
+        if (session.subject_id) {
+            const { StudentSubject } = require('../models');
+            const enrollment = await StudentSubject.findOne({
+                where: {
+                    student_id: student_id,
+                    subject_id: session.subject_id
+                }
+            });
+            if (!enrollment) {
+                return res.status(403).json({
+                    success: false,
+                    message: "You are not enrolled in this subject. Only enrolled students can mark attendance for this class."
+                });
+            }
+        }
+
         // Check if already marked today for this subjective class via the token's subject_id
         const existingAttendance = await Attendance.findOne({
             where: {
