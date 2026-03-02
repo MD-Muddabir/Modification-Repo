@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from "react";
+import ThemeSelector from "../../components/ThemeSelector";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import "../admin/Dashboard.css";
@@ -63,10 +64,13 @@ function SuperAdminDashboard() {
                     <h1>👑 Super Admin Dashboard</h1>
                     <p>Platform-wide management and analytics</p>
                 </div>
-                <button className="animated-btn danger" onClick={handleLogout}>
-                    <span className="icon icon-logout">🔒</span>
-                    Logout
-                </button>
+                <div className="dashboard-header-right">
+                    <ThemeSelector />
+                    <button className="animated-btn danger" onClick={handleLogout}>
+                        <span className="icon icon-logout">🔒</span>
+                        Logout
+                    </button>
+                </div>
             </div>
 
             {/* Statistics Grid */}

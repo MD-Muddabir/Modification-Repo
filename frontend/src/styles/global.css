@@ -555,3 +555,283 @@ a:hover {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--gray-500);
 }
+
+/* =====================================================
+   DARK MODE — applied when <html> has class "dark-mode"
+   ===================================================== */
+html.dark-mode {
+    --gray-50: #0f172a;
+    --gray-100: #1e293b;
+    --gray-200: #334155;
+    --gray-300: #475569;
+    --gray-400: #64748b;
+    --gray-500: #94a3b8;
+    --gray-600: #cbd5e1;
+    --gray-700: #e2e8f0;
+    --gray-800: #f1f5f9;
+    --gray-900: #f8fafc;
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 10px 20px -4px rgba(0, 0, 0, 0.5);
+}
+
+html.dark-mode body {
+    background-color: #0f172a;
+    color: #f1f5f9;
+}
+
+/* Cards */
+html.dark-mode .card,
+html.dark-mode .stat-card,
+html.dark-mode .action-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #f1f5f9;
+}
+
+html.dark-mode .card-header {
+    border-bottom-color: #334155;
+}
+
+html.dark-mode .card-title {
+    color: #f1f5f9;
+}
+
+/* Tables */
+html.dark-mode .table-container {
+    background: #1e293b;
+}
+
+html.dark-mode .table thead {
+    background-color: #0f172a;
+}
+
+html.dark-mode .table th {
+    color: #94a3b8;
+    border-bottom-color: #334155;
+}
+
+html.dark-mode .table td {
+    color: #e2e8f0;
+    border-bottom-color: #334155;
+}
+
+html.dark-mode .table tbody tr:hover {
+    background-color: #263045;
+}
+
+/* Forms */
+html.dark-mode .form-label {
+    color: #cbd5e1;
+}
+
+html.dark-mode .form-input,
+html.dark-mode .form-select,
+html.dark-mode .form-textarea {
+    background-color: #1e293b;
+    border-color: #475569;
+    color: #f1f5f9;
+}
+
+html.dark-mode .form-input:focus,
+html.dark-mode .form-select:focus,
+html.dark-mode .form-textarea:focus {
+    border-color: #818cf8;
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2);
+}
+
+/* Modals */
+html.dark-mode .modal {
+    background: #1e293b;
+    color: #f1f5f9;
+}
+
+html.dark-mode .modal-header,
+html.dark-mode .modal-footer {
+    border-color: #334155;
+}
+
+/* Buttons — secondary adapts to dark */
+html.dark-mode .btn-secondary {
+    background-color: #334155;
+    color: #e2e8f0;
+}
+
+html.dark-mode .btn-secondary:hover:not(:disabled) {
+    background-color: #475569;
+}
+
+/* Scrollbar dark */
+html.dark-mode ::-webkit-scrollbar-track {
+    background: #1e293b;
+}
+
+html.dark-mode ::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+
+html.dark-mode ::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* ── PUBLIC PAGE DARK MODE ── */
+html.dark-mode .public-container {
+    background-color: #0f172a;
+    color: #f1f5f9;
+}
+
+html.dark-mode .public-navbar {
+    background: rgba(15, 23, 42, 0.95);
+    border-bottom-color: #334155;
+}
+
+html.dark-mode .nav-brand {
+    color: #818cf8;
+}
+
+html.dark-mode .nav-link {
+    color: #cbd5e1;
+}
+
+html.dark-mode .nav-link:hover {
+    color: #818cf8;
+}
+
+html.dark-mode .hero-section {
+    background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+}
+
+html.dark-mode .hero-title {
+    color: #f1f5f9;
+}
+
+html.dark-mode .hero-subtitle {
+    color: #94a3b8;
+}
+
+html.dark-mode .features-section {
+    background: #0f172a;
+}
+
+html.dark-mode .section-title {
+    color: #e2e8f0;
+}
+
+html.dark-mode .feature-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #f1f5f9;
+}
+
+html.dark-mode .feature-card h3 {
+    color: #e2e8f0;
+}
+
+html.dark-mode .feature-card p {
+    color: #94a3b8;
+}
+
+html.dark-mode .pricing-section {
+    background: #0f172a;
+}
+
+html.dark-mode .pricing-card {
+    background: #1e293b;
+    border-color: #334155;
+    color: #f1f5f9;
+}
+
+html.dark-mode .plan-name {
+    color: #e2e8f0;
+}
+
+html.dark-mode .plan-price {
+    color: #f1f5f9;
+}
+
+html.dark-mode .plan-features li {
+    color: #cbd5e1;
+}
+
+/* ── PUBLIC PAGE PRO THEME ── */
+html.theme-pro .public-navbar {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border-bottom-color: rgba(255, 255, 255, 0.2);
+}
+
+html.theme-pro .nav-brand {
+    background: linear-gradient(135deg, #fff, #f0abfc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+html.theme-pro .nav-link {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+html.theme-pro .nav-link:hover {
+    color: #fff;
+}
+
+html.theme-pro .nav-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(8px);
+    border-radius: 8px;
+}
+
+html.theme-pro .nav-btn:hover {
+    background: rgba(255, 255, 255, 0.35);
+    color: white;
+}
+
+html.theme-pro .hero-section {
+    background: transparent;
+}
+
+html.theme-pro .hero-title {
+    background: linear-gradient(135deg, #fff 0%, #e0c3fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+html.theme-pro .hero-subtitle {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+html.theme-pro .features-section {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+}
+
+html.theme-pro .section-title {
+    background: linear-gradient(135deg, #fff, #f0abfc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+html.theme-pro .feature-card {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: rgba(255, 255, 255, 0.9);
+}
+
+html.theme-pro .feature-card:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+html.theme-pro .feature-card h3 {
+    color: #fff;
+}
+
+html.theme-pro .feature-card p {
+    color: rgba(255, 255, 255, 0.75);
+}

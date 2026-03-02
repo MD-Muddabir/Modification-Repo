@@ -1,0 +1,477 @@
+/**
+ * Pro Theme — Premium CSS
+ * Activated when <html> has class "theme-pro"
+ *
+ * Features:
+ *  - Animated gradient background
+ *  - Glassmorphism cards
+ *  - Neon/violet accent glow
+ *  - Floating card animations
+ *  - Premium typography (Inter via Google Fonts)
+ *  - Particle-like gradient orbs
+ *  - Rich button effects
+ */
+
+/* ── Import premium font ─────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;600;700&display=swap');
+
+/* ── CSS Variables: Pro Light ────────────────────────────────── */
+html.theme-pro {
+    --pro-bg-start: #667eea;
+    --pro-bg-mid: #764ba2;
+    --pro-bg-end: #f093fb;
+    --pro-glass-bg: rgba(255, 255, 255, 0.18);
+    --pro-glass-border: rgba(255, 255, 255, 0.35);
+    --pro-glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.25);
+    --pro-accent: #7c3aed;
+    --pro-accent-glow: rgba(124, 58, 237, 0.45);
+    --pro-text-primary: #1e1b4b;
+    --pro-text-secondary: #4c1d95;
+    --pro-text-muted: #6d28d9;
+    --pro-card-radius: 20px;
+}
+
+/* ── CSS Variables: Pro Dark ─────────────────────────────────── */
+html.theme-pro.dark-mode {
+    --pro-bg-start: #0f0c29;
+    --pro-bg-mid: #302b63;
+    --pro-bg-end: #24243e;
+    --pro-glass-bg: rgba(255, 255, 255, 0.06);
+    --pro-glass-border: rgba(255, 255, 255, 0.12);
+    --pro-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+    --pro-accent: #818cf8;
+    --pro-accent-glow: rgba(129, 140, 248, 0.4);
+    --pro-text-primary: #f0f4ff;
+    --pro-text-secondary: #a5b4fc;
+    --pro-text-muted: #818cf8;
+}
+
+/* ── Body: animated gradient background (DASHBOARD PAGES ONLY) ─ */
+html.theme-pro body {
+    font-family: 'Inter', 'Outfit', -apple-system, sans-serif !important;
+    background: linear-gradient(135deg,
+            var(--pro-bg-start) 0%,
+            var(--pro-bg-mid) 50%,
+            var(--pro-bg-end) 100%) !important;
+    background-size: 400% 400% !important;
+    animation: proGradientShift 12s ease infinite !important;
+    min-height: 100vh;
+    color: var(--pro-text-primary) !important;
+}
+
+
+
+@keyframes proGradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* ── Gradient orbs (decorative) ──────────────────────────────── */
+html.theme-pro body::before,
+html.theme-pro body::after {
+    content: '';
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(80px);
+    opacity: 0.35;
+}
+
+html.theme-pro body::before {
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, #f093fb, transparent 70%);
+    top: -100px;
+    right: -100px;
+    animation: orbFloat1 15s ease-in-out infinite;
+}
+
+html.theme-pro body::after {
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, #4facfe, transparent 70%);
+    bottom: -150px;
+    left: -150px;
+    animation: orbFloat2 20s ease-in-out infinite;
+}
+
+@keyframes orbFloat1 {
+
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    50% {
+        transform: translate(-30px, 40px) scale(1.1);
+    }
+}
+
+@keyframes orbFloat2 {
+
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    50% {
+        transform: translate(40px, -30px) scale(1.15);
+    }
+}
+
+/* ── Dashboard container ─────────────────────────────────────── */
+html.theme-pro .dashboard-container {
+    position: relative;
+    z-index: 1;
+    padding: 2rem !important;
+}
+
+/* ── Dashboard header ────────────────────────────────────────── */
+html.theme-pro .dashboard-header h1 {
+    background: linear-gradient(135deg, #fff 0%, #e0c3fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-family: 'Outfit', sans-serif !important;
+    font-weight: 800 !important;
+    font-size: 2.4rem !important;
+    letter-spacing: -0.5px;
+    text-shadow: none;
+}
+
+html.theme-pro.dark-mode .dashboard-header h1 {
+    background: linear-gradient(135deg, #a5b4fc 0%, #f0abfc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+html.theme-pro .dashboard-header p {
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-weight: 500;
+}
+
+html.theme-pro.dark-mode .dashboard-header p {
+    color: rgba(165, 180, 252, 0.9) !important;
+}
+
+html.theme-pro .quick-actions h2 {
+    color: rgba(255, 255, 255, 0.95) !important;
+    font-family: 'Outfit', sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 1.4rem !important;
+    letter-spacing: 0.3px;
+}
+
+html.theme-pro.dark-mode .quick-actions h2 {
+    color: #a5b4fc !important;
+}
+
+/* ── Glassmorphism Stat Cards ────────────────────────────────── */
+html.theme-pro .stat-card {
+    background: var(--pro-glass-bg) !important;
+    backdrop-filter: blur(20px) saturate(1.5) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(1.5) !important;
+    border: 1px solid var(--pro-glass-border) !important;
+    border-radius: var(--pro-card-radius) !important;
+    box-shadow: var(--pro-glass-shadow) !important;
+    animation: floatCard 6s ease-in-out infinite !important;
+    transition: transform 0.3s, box-shadow 0.3s !important;
+}
+
+html.theme-pro .stat-card:nth-child(2) {
+    animation-delay: 0.5s !important;
+}
+
+html.theme-pro .stat-card:nth-child(3) {
+    animation-delay: 1s !important;
+}
+
+html.theme-pro .stat-card:nth-child(4) {
+    animation-delay: 1.5s !important;
+}
+
+html.theme-pro .stat-card:nth-child(5) {
+    animation-delay: 2s !important;
+}
+
+@keyframes floatCard {
+
+    0%,
+    100% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-6px);
+    }
+}
+
+html.theme-pro .stat-card:hover {
+    transform: translateY(-10px) scale(1.03) !important;
+    box-shadow: 0 20px 40px var(--pro-accent-glow) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+html.theme-pro .stat-content h3 {
+    color: #fff !important;
+    font-family: 'Outfit', sans-serif !important;
+    font-weight: 800 !important;
+}
+
+html.theme-pro .stat-content p {
+    color: rgba(255, 255, 255, 0.75) !important;
+    font-weight: 500;
+}
+
+html.theme-pro.dark-mode .stat-content h3 {
+    color: #e0e7ff !important;
+}
+
+html.theme-pro.dark-mode .stat-content p {
+    color: #a5b4fc !important;
+}
+
+/* ── Stat icon ───────────────────────────────────────────────── */
+html.theme-pro .stat-icon {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* ── Glassmorphism Action Cards ──────────────────────────────── */
+html.theme-pro .action-card {
+    background: var(--pro-glass-bg) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid var(--pro-glass-border) !important;
+    border-radius: var(--pro-card-radius) !important;
+    box-shadow: var(--pro-glass-shadow) !important;
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Shimmer effect on hover */
+html.theme-pro .action-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -75%;
+    width: 50%;
+    height: 200%;
+    background: linear-gradient(to right,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.25) 50%,
+            rgba(255, 255, 255, 0) 100%);
+    transform: skewX(-20deg);
+    transition: left 0.5s ease;
+    pointer-events: none;
+}
+
+html.theme-pro .action-card:hover::before {
+    left: 125%;
+}
+
+html.theme-pro .action-card:hover {
+    transform: translateY(-8px) scale(1.05) !important;
+    box-shadow: 0 20px 40px var(--pro-accent-glow),
+        0 0 0 1px rgba(255, 255, 255, 0.4) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+html.theme-pro .action-icon {
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+    font-size: 2.8rem !important;
+}
+
+html.theme-pro .action-title {
+    color: #fff !important;
+    font-weight: 700 !important;
+    font-family: 'Inter', sans-serif !important;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+html.theme-pro.dark-mode .action-title {
+    color: #e0e7ff !important;
+}
+
+/* ── Pro Buttons ─────────────────────────────────────────────── */
+html.theme-pro .btn-danger {
+    background: linear-gradient(135deg, #f43f5e, #e11d48) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 4px 15px rgba(244, 63, 94, 0.4) !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.3px;
+    transition: all 0.3s !important;
+}
+
+html.theme-pro .btn-danger:hover:not(:disabled) {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(244, 63, 94, 0.6) !important;
+}
+
+html.theme-pro .btn-primary {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4) !important;
+    font-weight: 600 !important;
+}
+
+html.theme-pro .btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.6) !important;
+}
+
+/* ── Cards (card class) ──────────────────────────────────────── */
+html.theme-pro .card {
+    background: var(--pro-glass-bg) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border: 1px solid var(--pro-glass-border) !important;
+    border-radius: var(--pro-card-radius) !important;
+    box-shadow: var(--pro-glass-shadow) !important;
+    color: var(--pro-text-primary) !important;
+}
+
+html.theme-pro .card-header {
+    border-bottom-color: var(--pro-glass-border) !important;
+}
+
+html.theme-pro.dark-mode .card {
+    color: #e0e7ff !important;
+}
+
+/* ── Table overrides ─────────────────────────────────────────── */
+html.theme-pro .table-container {
+    background: var(--pro-glass-bg) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border: 1px solid var(--pro-glass-border) !important;
+    border-radius: var(--pro-card-radius) !important;
+}
+
+html.theme-pro .table thead {
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+html.theme-pro .table th {
+    color: rgba(255, 255, 255, 0.85) !important;
+    border-bottom-color: var(--pro-glass-border) !important;
+}
+
+html.theme-pro .table td {
+    color: rgba(255, 255, 255, 0.9) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+html.theme-pro .table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+html.theme-pro.dark-mode .table th {
+    color: #a5b4fc !important;
+}
+
+html.theme-pro.dark-mode .table td {
+    color: #e2e8f0 !important;
+}
+
+/* ── Form overrides ──────────────────────────────────────────── */
+html.theme-pro .form-input,
+html.theme-pro .form-select,
+html.theme-pro .form-textarea {
+    background: var(--pro-glass-bg) !important;
+    border-color: var(--pro-glass-border) !important;
+    color: var(--pro-text-primary) !important;
+    border-radius: 12px !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+html.theme-pro .form-input:focus,
+html.theme-pro .form-select:focus,
+html.theme-pro .form-textarea:focus {
+    border-color: var(--pro-accent) !important;
+    box-shadow: 0 0 0 3px var(--pro-accent-glow) !important;
+}
+
+html.theme-pro .form-label {
+    color: rgba(255, 255, 255, 0.85) !important;
+    font-weight: 600 !important;
+}
+
+html.theme-pro.dark-mode .form-input,
+html.theme-pro.dark-mode .form-select,
+html.theme-pro.dark-mode .form-textarea {
+    color: #e0e7ff !important;
+}
+
+/* Fix dropdown options visibility */
+html.theme-pro .form-select option {
+    background: #ffffff !important;
+    color: #1e1b4b !important;
+}
+
+html.theme-pro.dark-mode .form-select option {
+    background: #1e1b4b !important;
+    color: #e0e7ff !important;
+}
+
+/* Also for standard dark mode if present */
+html.dark-mode .form-select option {
+    background: #1e293b;
+    color: #f1f5f9;
+}
+
+/* ── Modal overrides ─────────────────────────────────────────── */
+html.theme-pro .modal {
+    background: rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(30px) !important;
+    -webkit-backdrop-filter: blur(30px) !important;
+    border: 1px solid var(--pro-glass-border) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3) !important;
+    color: var(--pro-text-primary) !important;
+}
+
+html.theme-pro.dark-mode .modal {
+    background: rgba(15, 12, 41, 0.75) !important;
+    color: #e0e7ff !important;
+}
+
+html.theme-pro .modal-header,
+html.theme-pro .modal-footer {
+    border-color: var(--pro-glass-border) !important;
+}
+
+/* ── Scrollbar pro styling ───────────────────────────────────── */
+html.theme-pro ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+html.theme-pro ::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, var(--pro-bg-start), var(--pro-bg-mid));
+    border-radius: 4px;
+}
+
+/* ── Upgrade modal in pro ────────────────────────────────────── */
+html.theme-pro .modal-content {
+    background: rgba(255, 255, 255, 0.85) !important;
+    backdrop-filter: blur(20px) !important;
+    border-radius: 20px !important;
+}
+
+html.theme-pro.dark-mode .modal-content {
+    background: rgba(30, 27, 75, 0.9) !important;
+    color: #e0e7ff !important;
+}

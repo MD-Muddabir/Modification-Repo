@@ -9,7 +9,8 @@ const User = sequelize.define("User", {
     phone: DataTypes.STRING,
     password_hash: DataTypes.STRING,
     status: DataTypes.ENUM("active", "blocked"),
-
+    theme_dark: { type: DataTypes.BOOLEAN, defaultValue: false },
+    theme_style: { type: DataTypes.ENUM("simple", "pro"), defaultValue: "simple" },
 });
 
 module.exports = User;

@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useContext } from "react";
+import ThemeSelector from "../../components/ThemeSelector";
 import { Link } from "react-router-dom";
 import api from "../../services/api";
 import { AuthContext } from "../../context/AuthContext";
@@ -149,18 +150,19 @@ function Faculty() {
         <div className="dashboard-container">
             <div className="dashboard-header">
                 <div>
-                    <h1>👩‍🏫 Faculty Management</h1>
+                    <h1 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ fontSize: '2rem', lineHeight: 1 }}>👩‍🏫</span>
+                        Faculty Management
+                    </h1>
                     <p>Manage faculty members</p>
                 </div>
-                <div style={{ display: "flex", gap: "10px" }}>
+                <div className="dashboard-header-right">
+                    <ThemeSelector />
                     <Link to="/admin/dashboard" className="btn btn-secondary">
                         ← Back
                     </Link>
                     <button
-                        onClick={() => {
-                            resetForm();
-                            setShowModal(true);
-                        }}
+                        onClick={() => { resetForm(); setShowModal(true); }}
                         className="btn btn-primary btn-animated"
                     >
                         + Add Faculty

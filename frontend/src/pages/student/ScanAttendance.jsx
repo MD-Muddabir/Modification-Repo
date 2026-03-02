@@ -72,12 +72,21 @@ function ScanAttendance() {
         }
     };
 
+    const getLocalDate = () => {
+        const d = new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
     const markAttendance = async (token) => {
         setLoading(true);
         setMessage(null);
         try {
             const response = await api.post("/attendance/mark-by-qr", {
-                session_token: token
+                session_token: token,
+                date: getLocalDate()
             });
             if (response.data.success) {
                 setMessage({ type: "success", text: "✅ " + response.data.message });
@@ -91,6 +100,10 @@ function ScanAttendance() {
             if (errorMsg.toLowerCase().includes("already marked")) {
                 msgType = "warning";
                 iconText = "💡 ";
+            } else if (error.response?.status === 403) {
+                // Not enrolled in this subject
+                msgType = "not-enrolled";
+                iconText = "🚫 ";
             }
             setMessage({ type: msgType, text: iconText + errorMsg });
         } finally {
@@ -108,6 +121,7 @@ function ScanAttendance() {
         if (!message) return "#6366f1";
         if (message.type === "success") return "#10b981";
         if (message.type === "warning") return "#f59e0b";
+        if (message.type === "not-enrolled") return "#f97316";
         return "#ef4444";
     };
 
@@ -115,12 +129,14 @@ function ScanAttendance() {
         if (!message) return "transparent";
         if (message.type === "success") return "#ecfdf5";
         if (message.type === "warning") return "#fffbeb";
+        if (message.type === "not-enrolled") return "#fff7ed";
         return "#fef2f2";
     };
 
     const getTextColor = () => {
         if (message?.type === "success") return "#065f46";
         if (message?.type === "warning") return "#92400e";
+        if (message?.type === "not-enrolled") return "#9a3412";
         return "#991b1b";
     };
 

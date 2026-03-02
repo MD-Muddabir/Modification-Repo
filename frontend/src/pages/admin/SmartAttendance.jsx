@@ -4,6 +4,7 @@ import { QRCodeSVG } from "qrcode.react";
 import api from "../../services/api";
 import { AuthContext } from "../../context/AuthContext";
 import "./Dashboard.css";
+import ThemeSelector from "../../components/ThemeSelector";
 
 function SmartAttendance() {
     const { user } = useContext(AuthContext);

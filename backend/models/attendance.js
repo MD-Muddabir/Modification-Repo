@@ -11,10 +11,15 @@ const Attendance = sequelize.define("Attendance", {
     marked_by: DataTypes.INTEGER,
     remarks: DataTypes.TEXT,
 }, {
+    tableName: "attendances",
+    timestamps: true,
+    underscored: true,
     indexes: [
         {
+            // Named index — Sequelize tracks by name, preventing duplicates on restart
+            name: "attendance_unique_daily",
             unique: true,
-            fields: ['institute_id', 'student_id', 'class_id', 'date', 'subject_id'] // included subject_id to allow same day multiple subjects
+            fields: ["institute_id", "student_id", "class_id", "date", "subject_id"]
         }
     ]
 });

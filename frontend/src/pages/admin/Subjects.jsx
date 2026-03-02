@@ -7,6 +7,7 @@ import { useState, useEffect, useContext } from "react";
 import { Link } from "react-router-dom";
 import api from "../../services/api";
 import { AuthContext } from "../../context/AuthContext";
+import ThemeSelector from "../../components/ThemeSelector";
 import "./Dashboard.css";
 
 function Subjects() {
@@ -138,7 +139,8 @@ function Subjects() {
                     <h1>📚 Subjects Management</h1>
                     <p>Manage subjects and assign faculty</p>
                 </div>
-                <div style={{ display: "flex", gap: "10px" }}>
+                <div className="dashboard-header-right">
+                    <ThemeSelector />
                     <Link to="/admin/dashboard" className="btn btn-secondary">
                         ← Back
                     </Link>

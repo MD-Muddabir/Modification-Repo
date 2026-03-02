@@ -1,0 +1,151 @@
+/* === ThemeStyleToggle — Simple ↔ Pro Slider === */
+
+/* Wrapper */
+.style-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 30px;
+    transition: background 0.25s;
+    outline: none;
+    user-select: none;
+}
+
+.style-toggle:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.dark-mode .style-toggle:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* When in Pro theme, the button itself glows */
+.theme-pro .style-toggle:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* === Track === */
+.style-toggle__track {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 62px;
+    height: 32px;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, #e0e7ff 0%, #ddd6fe 100%);
+    box-shadow:
+        inset 0 2px 5px rgba(0, 0, 0, 0.15),
+        0 1px 3px rgba(0, 0, 0, 0.08);
+    transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+/* When Pro is active: vivid purple-to-pink gradient track */
+.style-toggle--pro .style-toggle__track {
+    background: linear-gradient(135deg, #7c3aed 0%, #c026d3 100%);
+    box-shadow:
+        inset 0 2px 5px rgba(0, 0, 0, 0.3),
+        0 0 12px rgba(124, 58, 237, 0.5);
+}
+
+/* === Labels inside track === */
+.style-toggle__track-label {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    line-height: 1;
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Simple icon (left side) */
+.style-toggle__track-label--simple {
+    left: 6px;
+    opacity: 1;
+    transform: scale(1);
+    color: #7c3aed;
+}
+
+/* Pro icon (right side) */
+.style-toggle__track-label--pro {
+    right: 6px;
+    opacity: 0;
+    transform: scale(0.6);
+    color: white;
+}
+
+/* When Pro: show pro icon, hide simple icon */
+.style-toggle--pro .style-toggle__track-label--simple {
+    opacity: 0;
+    transform: scale(0.6);
+}
+
+.style-toggle--pro .style-toggle__track-label--pro {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* === Thumb === */
+.style-toggle__thumb {
+    position: absolute;
+    left: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: white;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.15);
+    transition:
+        transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+        background 0.35s,
+        box-shadow 0.35s;
+    z-index: 2;
+}
+
+/* Pro: thumb slides right and turns gold/violet */
+.style-toggle--pro .style-toggle__thumb {
+    transform: translateX(30px) translateY(-50%);
+    background: linear-gradient(135deg, #ffd700, #f59e0b);
+    box-shadow:
+        0 2px 8px rgba(245, 158, 11, 0.6),
+        0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* === External label === */
+.style-toggle__label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    color: var(--gray-700, #374151);
+    transition: color 0.3s;
+    white-space: nowrap;
+}
+
+/* Simple mode: normal text */
+.dark-mode .style-toggle__label {
+    color: #c7d2fe;
+}
+
+/* Pro mode: gradient text! */
+.theme-pro .style-toggle__label {
+    background: linear-gradient(135deg, #fff, #f0abfc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.theme-pro.dark-mode .style-toggle__label {
+    background: linear-gradient(135deg, #a5b4fc, #f0abfc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}

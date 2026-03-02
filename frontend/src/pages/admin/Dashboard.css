@@ -226,5 +226,118 @@
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* =====================================================
+   DARK MODE — Dashboard-specific overrides
+   ===================================================== */
+html.dark-mode .dashboard-container {
+    background-color: transparent;
+}
+
+html.dark-mode .dashboard-header h1 {
+    color: #f1f5f9;
+}
+
+html.dark-mode .dashboard-header p {
+    color: #94a3b8;
+}
+
+html.dark-mode .quick-actions h2 {
+    color: #e2e8f0;
+}
+
+html.dark-mode .stat-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+}
+
+html.dark-mode .stat-content h3 {
+    color: #f1f5f9;
+}
+
+html.dark-mode .stat-content p {
+    color: #94a3b8;
+}
+
+html.dark-mode .action-card {
+    background: #1e293b;
+    border: 1px solid #334155;
+}
+
+html.dark-mode .action-card:hover {
+    background: #263045;
+    border-color: #4f46e5;
+    box-shadow: 0 8px 20px rgba(79, 70, 229, 0.25);
+}
+
+html.dark-mode .action-title {
+    color: #e2e8f0;
+}
+
+html.dark-mode .tab {
+    color: #94a3b8;
+}
+
+html.dark-mode .tab:hover {
+    color: #818cf8;
+    background: #1e293b;
+}
+
+html.dark-mode .tab.active {
+    color: #818cf8;
+    border-bottom-color: #818cf8;
+}
+
+html.dark-mode .tabs {
+    border-bottom-color: #334155;
+}
+
+/* Dashboard header layout for toggle buttons */
+.dashboard-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: var(--spacing-xl);
+    position: relative;
+    z-index: 50;
+}
+
+.dashboard-header-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    background: rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--gray-200);
+    border-radius: 40px;
+    padding: 5px 10px;
+}
+
+/* Divider between toggles */
+.dashboard-header-right>*:not(:last-child):not(:first-child)::after {
+    content: '';
+    display: inline-block;
+    width: 1px;
+    height: 20px;
+    background: var(--gray-300);
+    margin: 0 4px;
+    vertical-align: middle;
+}
+
+html.dark-mode .dashboard-header-right {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: #334155;
+}
+
+html.theme-pro .dashboard-header-right {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }

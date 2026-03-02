@@ -61,6 +61,20 @@ exports.createStudent = async (req, res) => {
             });
         }
 
+        // Validate mandatory date fields BEFORE creating any DB records
+        if (!date_of_birth || isNaN(new Date(date_of_birth))) {
+            return res.status(400).json({
+                success: false,
+                message: "Date of Birth is required and must be a valid date (YYYY-MM-DD).",
+            });
+        }
+        if (!admission_date || isNaN(new Date(admission_date))) {
+            return res.status(400).json({
+                success: false,
+                message: "Admission Date is required and must be a valid date (YYYY-MM-DD).",
+            });
+        }
+
         // Hash password
         const password_hash = await hashPassword(password || "student123");
 
@@ -76,16 +90,23 @@ exports.createStudent = async (req, res) => {
         });
 
 
-        // Create student record
-        const student = await Student.create({
-            institute_id,
-            user_id: user.id || user.user_id,
-            roll_number,
-            admission_date: admission_date || new Date(),
-            date_of_birth,
-            gender: gender ? gender.toLowerCase() : null,
-            address,
-        });
+        // Create student record — if this fails, rollback the user to avoid orphan
+        let student;
+        try {
+            student = await Student.create({
+                institute_id,
+                user_id: user.id || user.user_id,
+                roll_number,
+                admission_date: admission_date,
+                date_of_birth: date_of_birth,
+                gender: gender ? gender.toLowerCase() : null,
+                address,
+            });
+        } catch (studentError) {
+            // Cleanup orphaned user so admin can retry with same email
+            await user.destroy();
+            throw studentError;
+        }
 
         // Add classes if provided
         if (class_ids && Array.isArray(class_ids) && class_ids.length > 0) {
@@ -197,13 +218,14 @@ exports.getAllStudents = async (req, res) => {
                     model: User,
                     attributes: ["id", "name", "email", "phone", "status"],
                     where: userWhereClause,
-                    required: search ? true : false, // Use INNER JOIN only when searching
+                    required: search ? true : false,
                 },
                 {
                     ...classIncludeOptions
                 },
                 subjectIncludeOptions
             ],
+            distinct: true, // Prevents duplicate counts/rows if student takes multiple subjects
         });
 
         res.status(200).json({

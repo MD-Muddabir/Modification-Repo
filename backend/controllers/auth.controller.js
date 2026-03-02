@@ -157,7 +157,9 @@ exports.login = async (req, res) => {
                 role: user.role,
                 institute_id: user.institute_id,
                 institute_name: user.Institute?.name,
-                features
+                features,
+                theme_dark: user.theme_dark ?? false,
+                theme_style: user.theme_style ?? "simple",
             },
         });
     } catch (error) {
@@ -225,5 +227,26 @@ exports.updateProfile = async (req, res) => {
             success: false,
             message: error.message
         });
+    }
+};
+
+/**
+ * Save Theme Preference
+ * Stores dark/style choice per user in the database
+ */
+exports.saveTheme = async (req, res) => {
+    try {
+        const { theme_dark, theme_style } = req.body;
+        const User = require("../models/user");
+        await User.update(
+            {
+                ...(theme_dark !== undefined && { theme_dark }),
+                ...(theme_style !== undefined && { theme_style }),
+            },
+            { where: { id: req.user.id } }
+        );
+        res.json({ success: true, message: "Theme saved" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
     }
 };
