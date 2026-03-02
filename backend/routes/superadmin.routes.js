@@ -41,4 +41,11 @@ router.put(
     controller.updateInstituteStatus
 );
 
+router.delete(
+    "/institutes/:id",
+    verifyToken,
+    allowRoles("super_admin"),
+    controller.deleteInstitute
+);
+
 module.exports = router;

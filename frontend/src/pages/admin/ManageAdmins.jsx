@@ -21,7 +21,8 @@ function ManageAdmins() {
         name: "",
         email: "",
         phone: "",
-        password: ""
+        password: "",
+        permissions: []
     });
     const [formErrors, setFormErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
@@ -45,9 +46,19 @@ function ManageAdmins() {
     };
 
     const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
-        setFormErrors({ ...formErrors, [name]: "" });
+        const { name, value, type, checked } = e.target;
+        if (type === 'checkbox' && name === 'permissions') {
+            let newPermissions = [...formData.permissions];
+            if (checked) {
+                newPermissions.push(value);
+            } else {
+                newPermissions = newPermissions.filter(p => p !== value);
+            }
+            setFormData({ ...formData, permissions: newPermissions });
+        } else {
+            setFormData({ ...formData, [name]: value });
+            setFormErrors({ ...formErrors, [name]: "" });
+        }
     };
 
     const validateForm = () => {
@@ -74,8 +85,8 @@ function ManageAdmins() {
                 // Success!
                 setAdmins([...admins, response.data.data]);
                 setShowModal(false);
-                setFormData({ name: "", email: "", phone: "", password: "" });
-                alert("Admin added successfully!");
+                setFormData({ name: "", email: "", phone: "", password: "", permissions: [] });
+                alert("Manager added successfully!");
                 // Refresh list to be sure
                 fetchAdmins();
             }
@@ -137,9 +148,15 @@ function ManageAdmins() {
                         <div className="admin-info">
                             <h3>{admin.name} {admin.id === user?.id && <span style={{ fontSize: '0.8em', color: '#6b7280' }}>(You)</span>}</h3>
                             <p><strong>Email:</strong> {admin.email}</p>
+                            <p><strong>Role:</strong> {admin.role === 'manager' ? 'Manager' : 'Original Admin'}</p>
                             <p><strong>Phone:</strong> {admin.phone || "N/A"}</p>
                             <p><strong>Status:</strong> <span style={{ color: admin.status === 'active' ? 'green' : 'red' }}>{admin.status}</span></p>
                             <p><strong>Joined:</strong> {new Date(admin.created_at).toLocaleDateString()}</p>
+                            {admin.role === 'manager' && (
+                                <p style={{ fontSize: '0.85rem', marginTop: '4px', fontStyle: 'italic', color: 'var(--text-secondary)' }}>
+                                    <strong>Access:</strong> {admin.permissions && admin.permissions.length > 0 ? admin.permissions.join(', ') : 'None'}
+                                </p>
+                            )}
                         </div>
 
                         {admin.id !== user?.id && (
@@ -211,6 +228,36 @@ function ManageAdmins() {
                                     placeholder="******"
                                 />
                                 {formErrors.password && <span className="error-message">{formErrors.password}</span>}
+                            </div>
+
+                            <div className="form-group" style={{ marginTop: '1rem' }}>
+                                <label className="form-label">Manager Access Permissions</label>
+                                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '10px' }}>Select the specific dashboard features this manager can access.</p>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                    {[
+                                        { val: 'students', label: 'Manage Students' },
+                                        { val: 'faculty', label: 'Manage Faculty' },
+                                        { val: 'classes', label: 'Manage Classes' },
+                                        { val: 'subjects', label: 'Manage Subjects' },
+                                        { val: 'attendance', label: 'Check Attendance' },
+                                        { val: 'reports', label: 'Reports & Analytics' },
+                                        { val: 'fees', label: 'Manage Fees' },
+                                        { val: 'announcements', label: 'Announcements' },
+                                        { val: 'exams', label: 'Exams' },
+                                        { val: 'expenses', label: 'Finances' }
+                                    ].map(feat => (
+                                        <label key={feat.val} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.95rem' }}>
+                                            <input
+                                                type="checkbox"
+                                                name="permissions"
+                                                value={feat.val}
+                                                checked={formData.permissions.includes(feat.val)}
+                                                onChange={handleInputChange}
+                                            />
+                                            {feat.label}
+                                        </label>
+                                    ))}
+                                </div>
                             </div>
 
                             {formErrors.general && <div className="error-message" style={{ marginBottom: '1rem' }}>{formErrors.general}</div>}

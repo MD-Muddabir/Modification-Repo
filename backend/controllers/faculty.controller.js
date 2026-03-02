@@ -4,7 +4,7 @@
  * Implements institute-level data isolation
  */
 
-const { Faculty, User, Subject, Institute, Plan } = require("../models");
+const { Faculty, User, Subject, Institute, Plan, Class } = require("../models");
 const { Op } = require("sequelize");
 const { hashPassword } = require("../utils/hashPassword");
 
@@ -136,6 +136,12 @@ exports.getAllFaculty = async (req, res) => {
                     model: Subject,
                     attributes: ["id", "name"],
                     required: false,
+                    include: [
+                        {
+                            model: Class,
+                            attributes: ["id", "name"],
+                        }
+                    ]
                 },
             ],
         });

@@ -1,4 +1,4 @@
-const { Institute, Subscription, Plan, Student, Faculty } = require("../models");
+const { Institute, Subscription, Plan, Student, Faculty, User, Class, Subject, Attendance, FeesStructure, Payment, Announcement, Exam, Mark, ClassSession, Expense } = require("../models");
 const { Op, fn, col } = require("sequelize");
 
 exports.getDashboardStats = async (req, res) => {
@@ -66,6 +66,49 @@ exports.updateInstituteStatus = async (req, res) => {
         );
 
         res.json({ message: "Institute status updated" });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+exports.deleteInstitute = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const institute = await Institute.findByPk(id);
+        if (!institute) {
+            return res.status(404).json({ error: "Institute not found" });
+        }
+
+        // Manual Cascade Delete due to missing onDelete:'CASCADE' in schema associations
+        // We need to find all students belonging to this institute first, then delete their StudentClass entries
+        const studentsInInstitute = await Student.findAll({
+            attributes: ['id'],
+            where: { institute_id: id }
+        });
+        const studentIds = studentsInInstitute.map(student => student.id);
+
+        if (studentIds.length > 0) {
+            await StudentClass.destroy({ where: { student_id: studentIds } });
+        }
+
+        await User.destroy({ where: { institute_id: id } });
+        await Class.destroy({ where: { institute_id: id } });
+        await Student.destroy({ where: { institute_id: id } });
+        await Faculty.destroy({ where: { institute_id: id } });
+        await Subject.destroy({ where: { institute_id: id } });
+        await Attendance.destroy({ where: { institute_id: id } });
+        await FeesStructure.destroy({ where: { institute_id: id } });
+        await Payment.destroy({ where: { institute_id: id } });
+        await Announcement.destroy({ where: { institute_id: id } });
+        await Exam.destroy({ where: { institute_id: id } });
+        await Mark.destroy({ where: { institute_id: id } });
+        await Subscription.destroy({ where: { institute_id: id } });
+        await ClassSession.destroy({ where: { institute_id: id } });
+
+        await institute.destroy();
+
+        res.json({ message: "Institute deleted successfully" });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

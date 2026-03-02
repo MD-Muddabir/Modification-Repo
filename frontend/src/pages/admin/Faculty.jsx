@@ -231,6 +231,7 @@ function Faculty() {
                                 <th>Designation</th>
                                 <th>Salary</th>
                                 <th>Join Date</th>
+                                <th>Teaching Details</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
@@ -255,6 +256,19 @@ function Faculty() {
                                             {facultyMember.join_date
                                                 ? new Date(facultyMember.join_date).toLocaleDateString()
                                                 : "N/A"}
+                                        </td>
+                                        <td>
+                                            {facultyMember.Subjects && facultyMember.Subjects.length > 0 ? (
+                                                <ul style={{ margin: 0, paddingLeft: "1.2rem", fontSize: "0.85rem", color: "#444" }}>
+                                                    {facultyMember.Subjects.map((sub) => (
+                                                        <li key={sub.id}>{sub.Class?.name} - {sub.name}</li>
+                                                    ))}
+                                                </ul>
+                                            ) : (
+                                                <span style={{ fontSize: "0.85rem", color: "#888", fontStyle: "italic" }}>
+                                                    Not assigned to any class or subject
+                                                </span>
+                                            )}
                                         </td>
                                         <td>
                                             <span

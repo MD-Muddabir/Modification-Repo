@@ -19,6 +19,7 @@ const Subscription = require("./subscription");
 const StudentSubject = require("./studentSubject");
 const StudentClass = require("./studentClass");
 const ClassSession = require("./classSession");
+const Expense = require("./expense");
 
 // Associations
 
@@ -135,6 +136,10 @@ Institute.hasMany(ClassSession, { foreignKey: "institute_id" });
 ClassSession.belongsTo(Class, { foreignKey: "class_id" });
 Class.hasMany(ClassSession, { foreignKey: "class_id" });
 
+// Expense Associations
+Institute.hasMany(Expense, { foreignKey: "institute_id" });
+Expense.belongsTo(Institute, { foreignKey: "institute_id" });
+
 ClassSession.belongsTo(Subject, { foreignKey: "subject_id" });
 Subject.hasMany(ClassSession, { foreignKey: "subject_id" });
 
@@ -160,4 +165,5 @@ module.exports = {
     StudentSubject,
     StudentClass,
     ClassSession,
+    Expense,
 };

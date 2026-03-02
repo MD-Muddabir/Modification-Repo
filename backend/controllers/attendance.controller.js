@@ -186,6 +186,100 @@ exports.getClassAttendanceByDate = async (req, res) => {
 };
 
 /**
+ * Get class attendance grid
+ * @route GET /api/attendance/class/:class_id/subject/:subject_id/grid
+ * @access Admin, Faculty
+ */
+exports.getClassAttendanceGrid = async (req, res) => {
+    try {
+        const { class_id, subject_id } = req.params;
+        const { start_date, end_date } = req.query;
+        const institute_id = req.user.institute_id;
+
+        if (!class_id || !subject_id || !start_date || !end_date) {
+            return res.status(400).json({ success: false, message: "Missing required parameters" });
+        }
+
+        const { Student, User, Subject, Class } = require('../models');
+
+        // Fetch students enrolled in this class and optionally subject
+        const includeOptions = [
+            {
+                model: User,
+                attributes: ['name', 'email']
+            },
+            {
+                model: Class,
+                where: { id: class_id },
+                attributes: [],
+                through: { attributes: [] }
+            }
+        ];
+
+        if (subject_id && subject_id !== 'undefined' && subject_id !== 'null') {
+            includeOptions.push({
+                model: Subject,
+                where: { id: subject_id },
+                attributes: [],
+                through: { attributes: [] }
+            });
+        }
+
+        const students = await Student.findAll({
+            where: { institute_id },
+            include: includeOptions,
+            order: [['roll_number', 'ASC']]
+        });
+
+        const attendanceRecords = await Attendance.findAll({
+            where: {
+                institute_id,
+                class_id,
+                subject_id,
+                date: { [Op.between]: [start_date, end_date] }
+            },
+            order: [['date', 'ASC']]
+        });
+
+        const result = students.map(student => {
+            const stuRecords = attendanceRecords.filter(r => r.student_id === student.id);
+            const total = stuRecords.length;
+            const present = stuRecords.filter(r => r.status === 'present').length;
+            const percentage = total > 0 ? ((present / total) * 100).toFixed(2) : 0;
+
+            // Map dates specifically
+            const daily = {};
+            stuRecords.forEach(r => {
+                daily[r.date] = r.status;
+            });
+
+            return {
+                student_id: student.id,
+                roll_number: student.roll_number,
+                name: student.User?.name,
+                total_days: total,
+                present_days: present,
+                absent_days: stuRecords.filter(r => r.status === 'absent').length,
+                late_days: stuRecords.filter(r => r.status === 'late').length,
+                percentage: parseFloat(percentage),
+                daily: daily
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            data: result
+        });
+    } catch (error) {
+        console.error("Error in getClassAttendanceGrid:", error);
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+/**
  * Update Attendance (Admin only, with restrictions)
  * @route PUT /api/attendance/:id
  * @access Admin only
@@ -742,6 +836,92 @@ exports.markAttendanceByQR = async (req, res) => {
 
     } catch (error) {
         console.error("Mark by QR error:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.markAttendanceByStudentQR = async (req, res) => {
+    try {
+        const { qr_code, class_id, subject_id, date } = req.body;
+        const institute_id = req.user.institute_id;
+        const faculty_id = req.user.id;
+
+        if (!qr_code || !qr_code.startsWith("STUDENT_QR_")) {
+            return res.status(400).json({ success: false, message: "Invalid QR format. Must be a valid student QR code." });
+        }
+
+        const student_id = qr_code.split("STUDENT_QR_")[1];
+
+        // Find Student
+        const student = await Student.findOne({ where: { id: student_id, institute_id } });
+        if (!student) {
+            return res.status(404).json({ success: false, message: "Student record not found in your institute" });
+        }
+
+        // Verify enrollments
+        if (subject_id) {
+            const { StudentSubject } = require('../models');
+            const enrollment = await StudentSubject.findOne({
+                where: { student_id, subject_id: subject_id }
+            });
+            if (!enrollment) {
+                return res.status(403).json({ success: false, message: "Student is not enrolled in this subject" });
+            }
+        } else if (class_id) {
+            const { StudentClass } = require('../models');
+            const enrollment = await StudentClass.findOne({
+                where: { student_id, class_id }
+            });
+            if (!enrollment) {
+                return res.status(403).json({ success: false, message: "Student is not enrolled in this class" });
+            }
+        }
+
+        const targetDate = date || new Date().toISOString().split('T')[0];
+
+        // Ensure student has admission before marking attendance
+        if (student.admission_date && new Date(targetDate) < new Date(student.admission_date)) {
+            return res.status(400).json({ success: false, message: "Cannot mark attendance before admission date." });
+        }
+
+        // Check already marked
+        const existingAttendance = await Attendance.findOne({
+            where: {
+                student_id,
+                institute_id,
+                class_id,
+                subject_id: subject_id || null,
+                date: targetDate
+            }
+        });
+
+        if (existingAttendance) {
+            if (existingAttendance.status === 'present') {
+                return res.status(400).json({ success: false, message: `Attendance already marked present today for ${student.User?.name || 'this student'}!` });
+            } else {
+                // override absent to present
+                await existingAttendance.update({ status: 'present', marked_by: faculty_id, remarks: "Smart Attendance (QR)" });
+                return res.status(200).json({ success: true, message: `Attendance updated to Present for ${student.User?.name || 'Student'} ✅` });
+            }
+        }
+
+        await Attendance.create({
+            institute_id,
+            student_id,
+            class_id,
+            subject_id: subject_id || null,
+            date: targetDate,
+            status: "present",
+            marked_by: faculty_id,
+            remarks: "Smart Attendance (QR)"
+        });
+
+        const userRecord = await User.findByPk(student.user_id);
+
+        res.status(200).json({ success: true, message: `Attendance marked successfully for ${userRecord?.name || 'Student'}! ✅` });
+
+    } catch (error) {
+        console.error("Mark by Student QR error:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };

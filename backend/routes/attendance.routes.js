@@ -19,6 +19,9 @@ router.post("/bulk", allowRoles("admin", "faculty"), attendanceController.markBu
 // Get attendance for specific class, subject, and date
 router.get("/class/:class_id/subject/:subject_id/date/:date", allowRoles("admin", "faculty"), attendanceController.getClassAttendanceByDate);
 
+// Get attendance grid data for class and subject matching date ranges
+router.get("/class/:class_id/subject/:subject_id/grid", allowRoles("admin", "faculty"), attendanceController.getClassAttendanceGrid);
+
 // Update attendance (admin only)
 router.put("/:id", allowRoles("admin"), attendanceController.updateAttendance);
 
@@ -36,6 +39,7 @@ router.post("/start-session", checkFeatureAccess("feature_auto_attendance"), all
 router.post("/end-session/:id", checkFeatureAccess("feature_auto_attendance"), allowRoles("admin", "faculty"), attendanceController.endSmartSession);
 router.get("/active-session/:class_id", checkFeatureAccess("feature_auto_attendance"), allowRoles("admin", "faculty"), attendanceController.getActiveSession);
 router.post("/mark-by-qr", checkFeatureAccess("feature_auto_attendance"), allowRoles("student"), attendanceController.markAttendanceByQR);
+router.post("/mark-student-qr", checkFeatureAccess("feature_auto_attendance"), allowRoles("admin", "faculty"), attendanceController.markAttendanceByStudentQR);
 
 // Attendance dashboard stats
 router.get("/dashboard", allowRoles("admin", "faculty"), attendanceController.getAttendanceDashboard);

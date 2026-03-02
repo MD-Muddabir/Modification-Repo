@@ -11,8 +11,10 @@ import ThemeSelector from "../../components/ThemeSelector";
 import "./Dashboard.css";
 
 function AdminDashboard() {
-    const { logout } = useContext(AuthContext);
+    const { user, logout } = useContext(AuthContext);
     const navigate = useNavigate();
+
+    const basePath = '/admin';
 
     const [stats, setStats] = useState({
         totalStudents: 0,
@@ -119,6 +121,14 @@ function AdminDashboard() {
         }
     };
 
+    const hasPermission = (featureKey) => {
+        if (user?.role === 'admin' || user?.role === 'superadmin' || user?.role === 'super_admin') return true;
+        if (user?.role === 'manager') {
+            return user.permissions && user.permissions.includes(featureKey);
+        }
+        return false;
+    };
+
     // Action Card Component
     const ActionCard = ({ icon, title, path, featureKey }) => (
         <div onClick={() => handleNavigation(path, featureKey)} className="action-card" style={{ cursor: 'pointer' }}>
@@ -148,7 +158,7 @@ function AdminDashboard() {
         <div className="dashboard-container">
             <div className="dashboard-header">
                 <div>
-                    <h1>Admin Dashboard</h1>
+                    <h1>{user?.role === 'manager' ? 'Manager Dashboard' : 'Admin Dashboard'}</h1>
                     <p>Welcome back! {planDetails ? `Current Plan: ${planDetails.plan.name}` : "Here's what's happening today."}</p>
                 </div>
                 <div className="dashboard-header-right">
@@ -204,23 +214,29 @@ function AdminDashboard() {
             <div className="quick-actions">
                 <h2>Quick Actions</h2>
                 <div className="action-grid">
-                    <ActionCard path="/admin/admins" icon="👥" title="Manage Admins" featureKey="admins" />
-                    <ActionCard path="/admin/students" icon="👨‍🎓" title="Manage Students" featureKey="students" />
-                    <ActionCard path="/admin/faculty" icon="👩‍🏫" title="Manage Faculty" featureKey="faculty" />
-                    <ActionCard path="/admin/classes" icon="📚" title="Manage Classes" featureKey="classes" />
-                    <ActionCard path="/admin/subjects" icon="📖" title="Manage Subjects" featureKey="subjects" />
+                    {user?.role === 'admin' && (
+                        <ActionCard path={`${basePath}/admins`} icon="👥" title="Manage Admins" featureKey="admins" />
+                    )}
+                    {hasPermission('students') && <ActionCard path={`${basePath}/students`} icon="👨‍🎓" title="Manage Students" featureKey="students" />}
+                    {hasPermission('faculty') && <ActionCard path={`${basePath}/faculty`} icon="👩‍🏫" title="Manage Faculty" featureKey="faculty" />}
+                    {hasPermission('classes') && <ActionCard path={`${basePath}/classes`} icon="📚" title="Manage Classes" featureKey="classes" />}
+                    {hasPermission('subjects') && <ActionCard path={`${basePath}/subjects`} icon="📖" title="Manage Subjects" featureKey="subjects" />}
 
-                    <ActionCard path="/admin/attendance" icon="📋" title="Manage Attendance" featureKey="attendance" />
-                    <ActionCard path="/admin/smart-attendance" icon="⚡" title="Smart Attendance" featureKey="auto_attendance" />
-                    <ActionCard path="/admin/reports" icon="📊" title="Reports & Analytics" featureKey="reports" />
-                    <ActionCard path="/admin/fees" icon="💰" title="Fee Management" featureKey="fees" />
-                    <ActionCard path="/admin/exams" icon="📝" title="Manage Exams" />
-                    <ActionCard path="/admin/announcements" icon="📢" title="Announcements" featureKey="announcements" />
+                    {hasPermission('attendance') && <ActionCard path={`${basePath}/attendance`} icon="📋" title="Manage Attendance" featureKey="attendance" />}
+                    {hasPermission('attendance') && <ActionCard path={`${basePath}/view-attendance`} icon="📊" title="View Attendance" featureKey="attendance" />}
+                    {hasPermission('attendance') && <ActionCard path={`${basePath}/smart-attendance`} icon="📸" title="Scan Student QR" featureKey="auto_attendance" />}
+                    {hasPermission('reports') && <ActionCard path={`${basePath}/reports`} icon="📊" title="Reports & Analytics" featureKey="reports" />}
+                    {hasPermission('expenses') && <ActionCard path={`${basePath}/expenses`} icon="💸" title="Finances & Transport" featureKey="expenses" />}
+                    {hasPermission('fees') && <ActionCard path={`${basePath}/fees`} icon="💰" title="Fee Management" featureKey="fees" />}
+                    {hasPermission('exams') && <ActionCard path={`${basePath}/exams`} icon="📝" title="Manage Exams" featureKey="exams" />}
+                    {hasPermission('announcements') && <ActionCard path={`${basePath}/announcements`} icon="📢" title="Announcements" featureKey="announcements" />}
 
-                    <div onClick={() => navigate("/admin/settings")} className="action-card" style={{ cursor: 'pointer' }}>
-                        <span className="action-icon">⚙️</span>
-                        <span className="action-title">Settings</span>
-                    </div>
+                    {user?.role === 'admin' && (
+                        <div onClick={() => navigate(`${basePath}/settings`)} className="action-card" style={{ cursor: 'pointer' }}>
+                            <span className="action-icon">⚙️</span>
+                            <span className="action-title">Settings</span>
+                        </div>
+                    )}
                 </div>
             </div>
 

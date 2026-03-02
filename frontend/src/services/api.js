@@ -31,6 +31,14 @@ api.interceptors.response.use(
             }
         }
 
+        // Handle Suspended Account
+        if (error.response && error.response.status === 403 && error.response.data.message?.includes("suspended")) {
+            alert("⚠️ Your institute account has been suspended by the Super Admin. Please contact support.");
+            // Optionally log out the user:
+            // localStorage.clear();
+            // window.location.href = "/login";
+        }
+
         return Promise.reject(error);
     }
 );

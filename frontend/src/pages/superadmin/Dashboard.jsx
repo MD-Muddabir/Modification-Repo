@@ -158,6 +158,12 @@ function SuperAdminDashboard() {
                         <p>View revenue reports</p>
                     </Link>
 
+                    <Link to="/superadmin/expenses" className="action-card">
+                        <div className="action-icon">💸</div>
+                        <h3>Finances (Transport)</h3>
+                        <p>Track expenses and burn rate</p>
+                    </Link>
+
                     <Link to="/superadmin/settings" className="action-card">
                         <div className="action-icon">⚙️</div>
                         <h3>Settings</h3>

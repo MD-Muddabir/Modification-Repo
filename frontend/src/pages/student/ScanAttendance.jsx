@@ -1,213 +1,90 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import { Link } from "react-router-dom";
+import { QRCodeSVG } from "qrcode.react";
 import api from "../../services/api";
-import { Html5Qrcode } from "html5-qrcode";
+import { AuthContext } from "../../context/AuthContext";
 import "../admin/Dashboard.css";
 
 function ScanAttendance() {
-    const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState(null);
-    const [cameraError, setCameraError] = useState(null);
-
-    const isProcessed = useRef(false);
-    const qrCodeRef = useRef(null);
-    const isScannerRunning = useRef(false);
+    const { user } = useContext(AuthContext);
+    const [loading, setLoading] = useState(true);
+    const [enrolledSubjects, setEnrolledSubjects] = useState([]);
+    const [studentData, setStudentData] = useState(null);
 
     useEffect(() => {
-        startScanner();
-        return () => {
-            stopScanner();
-        };
+        fetchStudentData();
     }, []);
 
-    const startScanner = async () => {
+    const fetchStudentData = async () => {
         try {
-            // Always remove old instance if exists
-            if (qrCodeRef.current) {
-                await stopScanner();
-            }
+            // First fetch profile to get actual student ID and details
+            const profileRes = await api.get("/students/me");
+            const data = profileRes.data.data;
+            setStudentData(data);
 
-            const html5QrCode = new Html5Qrcode("qr-reader-region");
-            qrCodeRef.current = html5QrCode;
-
-            const cameras = await Html5Qrcode.getCameras();
-            if (!cameras || cameras.length === 0) {
-                setCameraError("No camera found on this device.");
-                return;
-            }
-
-            // Prefer back camera (environment) if available
-            const cameraId = cameras.find(c => c.label.toLowerCase().includes("back"))?.id || cameras[0].id;
-
-            await html5QrCode.start(
-                cameraId,
-                {
-                    fps: 10,
-                    qrbox: { width: 250, height: 250 },
-                    aspectRatio: 1.0
-                },
-                (decodedText) => {
-                    if (isProcessed.current) return;
-                    isProcessed.current = true;
-                    stopScanner();
-                    markAttendance(decodedText);
-                },
-                () => { /* ignore scan errors for each frame */ }
-            );
-            isScannerRunning.current = true;
-        } catch (err) {
-            console.error("Scanner start error:", err);
-            setCameraError("Could not access camera. Please allow camera permission and reload.");
-        }
-    };
-
-    const stopScanner = async () => {
-        try {
-            if (qrCodeRef.current && isScannerRunning.current) {
-                await qrCodeRef.current.stop();
-                isScannerRunning.current = false;
-            }
-        } catch (e) {
-            // silently ignore cleanup errors
-        }
-    };
-
-    const getLocalDate = () => {
-        const d = new Date();
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-    };
-
-    const markAttendance = async (token) => {
-        setLoading(true);
-        setMessage(null);
-        try {
-            const response = await api.post("/attendance/mark-by-qr", {
-                session_token: token,
-                date: getLocalDate()
-            });
-            if (response.data.success) {
-                setMessage({ type: "success", text: "✅ " + response.data.message });
-            } else {
-                setMessage({ type: "error", text: "❌ " + response.data.message });
+            // Check if student has subjects
+            if (data && (data.Classes?.length > 0 || data.Subjects?.length > 0)) {
+                setEnrolledSubjects(data.Subjects || data.Classes);
             }
         } catch (error) {
-            const errorMsg = error.response?.data?.message || "Failed to mark attendance.";
-            let msgType = "error";
-            let iconText = "❌ ";
-            if (errorMsg.toLowerCase().includes("already marked")) {
-                msgType = "warning";
-                iconText = "💡 ";
-            } else if (error.response?.status === 403) {
-                // Not enrolled in this subject
-                msgType = "not-enrolled";
-                iconText = "🚫 ";
-            }
-            setMessage({ type: msgType, text: iconText + errorMsg });
+            console.error("Error fetching student profile:", error);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleScanAnother = async () => {
-        isProcessed.current = false;
-        setMessage(null);
-        await startScanner();
-    };
+    if (loading) {
+        return <div className="dashboard-container">Loading...</div>;
+    }
 
-    const getBorderColor = () => {
-        if (!message) return "#6366f1";
-        if (message.type === "success") return "#10b981";
-        if (message.type === "warning") return "#f59e0b";
-        if (message.type === "not-enrolled") return "#f97316";
-        return "#ef4444";
-    };
-
-    const getBgColor = () => {
-        if (!message) return "transparent";
-        if (message.type === "success") return "#ecfdf5";
-        if (message.type === "warning") return "#fffbeb";
-        if (message.type === "not-enrolled") return "#fff7ed";
-        return "#fef2f2";
-    };
-
-    const getTextColor = () => {
-        if (message?.type === "success") return "#065f46";
-        if (message?.type === "warning") return "#92400e";
-        if (message?.type === "not-enrolled") return "#9a3412";
-        return "#991b1b";
-    };
+    // Unqiue Static QR code value based on Student ID.
+    // Faculty will scan this QR code.
+    const qrValue = studentData ? `STUDENT_QR_${studentData.id}` : "";
 
     return (
         <div className="dashboard-container">
             <div className="dashboard-header">
                 <div>
-                    <h1>📷 Scan QR Attendance</h1>
-                    <p>Scan the QR code displayed by your faculty to mark your attendance.</p>
+                    <h1>🤳 My Attendance QR Code</h1>
+                    <p>Show this static QR code to your faculty to mark attendance.</p>
                 </div>
                 <Link to="/student/dashboard" className="btn btn-secondary">
                     ← Back
                 </Link>
             </div>
 
-            <div className="card" style={{ padding: "2rem", maxWidth: "540px", margin: "0 auto", textAlign: "center" }}>
-                {cameraError ? (
-                    <div style={{ padding: "2rem", backgroundColor: "#fef2f2", borderRadius: "12px", border: "1px solid #ef4444" }}>
-                        <h2 style={{ color: "#991b1b", marginBottom: "1rem" }}>📵 Camera Error</h2>
-                        <p style={{ color: "#7f1d1d" }}>{cameraError}</p>
-                        <button
-                            className="btn btn-primary"
-                            style={{ marginTop: "1rem" }}
-                            onClick={() => { setCameraError(null); startScanner(); }}
-                        >
-                            🔄 Retry
-                        </button>
-                    </div>
-                ) : !message ? (
-                    <div>
-                        <h2 style={{ marginBottom: "1rem", color: "#1f2937" }}>Point camera at QR Code</h2>
-                        {/* Single clean camera container — no extra UI from the library */}
-                        <div
-                            id="qr-reader-region"
-                            style={{
-                                width: "100%",
-                                maxWidth: "400px",
-                                margin: "0 auto",
-                                borderRadius: "12px",
-                                overflow: "hidden",
-                                border: "3px solid #6366f1",
-                                aspectRatio: "1 / 1",
-                                background: "#000"
-                            }}
-                        />
-                        {loading && (
-                            <p style={{ marginTop: "1rem", color: "#6366f1", fontWeight: "bold", fontSize: "1.1rem" }}>
-                                ⏳ Verifying attendance...
-                            </p>
-                        )}
-                        <p style={{ marginTop: "0.75rem", color: "#6b7280", fontSize: "0.9rem" }}>
-                            Make sure the QR code is well-lit and within the frame.
+            <div className="card" style={{ padding: "3rem", maxWidth: "540px", margin: "0 auto", textAlign: "center" }}>
+                {enrolledSubjects.length === 0 ? (
+                    <div style={{ backgroundColor: "#fef2f2", padding: "2rem", borderRadius: "12px", border: "1px solid #ef4444" }}>
+                        <h2 style={{ color: "#991b1b", marginBottom: "1rem" }}>🚫 Not Enrolled</h2>
+                        <p style={{ color: "#7f1d1d", fontSize: "1.1rem" }}>
+                            You are not enrolled in any subjects. Your QR Code cannot be generated until you are assigned to a class/subject.
                         </p>
                     </div>
                 ) : (
-                    <div style={{
-                        padding: "2.5rem",
-                        backgroundColor: getBgColor(),
-                        borderRadius: "16px",
-                        border: `2px solid ${getBorderColor()}`
-                    }}>
-                        <h2 style={{ margin: 0, color: getTextColor(), fontSize: "1.5rem" }}>
-                            {message.text}
-                        </h2>
-                        <button
-                            className="btn btn-primary"
-                            style={{ padding: "0.75rem 2rem", fontSize: "1rem", marginTop: "2rem" }}
-                            onClick={handleScanAnother}
-                        >
-                            🔄 Scan Another Code
-                        </button>
+                    <div>
+                        <h2 style={{ marginBottom: "1.5rem", color: "#1f2937" }}>Your Unique ID Code</h2>
+                        <div style={{
+                            background: "white",
+                            padding: "1.5rem",
+                            borderRadius: "16px",
+                            display: "inline-block",
+                            border: "2px solid #e5e7eb",
+                            boxShadow: "0 10px 25px rgba(0,0,0,0.1)"
+                        }}>
+                            <QRCodeSVG
+                                value={qrValue}
+                                size={250}
+                                level={"H"}
+                                includeMargin={true}
+                            />
+                        </div>
+                        <p style={{ marginTop: "1.5rem", color: "#4b5563", fontSize: "1.1rem", fontWeight: "bold" }}>
+                            {studentData?.User?.name || user?.name}
+                        </p>
+                        <p style={{ marginTop: "0.5rem", color: "#6b7280", fontSize: "0.95rem" }}>
+                            This QR code is common for all your subjects and will not change. You can print it or show it directly from your device.
+                        </p>
                     </div>
                 )}
             </div>

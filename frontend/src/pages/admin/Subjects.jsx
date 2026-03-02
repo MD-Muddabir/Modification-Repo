@@ -69,11 +69,23 @@ function Subjects() {
                 await api.put(`/subjects/${formData.id}`, formData);
                 alert("Subject updated successfully");
             } else {
-                await api.post("/subjects", {
-                    ...formData,
-                    institute_id: user.institute_id,
-                });
-                alert("Subject created successfully");
+                const subjectNames = formData.name.split(',').map(name => name.trim()).filter(Boolean);
+
+                if (subjectNames.length === 0) {
+                    return alert("Please enter at least one valid subject name");
+                }
+
+                // Create dynamically for multiple subjects
+                await Promise.all(
+                    subjectNames.map(async (name) => {
+                        return api.post("/subjects", {
+                            ...formData,
+                            name: name,
+                            institute_id: user.institute_id,
+                        });
+                    })
+                );
+                alert(`${subjectNames.length} Subject(s) created successfully`);
             }
             setShowModal(false);
             resetForm();
@@ -308,7 +320,7 @@ function Subjects() {
                                         type="text"
                                         name="name"
                                         className="form-input"
-                                        placeholder="e.g., Mathematics, Physics, English"
+                                        placeholder="e.g., Mathematics, Physics, English (comma separated for multiple)"
                                         value={formData.name}
                                         onChange={handleChange}
                                         required

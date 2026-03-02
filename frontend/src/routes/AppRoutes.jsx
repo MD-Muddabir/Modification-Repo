@@ -31,6 +31,7 @@ const Subscriptions = lazy(() => import("../pages/superadmin/Subscriptions"));
 const Analytics = lazy(() => import("../pages/superadmin/Analytics"));
 const Revenue = lazy(() => import("../pages/superadmin/Revenue"));
 const SuperAdminSettings = lazy(() => import("../pages/superadmin/Settings"));
+const SuperAdminExpenses = lazy(() => import("../pages/superadmin/Expenses"));
 
 // Admin Pages
 const AdminDashboard = lazy(() => import("../pages/admin/Dashboard"));
@@ -47,7 +48,8 @@ const Settings = lazy(() => import("../pages/admin/Settings"));
 const Profile = lazy(() => import("../pages/admin/Profile"));
 const ManageAdmins = lazy(() => import("../pages/admin/ManageAdmins")); // Added ManageAdmins
 const AdminSmartAttendance = lazy(() => import("../pages/admin/SmartAttendance"));
-
+const AdminExpenses = lazy(() => import("../pages/admin/Expenses"));
+const FacultyViewAttendance = lazy(() => import("../pages/faculty/ViewAttendance"));
 // Faculty Pages
 const FacultyDashboard = lazy(() => import("../pages/faculty/Dashboard"));
 const MarkAttendance = lazy(() => import("../pages/faculty/MarkAttendance"));
@@ -110,6 +112,7 @@ function AppRoutes() {
                 <Route path="subscriptions" element={<Subscriptions />} />
                 <Route path="analytics" element={<Analytics />} />
                 <Route path="revenue" element={<Revenue />} />
+                <Route path="expenses" element={<SuperAdminExpenses />} />
                 <Route path="settings" element={<SuperAdminSettings />} />
                 <Route path="*" element={<Navigate to="/superadmin/dashboard" />} />
               </Routes>
@@ -117,11 +120,11 @@ function AppRoutes() {
           }
         />
 
-        {/* Admin Routes */}
+        {/* Admin/Manager Routes */}
         <Route
           path="/admin/*"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin", "manager"]}>
               <Routes>
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="admins" element={<ManageAdmins />} />
@@ -130,11 +133,13 @@ function AppRoutes() {
                 <Route path="classes" element={<Classes />} />
                 <Route path="subjects" element={<Subjects />} />
                 <Route path="attendance" element={<Attendance />} />
+                <Route path="view-attendance" element={<FacultyViewAttendance />} />
                 <Route path="smart-attendance" element={<AdminSmartAttendance />} />
                 <Route path="reports" element={<Reports />} />
                 <Route path="fees" element={<Fees />} />
                 <Route path="announcements" element={<Announcements />} />
                 <Route path="exams" element={<Exams />} />
+                <Route path="expenses" element={<AdminExpenses />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="*" element={<Navigate to="/admin/dashboard" />} />
@@ -151,6 +156,7 @@ function AppRoutes() {
               <Routes>
                 <Route path="dashboard" element={<FacultyDashboard />} />
                 <Route path="attendance" element={<MarkAttendance />} />
+                <Route path="view-attendance" element={<FacultyViewAttendance />} />
                 <Route path="smart-attendance" element={<FacultySmartAttendance />} />
                 <Route path="marks" element={<EnterMarks />} />
                 <Route path="students" element={<ViewStudents />} />
