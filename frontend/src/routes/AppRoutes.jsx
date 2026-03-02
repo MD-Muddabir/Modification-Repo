@@ -120,11 +120,11 @@ function AppRoutes() {
           }
         />
 
-        {/* Admin Routes */}
+        {/* Admin/Manager Routes */}
         <Route
           path="/admin/*"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin", "manager"]}>
               <Routes>
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="admins" element={<ManageAdmins />} />

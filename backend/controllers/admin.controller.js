@@ -65,13 +65,15 @@ const { hashPassword } = require("../utils/hashPassword");
 
 exports.getAllAdmins = async (req, res) => {
     try {
+        if (req.user.role === 'manager') return res.status(403).json({ success: false, message: "Managers cannot manage secondary admins." });
         const institute_id = req.user.institute_id;
+        const { Op } = require('sequelize');
         const admins = await User.findAll({
             where: {
                 institute_id,
-                role: 'admin'
+                role: { [Op.in]: ['admin', 'manager'] }
             },
-            attributes: ['id', 'name', 'email', 'phone', 'status', 'created_at']
+            attributes: ['id', 'name', 'email', 'phone', 'status', 'created_at', 'role', 'permissions']
         });
 
         res.status(200).json({
@@ -86,6 +88,7 @@ exports.getAllAdmins = async (req, res) => {
 
 exports.createAdmin = async (req, res) => {
     try {
+        if (req.user.role === 'manager') return res.status(403).json({ success: false, message: "Managers cannot create secondary admins." });
         const institute_id = req.user.institute_id;
         const { name, email, password, phone } = req.body;
 
@@ -98,8 +101,9 @@ exports.createAdmin = async (req, res) => {
             return res.status(403).json({ success: false, message: "No active plan found." });
         }
 
+        const { Op } = require('sequelize');
         const currentAdminCount = await User.count({
-            where: { institute_id, role: 'admin' }
+            where: { institute_id, role: { [Op.in]: ['admin', 'manager'] } }
         });
 
         const limit_admins = institute.current_limit_admins || institute.Plan.max_admin_users;
@@ -116,16 +120,17 @@ exports.createAdmin = async (req, res) => {
             return res.status(400).json({ success: false, message: "Name, email, and password are required." });
         }
 
-        // 3. Create Admin
+        // 3. Create Admin/Manager (second admins are created as managers)
         const hashedPassword = await hashPassword(password);
         const newAdmin = await User.create({
             institute_id,
-            role: 'admin',
+            role: 'manager',
             name,
             email,
             phone,
             password_hash: hashedPassword,
-            status: 'active'
+            status: 'active',
+            permissions: req.body.permissions || null
         });
 
         res.status(201).json({
@@ -164,15 +169,24 @@ exports.deleteAdmin = async (req, res) => {
         if (firstAdmin && firstAdmin.id === parseInt(adminIdToDelete)) {
             return res.status(403).json({
                 success: false,
-                message: "Permission denied. The primary admin cannot be deleted."
+                message: "Permission denied. The original primary admin cannot be deleted."
             });
         }
 
+        // A Manager cannot delete ANY other admin
+        if (req.user.role === 'manager') {
+            return res.status(403).json({
+                success: false,
+                message: "Managers cannot remove other administrators."
+            });
+        }
+
+        const { Op } = require('sequelize');
         const admin = await User.findOne({
             where: {
                 id: adminIdToDelete,
                 institute_id,
-                role: 'admin'
+                role: { [Op.in]: ['admin', 'manager'] }
             }
         });
 
@@ -217,19 +231,26 @@ exports.updateAdmin = async (req, res) => {
         const adminId = req.params.id;
         const { name, email, phone, status } = req.body;
 
+        const { Op } = require('sequelize');
         const admin = await User.findOne({
-            where: { id: adminId, institute_id, role: 'admin' }
+            where: { id: adminId, institute_id, role: { [Op.in]: ['admin', 'manager'] } }
         });
 
         if (!admin) {
-            return res.status(404).json({ success: false, message: "Admin not found." });
+            return res.status(404).json({ success: false, message: "Admin/Manager not found." });
+        }
+
+        // Block Manager from editing Primary Admin
+        if (req.user.role === 'manager' && admin.role === 'admin') {
+            return res.status(403).json({ success: false, message: "Managers cannot edit primary administrators." });
         }
 
         await admin.update({
             name,
             email,
             phone,
-            status
+            status,
+            permissions: req.body.permissions !== undefined ? req.body.permissions : admin.permissions
         });
 
         res.status(200).json({ success: true, message: "Admin updated successfully.", data: admin });

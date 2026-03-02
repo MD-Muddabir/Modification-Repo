@@ -161,7 +161,7 @@ exports.changePassword = async (userId, oldPassword, newPassword) => {
 
 exports.getProfile = async (userId) => {
     const user = await User.findByPk(userId, {
-        attributes: ['id', 'name', 'email', 'role', 'institute_id'],
+        attributes: ['id', 'name', 'email', 'role', 'institute_id', 'permissions'],
         include: [{
             model: Institute,
             include: [{ model: Plan }] // Include Plan details
@@ -196,6 +196,7 @@ exports.updateProfile = async (userId, data) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        institute_id: user.institute_id
+        institute_id: user.institute_id,
+        permissions: user.permissions || []
     };
 };
