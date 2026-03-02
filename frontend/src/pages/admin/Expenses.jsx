@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import { Link } from "react-router-dom";
 import ThemeSelector from "../../components/ThemeSelector";
 import api from "../../services/api";
 import "./Dashboard.css"; // Reuse dashboard UI
@@ -11,7 +12,11 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
-function AdminExpenses() {
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
+
+const AdminExpenses = forwardRef((props, ref) => {
     const [loading, setLoading] = useState(true);
     const [expenses, setExpenses] = useState([]);
     const [stats, setStats] = useState({
@@ -23,6 +28,8 @@ function AdminExpenses() {
     const [chartDataState, setChartDataState] = useState(null);
     const [filterPeriod, setFilterPeriod] = useState("current_month");
     const [filterDateValue, setFilterDateValue] = useState("");
+
+    const chartRef = useRef(null);
 
     const [showAddModal, setShowAddModal] = useState(false);
     const [formData, setFormData] = useState({
@@ -131,24 +138,108 @@ function AdminExpenses() {
         }
     };
 
+    useImperativeHandle(ref, () => ({
+        handleExportPDF,
+        handleExportExcel
+    }));
+
+    const handleExportPDF = () => {
+        const doc = new jsPDF('landscape');
+        const title = "Institute Finances Report";
+        doc.text(title, 14, 15);
+
+        let startY = 25;
+
+        // Try to add the chart graph to the PDF
+        if (chartRef.current) {
+            try {
+                // Generate high quality base64 image from chart
+                const chartImg = chartRef.current.toBase64Image();
+                if (chartImg) {
+                    doc.addImage(chartImg, 'PNG', 14, startY, 260, 100);
+                    startY += 110;
+                }
+            } catch (err) {
+                console.error("Could not capture chart image", err);
+            }
+        }
+
+        // Add expenses table
+        if (expenses.length > 0) {
+            doc.text("Recent Expenses", 14, startY);
+            startY += 10;
+            const columns = ["Date", "Title", "Category", "Amount (INR)", "Description"];
+            const rows = expenses.map(exp => [
+                new Date(exp.date).toLocaleDateString(),
+                exp.title,
+                exp.category,
+                exp.amount,
+                exp.description || "-"
+            ]);
+
+            autoTable(doc, {
+                head: [columns],
+                body: rows,
+                startY: startY,
+            });
+        } else {
+            doc.text("No expenses recorded for this period.", 14, startY);
+        }
+
+        doc.save(`${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`);
+    };
+
+    const handleExportExcel = () => {
+        if (expenses.length === 0) {
+            alert("No expense data to export.");
+            return;
+        }
+
+        const title = "Institute Finances Report";
+        const columns = ["Date", "Title", "Category", "Amount (INR)", "Description"];
+        const rows = expenses.map(exp => [
+            new Date(exp.date).toLocaleDateString(),
+            exp.title,
+            exp.category,
+            exp.amount,
+            exp.description || "-"
+        ]);
+
+        const worksheet = XLSX.utils.aoa_to_sheet([columns, ...rows]);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Expenses");
+        XLSX.writeFile(workbook, `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.xlsx`);
+    };
+
     if (loading) {
-        return <div className="dashboard-container">Loading Finances...</div>;
+        return <div className={props.isReportMode ? "" : "dashboard-container"}>Loading Finances...</div>;
     }
 
     return (
-        <div className="dashboard-container">
-            <div className="dashboard-header">
-                <div>
-                    <h1>💸 Institute Finances (Transport)</h1>
-                    <p>Track monthly expenses (rent, light bill, xerox), income, burn rate and profit/loss</p>
+        <div className={props.isReportMode ? "" : "dashboard-container"}>
+            {!props.isReportMode && (
+                <div className="dashboard-header">
+                    <div>
+                        <h1>💸 Institute Finances (Transport)</h1>
+                        <p>Track monthly expenses (rent, light bill, xerox), income, burn rate and profit/loss</p>
+                    </div>
+                    <div className="dashboard-header-right" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                        <button onClick={handleExportPDF} className="btn btn-primary" style={{ backgroundColor: "#ef4444", borderColor: "#ef4444", padding: '0.5rem 1rem' }}>
+                            📄 PDF
+                        </button>
+                        <button onClick={handleExportExcel} className="btn btn-primary" style={{ backgroundColor: "#10b981", borderColor: "#10b981", padding: '0.5rem 1rem' }}>
+                            📊 Excel
+                        </button>
+                        <ThemeSelector />
+                        <button className="animated-btn primary" onClick={() => setShowAddModal(true)}>
+                            <span className="icon">➕</span> Add Expense
+                        </button>
+                        <Link to="/admin/dashboard" className="btn btn-secondary">
+                            ← Back
+                        </Link>
+                    </div>
                 </div>
-                <div className="dashboard-header-right">
-                    <ThemeSelector />
-                    <button className="animated-btn primary" onClick={() => setShowAddModal(true)}>
-                        <span className="icon">➕</span> Add Expense
-                    </button>
-                </div>
-            </div>
+            )}
 
             {/* Filter Section */}
             <div className="filter-container" style={{
@@ -202,7 +293,7 @@ function AdminExpenses() {
             </div>
 
             {/* Statistics Grid */}
-            <div className="stats-grid">
+            <div className="stats-grid" style={{ gridTemplateColumns: "repeat(4, 1fr)" }}>
                 <div className="stat-card">
                     <div className="stat-icon" style={{ backgroundColor: "rgba(16, 185, 129, 0.1)", color: "#10b981" }}>💵</div>
                     <div className="stat-content">
@@ -215,7 +306,15 @@ function AdminExpenses() {
                     <div className="stat-icon" style={{ backgroundColor: "rgba(239, 68, 68, 0.1)", color: "#ef4444" }}>🔥</div>
                     <div className="stat-content">
                         <h3>₹{stats.totalExpense?.toLocaleString() || 0}</h3>
-                        <p>Total Expenses (Burn Rate)</p>
+                        <p>Total Amount of Expenses</p>
+                    </div>
+                </div>
+
+                <div className="stat-card">
+                    <div className="stat-icon" style={{ backgroundColor: "rgba(245, 158, 11, 0.1)", color: "#f59e0b" }}>📝</div>
+                    <div className="stat-content">
+                        <h3>{expenses.length}</h3>
+                        <p>Total Expenses Count</p>
                     </div>
                 </div>
 
@@ -232,8 +331,9 @@ function AdminExpenses() {
             {chartDataState && (
                 <div className="card" style={{ marginTop: "2rem", padding: "1.5rem" }}>
                     <h3 style={{ marginBottom: "1rem" }}>6-Month Financial Overview</h3>
-                    <div style={{ height: "300px", width: "100%" }}>
+                    <div style={{ height: "300px", width: "100%", backgroundColor: 'var(--card-bg)' }}>
                         <Line
+                            ref={chartRef}
                             data={chartDataState}
                             options={{
                                 responsive: true,
@@ -250,19 +350,18 @@ function AdminExpenses() {
                 </div>
             )}
 
-            {/* Add Expense Modal */}
             {showAddModal && (
                 <div className="modal-overlay">
                     <div className="modal-content">
-                        <h2>Add New Expense</h2>
+                        <h2 style={{ marginBottom: "1.5rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>Add New Expense</h2>
                         <form onSubmit={handleAddExpense} className="form-grid">
                             <div className="form-group">
-                                <label>Title</label>
-                                <input type="text" name="title" value={formData.title} onChange={handleInputChange} required placeholder="e.g. November Rent" />
+                                <label className="form-label">Title</label>
+                                <input type="text" className="form-input" name="title" value={formData.title} onChange={handleInputChange} required placeholder="e.g. November Rent" />
                             </div>
                             <div className="form-group">
-                                <label>Category</label>
-                                <select name="category" value={formData.category} onChange={handleInputChange}>
+                                <label className="form-label">Category</label>
+                                <select className="form-select" name="category" value={formData.category} onChange={handleInputChange}>
                                     <option value="Rent">Rent</option>
                                     <option value="Electricity">Electricity / Light Bill</option>
                                     <option value="Xerox">Printing & Xerox</option>
@@ -272,18 +371,18 @@ function AdminExpenses() {
                                 </select>
                             </div>
                             <div className="form-group">
-                                <label>Amount (₹)</label>
-                                <input type="number" name="amount" value={formData.amount} onChange={handleInputChange} required />
+                                <label className="form-label">Amount (₹)</label>
+                                <input type="number" className="form-input" name="amount" value={formData.amount} onChange={handleInputChange} required placeholder="e.g. 5000" />
                             </div>
                             <div className="form-group">
-                                <label>Date</label>
-                                <input type="date" name="date" value={formData.date} onChange={handleInputChange} required />
+                                <label className="form-label">Date</label>
+                                <input type="date" className="form-input" name="date" value={formData.date} onChange={handleInputChange} required />
                             </div>
                             <div className="form-group" style={{ gridColumn: "1 / -1" }}>
-                                <label>Description</label>
-                                <textarea name="description" value={formData.description} onChange={handleInputChange} rows="3"></textarea>
+                                <label className="form-label">Description (Optional)</label>
+                                <textarea className="form-input" name="description" value={formData.description} onChange={handleInputChange} rows="3" placeholder="Additional details..."></textarea>
                             </div>
-                            <div className="form-actions" style={{ gridColumn: "1 / -1" }}>
+                            <div className="form-actions" style={{ gridColumn: "1 / -1", marginTop: "1rem", paddingTop: "1rem", borderTop: "1px solid var(--border-color)" }}>
                                 <button type="button" className="btn btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
                                 <button type="submit" className="btn btn-primary">Save Expense</button>
                             </div>
@@ -305,13 +404,13 @@ function AdminExpenses() {
                                 <th>Title</th>
                                 <th>Category</th>
                                 <th>Amount</th>
-                                <th>Actions</th>
+                                {!props.isReportMode && <th>Actions</th>}
                             </tr>
                         </thead>
                         <tbody>
                             {expenses.length === 0 ? (
                                 <tr>
-                                    <td colSpan="5" style={{ textAlign: "center", padding: "2rem" }}>
+                                    <td colSpan={props.isReportMode ? "4" : "5"} style={{ textAlign: "center", padding: "2rem" }}>
                                         No expenses recorded yet.
                                     </td>
                                 </tr>
@@ -329,11 +428,13 @@ function AdminExpenses() {
                                         <td style={{ color: "#ef4444", fontWeight: "bold" }}>
                                             -₹{parseFloat(exp.amount).toLocaleString()}
                                         </td>
-                                        <td>
-                                            <button className="btn btn-sm btn-danger" onClick={() => handleDeleteExpense(exp.id)}>
-                                                Delete
-                                            </button>
-                                        </td>
+                                        {!props.isReportMode && (
+                                            <td>
+                                                <button className="btn btn-sm btn-danger" onClick={() => handleDeleteExpense(exp.id)}>
+                                                    Delete
+                                                </button>
+                                            </td>
+                                        )}
                                     </tr>
                                 ))
                             )}
@@ -343,6 +444,6 @@ function AdminExpenses() {
             </div>
         </div>
     );
-}
+});
 
 export default AdminExpenses;

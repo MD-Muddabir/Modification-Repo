@@ -43,7 +43,7 @@ function Login() {
         case "admin": navigate("/admin/dashboard"); break;
         case "faculty": navigate("/faculty/dashboard"); break;
         case "student": navigate("/student/dashboard"); break;
-        case "manager": navigate("/manager/dashboard"); break;
+        case "manager": navigate("/admin/dashboard"); break;
         default: navigate("/");
       }
     } catch (err) {
