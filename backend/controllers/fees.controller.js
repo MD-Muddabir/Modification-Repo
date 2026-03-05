@@ -353,7 +353,7 @@ exports.getAssignedStudentFees = async (req, res) => {
         // Doing a pass for both generic class fees AND specific enrolled subject fees
         const students = await Student.findAll({
             where: { institute_id },
-            include: [{ model: Subject }]
+            include: [{ model: Subject }, { model: Class }]
         });
         const structures = await FeesStructure.findAll({ where: { institute_id }, raw: true });
 
@@ -363,9 +363,10 @@ exports.getAssignedStudentFees = async (req, res) => {
         const toCreate = [];
         for (const s of students) {
             const subjectIds = s.Subjects ? s.Subjects.map(sub => sub.id) : [];
+            const classIds = s.Classes ? s.Classes.map(c => c.id) : [];
 
             for (const fs of structures) {
-                if (s.class_id === fs.class_id) {
+                if (classIds.includes(fs.class_id)) {
                     // Check if the fee structure applies to this student:
                     // Applies if it's a generic class fee (subject_id is null) OR matches an enrolled subject
                     if (fs.subject_id === null || subjectIds.includes(fs.subject_id)) {
@@ -373,7 +374,7 @@ exports.getAssignedStudentFees = async (req, res) => {
                             toCreate.push({
                                 institute_id,
                                 student_id: s.id,
-                                class_id: s.class_id,
+                                class_id: fs.class_id,
                                 fee_structure_id: fs.id,
                                 original_amount: fs.amount,
                                 discount_amount: 0,
@@ -418,7 +419,7 @@ exports.getAssignedStudentFees = async (req, res) => {
                 studentFees.push({
                     id: `dummy_${s.id}`,
                     student_id: s.id,
-                    class_id: s.class_id,
+                    class_id: s.Classes?.[0]?.id || null, // fallback class to show in UI
                     fee_structure_id: null,
                     original_amount: 0,
                     discount_amount: 0,
@@ -427,7 +428,7 @@ exports.getAssignedStudentFees = async (req, res) => {
                     due_amount: 0,
                     status: 'pending', // show as pending so they appear by default!
                     Student: s,
-                    Class: s.Class,
+                    Class: s.Classes?.[0] || null,
                     FeesStructure: null
                 });
             }
