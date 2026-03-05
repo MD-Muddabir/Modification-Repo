@@ -3,7 +3,7 @@
  * Handles fee structure and payment tracking
  */
 
-const { FeesStructure, Payment, Student, User, StudentFee, FeeDiscountLog, Class } = require("../models");
+const { FeesStructure, Payment, Student, User, StudentFee, FeeDiscountLog, Class, Subject } = require("../models");
 const { Op } = require("sequelize");
 
 exports.createFeeStructure = async (req, res) => {
@@ -350,29 +350,40 @@ exports.getAssignedStudentFees = async (req, res) => {
         const institute_id = req.user.institute_id;
 
         // Auto-sync missing StudentFees for all students/class fees
-        // Doing a quick pass
-        const students = await Student.findAll({ where: { institute_id }, raw: true });
-        const structures = await FeesStructure.findAll({ where: { institute_id, subject_id: null }, raw: true });
+        // Doing a pass for both generic class fees AND specific enrolled subject fees
+        const students = await Student.findAll({
+            where: { institute_id },
+            include: [{ model: Subject }]
+        });
+        const structures = await FeesStructure.findAll({ where: { institute_id }, raw: true });
 
         const existingStudentFees = await StudentFee.findAll({ where: { institute_id }, raw: true });
         const existingSet = new Set(existingStudentFees.map(sf => `${sf.student_id}_${sf.fee_structure_id}`));
 
         const toCreate = [];
         for (const s of students) {
+            const subjectIds = s.Subjects ? s.Subjects.map(sub => sub.id) : [];
+
             for (const fs of structures) {
-                if (s.class_id === fs.class_id && !existingSet.has(`${s.id}_${fs.id}`)) {
-                    toCreate.push({
-                        institute_id,
-                        student_id: s.id,
-                        class_id: s.class_id,
-                        fee_structure_id: fs.id,
-                        original_amount: fs.amount,
-                        discount_amount: 0,
-                        final_amount: fs.amount,
-                        paid_amount: 0,
-                        due_amount: fs.amount,
-                        status: 'pending'
-                    });
+                if (s.class_id === fs.class_id) {
+                    // Check if the fee structure applies to this student:
+                    // Applies if it's a generic class fee (subject_id is null) OR matches an enrolled subject
+                    if (fs.subject_id === null || subjectIds.includes(fs.subject_id)) {
+                        if (!existingSet.has(`${s.id}_${fs.id}`)) {
+                            toCreate.push({
+                                institute_id,
+                                student_id: s.id,
+                                class_id: s.class_id,
+                                fee_structure_id: fs.id,
+                                original_amount: fs.amount,
+                                discount_amount: 0,
+                                final_amount: fs.amount,
+                                paid_amount: 0,
+                                due_amount: fs.amount,
+                                status: 'pending'
+                            });
+                        }
+                    }
                 }
             }
         }
@@ -386,7 +397,7 @@ exports.getAssignedStudentFees = async (req, res) => {
             include: [
                 { model: Student, include: [{ model: User, attributes: ['name', 'email'] }] },
                 { model: Class, attributes: ['name', 'section'] },
-                { model: FeesStructure }
+                { model: FeesStructure, include: [{ model: Subject, required: false }] }
             ],
             order: [["id", "DESC"]]
         });

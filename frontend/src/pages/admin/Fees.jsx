@@ -409,7 +409,10 @@ function Fees() {
                                             <div style={{ fontWeight: '700', fontSize: '0.95rem' }}>{sf.Student?.User?.name} ({sf.Student?.roll_number})</div>
                                             <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                                                 <span className="badge badge-secondary">{sf.Class?.name} {sf.Class?.section}</span>
-                                                <span className="badge badge-info">{sf.FeesStructure?.fee_type || 'Fee'}</span>
+                                                <span className="badge badge-info">
+                                                    {sf.FeesStructure?.fee_type || 'Fee'}
+                                                    {sf.FeesStructure?.Subject ? ` • ${sf.FeesStructure.Subject.name}` : ''}
+                                                </span>
                                             </div>
                                         </div>
 
