@@ -23,6 +23,7 @@ const ClassSession = require("./classSession");
 const Expense = require("./expense");
 const TimetableSlot = require("./timetableSlot");
 const Timetable = require("./timetable");
+const TransportFee = require("./transportFee");
 
 // Associations
 
@@ -102,6 +103,12 @@ Student.hasMany(Payment, { foreignKey: "student_id" });
 Payment.belongsTo(Institute, { foreignKey: "institute_id" });
 Institute.hasMany(Payment, { foreignKey: "institute_id" });
 
+Payment.belongsTo(FeesStructure, { foreignKey: "fee_structure_id" });
+FeesStructure.hasMany(Payment, { foreignKey: "fee_structure_id" });
+
+Payment.belongsTo(User, { as: "collector", foreignKey: "collected_by" });
+User.hasMany(Payment, { foreignKey: "collected_by" });
+
 // Announcement Associations
 Announcement.belongsTo(User, { as: "creator", foreignKey: "created_by" });
 User.hasMany(Announcement, { foreignKey: "created_by" });
@@ -153,6 +160,16 @@ Class.hasMany(ClassSession, { foreignKey: "class_id" });
 Institute.hasMany(Expense, { foreignKey: "institute_id" });
 Expense.belongsTo(Institute, { foreignKey: "institute_id" });
 
+Expense.belongsTo(User, { as: "creator", foreignKey: "created_by" });
+User.hasMany(Expense, { foreignKey: "created_by" });
+
+// TransportFee Associations
+TransportFee.belongsTo(Institute, { foreignKey: "institute_id" });
+Institute.hasMany(TransportFee, { foreignKey: "institute_id" });
+
+TransportFee.belongsTo(User, { as: "creator", foreignKey: "created_by" });
+User.hasMany(TransportFee, { foreignKey: "created_by" });
+
 ClassSession.belongsTo(Subject, { foreignKey: "subject_id" });
 Subject.hasMany(ClassSession, { foreignKey: "subject_id" });
 
@@ -203,5 +220,6 @@ module.exports = {
     Expense,
     TimetableSlot,
     Timetable,
-    FacultyAttendance
+    FacultyAttendance,
+    TransportFee
 };

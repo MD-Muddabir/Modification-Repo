@@ -154,6 +154,8 @@ exports.recordPayment = async (req, res) => {
             transaction_id: transaction_id || "TXN_" + Date.now(),
             payment_date: payment_date || new Date(),
             status: "success",
+            collected_by: req.user.id,
+            remarks: remarks || null,
         });
 
         res.status(201).json({
@@ -226,6 +228,64 @@ exports.getStudentPayments = async (req, res) => {
             success: false,
             message: error.message,
         });
+    }
+};
+
+exports.updateFeeStructure = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const institute_id = req.user.institute_id;
+        const { class_id, subject_id, fee_type, amount, due_date, description } = req.body;
+
+        const feeStructure = await FeesStructure.findOne({ where: { id, institute_id } });
+
+        if (!feeStructure) {
+            return res.status(404).json({ success: false, message: "Fee structure not found" });
+        }
+
+        await feeStructure.update({
+            class_id,
+            subject_id: subject_id || null,
+            fee_type,
+            amount,
+            due_date,
+            description,
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Fee structure updated successfully",
+            data: feeStructure,
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.deleteFeeStructure = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const institute_id = req.user.institute_id;
+
+        const feeStructure = await FeesStructure.findOne({ where: { id, institute_id } });
+
+        if (!feeStructure) {
+            return res.status(404).json({ success: false, message: "Fee structure not found" });
+        }
+
+        const existingPayments = await Payment.count({ where: { fee_structure_id: id, institute_id } });
+        if (existingPayments > 0) {
+            return res.status(400).json({ success: false, message: "Cannot delete fee structure because payments have already been recorded against it." });
+        }
+
+        await feeStructure.destroy();
+
+        res.status(200).json({
+            success: true,
+            message: "Fee structure deleted successfully",
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 

@@ -88,6 +88,8 @@ app.use("/api/plans", require("./routes/plan.routes"));
 app.use("/api/payment", require("./routes/payment.routes"));
 app.use("/api/invoice", require("./routes/invoice.routes"));
 app.use("/api/expenses", require("./routes/expense.routes"));
+app.use("/api/transport-fees", require("./routes/transportFee.routes"));
+app.use("/api/manager", require("./routes/manager.routes"));
 app.use("/api/timetable", require("./routes/timetable.routes"));
 app.use("/api/webhook", require("./routes/webhook.routes"));
 

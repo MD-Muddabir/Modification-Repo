@@ -194,9 +194,18 @@ exports.deleteAdmin = async (req, res) => {
             return res.status(404).json({ success: false, message: "Admin not found." });
         }
 
-        await admin.destroy();
-
-        res.status(200).json({ success: true, message: "Admin removed successfully." });
+        try {
+            await admin.destroy();
+            res.status(200).json({ success: true, message: "Admin removed successfully." });
+        } catch (dbError) {
+            if (dbError.name === 'SequelizeForeignKeyConstraintError') {
+                return res.status(400).json({
+                    success: false,
+                    message: "Cannot remove this manager because they have linked records (e.g. they marked attendance or collected fees). Please Edit and Block their account instead."
+                });
+            }
+            throw dbError;
+        }
 
     } catch (error) {
         console.error("Delete admin error:", error);

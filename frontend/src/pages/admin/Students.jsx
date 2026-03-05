@@ -41,6 +41,17 @@ function Students() {
         fetchClasses();
     }, []);
 
+    const hasPerm = (op) => {
+        if (user?.role === 'admin' || user?.role === 'super_admin') return true;
+        if (user?.role === 'manager' && user?.permissions) {
+            return user.permissions.includes('students') || user.permissions.includes(`students.${op}`);
+        }
+        return false;
+    };
+    const canCreate = hasPerm('create');
+    const canUpdate = hasPerm('update');
+    const canDelete = hasPerm('delete');
+
     const fetchStudents = async () => {
         try {
             const response = await api.get("/students");
@@ -251,12 +262,14 @@ function Students() {
                     <Link to="/admin/dashboard" className="btn btn-secondary">
                         ← Back
                     </Link>
-                    <button
-                        onClick={() => { resetForm(); setShowModal(true); }}
-                        className="btn btn-primary"
-                    >
-                        + Add Student
-                    </button>
+                    {canCreate && (
+                        <button
+                            onClick={() => { resetForm(); setShowModal(true); }}
+                            className="btn btn-primary"
+                        >
+                            + Add Student
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -398,18 +411,22 @@ function Students() {
                                         </td>
                                         <td>
                                             <div style={{ display: "flex", gap: "0.5rem" }}>
-                                                <button
-                                                    className="btn btn-sm btn-primary"
-                                                    onClick={() => handleEdit(student)}
-                                                >
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    className="btn btn-sm btn-danger"
-                                                    onClick={() => handleDelete(student.id)}
-                                                >
-                                                    Delete
-                                                </button>
+                                                {canUpdate && (
+                                                    <button
+                                                        className="btn btn-sm btn-primary"
+                                                        onClick={() => handleEdit(student)}
+                                                    >
+                                                        Edit
+                                                    </button>
+                                                )}
+                                                {canDelete && (
+                                                    <button
+                                                        className="btn btn-sm btn-danger"
+                                                        onClick={() => handleDelete(student.id)}
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

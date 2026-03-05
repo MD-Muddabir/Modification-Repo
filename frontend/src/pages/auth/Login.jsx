@@ -26,6 +26,21 @@ function Login() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Redirect if already logged in
+  useEffect(() => {
+    const userObj = JSON.parse(localStorage.getItem("user"));
+    if (userObj) {
+      switch (userObj.role) {
+        case "super_admin": navigate("/superadmin/dashboard"); break;
+        case "admin": navigate("/admin/dashboard"); break;
+        case "faculty": navigate("/faculty/dashboard"); break;
+        case "student": navigate("/student/dashboard"); break;
+        case "manager": navigate("/admin/dashboard"); break;
+        default: navigate("/");
+      }
+    }
+  }, [navigate]);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError("");
