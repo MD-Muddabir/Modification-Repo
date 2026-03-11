@@ -270,15 +270,44 @@ exports.getSubmissions = async (req, res) => {
         const { id } = req.params;
         const institute_id = req.user.institute_id;
 
-        const submissions = await AssignmentSubmission.findAll({
-            where: { assignment_id: id, institute_id },
+        const assignment = await Assignment.findOne({ where: { id, institute_id } });
+        if (!assignment) return res.status(404).json({ success: false, message: 'Assignment not found' });
+
+        // Fetch students in this assignment's class
+        const students = await Student.findAll({
             include: [
-                { model: Student, include: [{ model: User, attributes: ['name', 'email', 'phone'] }] }
+                { model: Class, where: { id: assignment.class_id }, attributes: [] },
+                { model: User, attributes: ['id', 'name', 'email', 'phone'] }
             ],
-            order: [['submitted_at', 'ASC']]
+            where: { institute_id }
         });
 
-        res.status(200).json({ success: true, submissions });
+        // Fetch submissions for this assignment
+        const submissionsList = await AssignmentSubmission.findAll({
+            where: { assignment_id: id, institute_id }
+        });
+
+        const submissionsMap = new Map();
+        submissionsList.forEach(s => submissionsMap.set(s.student_id, s));
+
+        // Format roster
+        const roster = students.map(stu => {
+            const sub = submissionsMap.get(stu.id);
+            return {
+                id: sub ? sub.id : `pending-${stu.id}`,
+                Student: stu,
+                student_id: stu.id,
+                status: sub ? sub.status : 'pending',
+                submitted_at: sub ? sub.submitted_at : null,
+                is_late: sub ? sub.is_late : false,
+                submission_file_url: sub ? sub.submission_file_url : null,
+                marks_obtained: sub ? sub.marks_obtained : null,
+                grade: sub ? sub.grade : null,
+                feedback: sub ? sub.feedback : null
+            };
+        });
+
+        res.status(200).json({ success: true, submissions: roster });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }

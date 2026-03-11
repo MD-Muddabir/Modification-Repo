@@ -9,6 +9,23 @@ const FacultyAssignments = () => {
     // For Create Modal
     const [showModal, setShowModal] = useState(false);
     const [uploading, setUploading] = useState(false);
+
+    // Submissions View State
+    const [viewSubmissions, setViewSubmissions] = useState(false);
+    const [selectedAssignment, setSelectedAssignment] = useState(null);
+    const [submissions, setSubmissions] = useState([]);
+    const [subLoading, setSubLoading] = useState(false);
+
+    // Grading State
+    const [showGradeModal, setShowGradeModal] = useState(false);
+    const [selectedSubmission, setSelectedSubmission] = useState(null);
+    const [gradingData, setGradingData] = useState({
+        marks_obtained: "",
+        grade: "",
+        feedback: ""
+    });
+    const [grading, setGrading] = useState(false);
+
     const [classes, setClasses] = useState([]);
     const [subjects, setSubjects] = useState([]);
     const [filteredSubjects, setFilteredSubjects] = useState([]);
@@ -102,6 +119,50 @@ const FacultyAssignments = () => {
         }
     };
 
+    const handleViewSubmissions = async (asg) => {
+        setSelectedAssignment(asg);
+        setViewSubmissions(true);
+        setSubLoading(true);
+        try {
+            const res = await api.get(`/assignments/${asg.id}/submissions`);
+            if (res.data.success) {
+                setSubmissions(res.data.submissions);
+            }
+        } catch (error) {
+            toast.error("Failed to fetch submissions");
+        } finally {
+            setSubLoading(false);
+        }
+    };
+
+    const openGradeModal = (sub) => {
+        setSelectedSubmission(sub);
+        setGradingData({
+            marks_obtained: sub.marks_obtained || "",
+            grade: sub.grade || "",
+            feedback: sub.feedback || ""
+        });
+        setShowGradeModal(true);
+    };
+
+    const handleGradeSubmit = async (e) => {
+        e.preventDefault();
+        setGrading(true);
+        try {
+            const res = await api.patch(`/assignments/${selectedAssignment.id}/submissions/${selectedSubmission.id}/grade`, gradingData);
+            if (res.data.success) {
+                toast.success("Graded successfully");
+                setShowGradeModal(false);
+                // Refresh submissions list
+                handleViewSubmissions(selectedAssignment);
+            }
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to grade");
+        } finally {
+            setGrading(false);
+        }
+    };
+
     return (
         <div className="dashboard-container">
             <div className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -145,13 +206,148 @@ const FacultyAssignments = () => {
                                     </span>
                                 </td>
                                 <td style={{ padding: '10px' }}>
-                                    {a.stats?.total_submissions} / {a.stats?.total_students}
+                                    <button
+                                        className="btn btn-sm btn-secondary"
+                                        onClick={() => handleViewSubmissions(a)}
+                                        style={{ padding: '4px 8px', fontSize: '12px' }}
+                                    >
+                                        {a.stats?.total_submissions} / {a.stats?.total_students} Submissions
+                                    </button>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
+
+            {/* View Submissions Modal */}
+            {viewSubmissions && (
+                <div className="modal-overlay">
+                    <div className="modal-content" style={{ maxWidth: 900, width: '95%', maxHeight: '90vh', overflowY: 'auto' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                            <h2 style={{ margin: 0 }}>📊 Submissions for: {selectedAssignment.title}</h2>
+                            <button className="btn btn-secondary" onClick={() => setViewSubmissions(false)}>✕</button>
+                        </div>
+
+                        {subLoading ? (
+                            <div style={{ padding: '40px', textAlign: 'center' }}>Loading submissions...</div>
+                        ) : (
+                            <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                    <thead>
+                                        <tr style={{ background: '#f8fafc', textAlign: 'left' }}>
+                                            <th style={{ padding: '12px', borderBottom: '1px solid #e2e8f0' }}>Student Name</th>
+                                            <th style={{ padding: '12px', borderBottom: '1px solid #e2e8f0' }}>Submitted On</th>
+                                            <th style={{ padding: '12px', borderBottom: '1px solid #e2e8f0' }}>File</th>
+                                            <th style={{ padding: '12px', borderBottom: '1px solid #e2e8f0' }}>Status</th>
+                                            <th style={{ padding: '12px', borderBottom: '1px solid #e2e8f0' }}>Marks / Grade</th>
+                                            <th style={{ padding: '12px', borderBottom: '1px solid #e2e8f0' }}>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {submissions.length === 0 ? (
+                                            <tr><td colSpan="6" style={{ padding: '20px', textAlign: 'center' }}>No submissions yet.</td></tr>
+                                        ) : submissions.map(s => (
+                                            <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                                                <td style={{ padding: '12px' }}>
+                                                    <strong>{s.Student?.User?.name}</strong><br />
+                                                    <small style={{ color: '#64748b' }}>Roll No: {s.Student?.roll_number}</small>
+                                                </td>
+                                                <td style={{ padding: '12px' }}>
+                                                    {new Date(s.submitted_at).toLocaleString()}
+                                                    {s.is_late && <div style={{ color: '#ef4444', fontSize: '11px', fontWeight: 'bold' }}>LATE</div>}
+                                                </td>
+                                                <td style={{ padding: '12px' }}>
+                                                    <a
+                                                        href={`${api.defaults.baseURL.replace('/api', '')}${s.submission_file_url}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="btn btn-secondary btn-sm"
+                                                        style={{ padding: '2px 8px', fontSize: '11px' }}
+                                                    >
+                                                        View File
+                                                    </a>
+                                                </td>
+                                                <td style={{ padding: '12px' }}>
+                                                    <span style={{
+                                                        padding: '4px 8px', borderRadius: '12px', fontSize: '11px',
+                                                        background: s.status === 'graded' ? '#dcfce7' : '#fef9c3',
+                                                        color: s.status === 'graded' ? '#166534' : '#854d0e'
+                                                    }}>
+                                                        {s.status}
+                                                    </span>
+                                                </td>
+                                                <td style={{ padding: '12px' }}>
+                                                    {s.status === 'graded' ? (
+                                                        <span>{s.marks_obtained} / {selectedAssignment.max_marks} ({s.grade})</span>
+                                                    ) : '-'}
+                                                </td>
+                                                <td style={{ padding: '12px' }}>
+                                                    <button className="btn btn-primary btn-sm" onClick={() => openGradeModal(s)}>
+                                                        {s.status === 'graded' ? 'Edit Grade' : 'Grade Now'}
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Grading Modal */}
+            {showGradeModal && (
+                <div className="modal-overlay" style={{ zIndex: 1100 }}>
+                    <div className="modal-content" style={{ maxWidth: 500, width: '90%' }}>
+                        <h3>📝 Grade Submission: {selectedSubmission?.Student?.User?.name}</h3>
+                        <form onSubmit={handleGradeSubmit}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginTop: '15px' }}>
+                                <div className="form-group">
+                                    <label className="form-label">Marks Obtained (Max: {selectedAssignment.max_marks}) *</label>
+                                    <input
+                                        type="number"
+                                        className="form-input"
+                                        value={gradingData.marks_obtained}
+                                        onChange={(e) => setGradingData({ ...gradingData, marks_obtained: e.target.value })}
+                                        required
+                                        max={selectedAssignment.max_marks}
+                                        min="0"
+                                        step="0.01"
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Grade (Optional)</label>
+                                    <input
+                                        type="text"
+                                        className="form-input"
+                                        placeholder="A, B+, Excellent etc"
+                                        value={gradingData.grade}
+                                        onChange={(e) => setGradingData({ ...gradingData, grade: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                            <div className="form-group" style={{ marginTop: '15px' }}>
+                                <label className="form-label">Feedback to Student</label>
+                                <textarea
+                                    className="form-input"
+                                    rows="3"
+                                    placeholder="Good work, keep it up..."
+                                    value={gradingData.feedback}
+                                    onChange={(e) => setGradingData({ ...gradingData, feedback: e.target.value })}
+                                ></textarea>
+                            </div>
+                            <div className="modal-actions" style={{ marginTop: '20px', display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowGradeModal(false)} disabled={grading}>Cancel</button>
+                                <button type="submit" className="btn btn-primary" disabled={grading}>
+                                    {grading ? "Saving..." : "Save Grade"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {/* Create Assignment Modal */}
             {showModal && (
