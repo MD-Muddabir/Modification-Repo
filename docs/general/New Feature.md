@@ -1,0 +1,7 @@
+
+Phase 1:
+    If i am adding the new feature then this feature add in the SuperAdmin Dashbaord in Manage Plans Section in that Create New Subscription Plan form Add this feature. and If i am checkout this feature then this feature add in the Admin Dashbaord and proper working. IF I am not checkout this features then this feature look in the admin dashbaord. for example If i am add new feature attendance then this feature add in the plan form and plans. If i am create the plan name is basic and checkout the Attendance feature then user can buy this plan then he can use this feature. If i am create the plan name is demo and not checkout the Attendance feature then user can buy this demo plan then he cannot access this features and look this features. if user can click on this feature then msg showing "Please upgrade your plan to access this feature". You can think deeply and all posibility and please proper implement and give me the proper working website.
+
+Phase 2:
+    If i am adding the new feature then this feature add in the Admin Dashbaord in Manage Manager section in that Create New Manager form Add this feature. and If Admin can checkout this feature then this feature add in the manager dashbaord and showing this feature and proper working. If Admin not checkout this feature then this feature not showing in the manager dashbaord. hide this feature. and please implement properly and you can think deeply and think all posiility and choose the best and professional way. and please give me the proper working website.
+
