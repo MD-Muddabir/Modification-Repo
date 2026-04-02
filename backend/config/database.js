@@ -9,14 +9,14 @@ require("dotenv").config();
 
 // Initialize Sequelize with environment variables
 const sequelize = new Sequelize(
-    process.env.DB_NAME || "student_saas",
+    process.env.DB_NAME || "railway",          // ✅ change default
     process.env.DB_USER || "root",
-    process.env.DB_PASSWORD || "tiger",
+    process.env.DB_PASSWORD,
     {
-        host: process.env.DB_HOST || "localhost",
+        host: process.env.DB_HOST,              // ❌ no localhost fallback
         port: process.env.DB_PORT || 3306,
-        dialect: process.env.DB_DIALECT || "mysql",
-        logging: false, // Set to console.log for debugging
+        dialect: "mysql",
+        logging: false,
         pool: {
             max: 10,
             min: 0,
