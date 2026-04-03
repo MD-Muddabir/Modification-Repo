@@ -89,6 +89,7 @@ export default function InstitutePage() {
 
   const enqRef = useRef(null);
   const contentRef = useRef(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useScrollReveal();
 
@@ -156,7 +157,11 @@ export default function InstitutePage() {
     }
   }, [data]);
 
-  const scrollToEnq = () => enqRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToEnq = () => {
+    enqRef.current?.scrollIntoView({ behavior: "smooth" });
+    setMobileMenuOpen(false);
+  };
+  const handleNavLink = (e) => { setMobileMenuOpen(false); };
 
   const handleEnqSubmit = async (e) => {
     e.preventDefault();
@@ -217,10 +222,35 @@ export default function InstitutePage() {
         </ul>
 
         <div className="pub-nav-cta">
-          {/* <a href="/login" className="pub-btn-outline">Login</a> */}
           <button className="pub-btn-primary" onClick={scrollToEnq}>Enroll Now</button>
         </div>
+
+        {/* Hamburger — shown only on mobile via CSS */}
+        <button
+          className={`pub-nav-hamburger ${mobileMenuOpen ? 'open' : ''}`}
+          onClick={() => setMobileMenuOpen(o => !o)}
+          aria-label="Toggle navigation menu"
+        >
+          <span /><span /><span />
+        </button>
       </nav>
+
+      {/* ── Mobile Menu Drawer ── */}
+      {mobileMenuOpen && (
+        <div className="pub-mobile-menu open" onClick={() => setMobileMenuOpen(false)}>
+          <div className="pub-mobile-overlay" />
+          <div className="pub-mobile-drawer" onClick={e => e.stopPropagation()}>
+            <button className="pub-mobile-close" onClick={() => setMobileMenuOpen(false)}>✕</button>
+            <a href="#about" onClick={handleNavLink}>About</a>
+            {hasYoutube && <a href="#video" onClick={handleNavLink}>Video</a>}
+            {hasCourses && <a href="#courses" onClick={handleNavLink}>Courses</a>}
+            {hasFaculty && <a href="#faculty" onClick={handleNavLink}>Faculty</a>}
+            {data.gallery?.length > 0 && <a href="#gallery" onClick={handleNavLink}>Gallery</a>}
+            <a href="#contact" onClick={handleNavLink}>Contact</a>
+            <button className="pub-btn-primary" onClick={scrollToEnq}>Enroll Now</button>
+          </div>
+        </div>
+      )}
 
       {/* ── Hero ── */}
       <section className="pub-hero" id="home">
