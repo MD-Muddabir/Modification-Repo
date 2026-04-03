@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../../services/api";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import { resolveFileUrl } from "../../utils/resolveUrl";
 import { toast } from "react-hot-toast";
 
 function FacultyNotes() {
@@ -174,7 +175,7 @@ function FacultyNotes() {
                                         <td>{note.subjectName || note.Subject?.name || note.subject_id}</td>
                                         <td>
                                             <a
-                                                href={`${api.defaults.baseURL.replace('/api', '')}${note.file_url}`}
+                                                href={resolveFileUrl(note.file_url)}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="btn btn-secondary"

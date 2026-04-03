@@ -16,8 +16,22 @@ const {
     Plan
 } = require("../models");
 const { Op } = require("sequelize");
-const path = require("path");
-const fs = require("fs");
+const cloudinary = require("../config/cloudinary");
+
+// ── Helper: extract Cloudinary public_id from a URL ─────────────
+function extractPublicId(url) {
+    if (!url || !url.includes("cloudinary.com")) return null;
+    // e.g. https://res.cloudinary.com/CLOUD/image/upload/v123/folder/name.ext
+    const match = url.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.[a-z0-9]+)?$/i);
+    return match ? match[1] : null;
+}
+
+// ── Helper: delete a Cloudinary asset (silently ignores errors) ──
+async function destroyCloudinary(url, resourceType = "image") {
+    const publicId = extractPublicId(url);
+    if (!publicId) return;
+    try { await cloudinary.uploader.destroy(publicId, { resource_type: resourceType }); } catch (_) {}
+}
 
 // ── Slug generator ──────────────────────────────────────────────
 function generateSlug(name) {
@@ -145,7 +159,8 @@ exports.createOrUpdatePublicPage = async (req, res) => {
                     const idx = parseInt(matchCourse[1]);
                     const file = req.files[fieldName][0];
                     if (file && manualCourses[idx]) {
-                        manualCourses[idx].image_url = `/uploads/public/${file.filename}`;
+                        // file.path = full Cloudinary HTTPS URL
+                        manualCourses[idx].image_url = file.path;
                     }
                 }
                 const matchFaculty = fieldName.match(/^manual_faculty_img_(\d+)$/);
@@ -153,7 +168,7 @@ exports.createOrUpdatePublicPage = async (req, res) => {
                     const idx = parseInt(matchFaculty[1]);
                     const file = req.files[fieldName][0];
                     if (file && manualFaculty[idx]) {
-                        manualFaculty[idx].image_url = `/uploads/public/${file.filename}`;
+                        manualFaculty[idx].image_url = file.path;
                     }
                 }
             });
@@ -173,7 +188,9 @@ exports.createOrUpdatePublicPage = async (req, res) => {
                     const facultyId = match[1];
                     const file = req.files[fieldName][0];
                     if (file) {
-                        facultyImages[facultyId] = `/uploads/public/${file.filename}`;
+                        // Delete old Cloudinary image for this faculty (async, non-blocking)
+                        if (facultyImages[facultyId]) destroyCloudinary(facultyImages[facultyId]);
+                        facultyImages[facultyId] = file.path; // Cloudinary URL
                     }
                 }
             });
@@ -218,10 +235,10 @@ exports.createOrUpdatePublicPage = async (req, res) => {
             faculty_images: facultyImages,
         };
 
-        // Handle logo/cover photo uploads
+        // Handle logo/cover photo uploads — use Cloudinary permanent URL
         if (req.files) {
-            if (req.files.logo) profileData.logo_url = `/uploads/public/${req.files.logo[0].filename}`;
-            if (req.files.cover_photo) profileData.cover_photo_url = `/uploads/public/${req.files.cover_photo[0].filename}`;
+            if (req.files.logo) profileData.logo_url = req.files.logo[0].path;
+            if (req.files.cover_photo) profileData.cover_photo_url = req.files.cover_photo[0].path;
         }
 
         let profile;
@@ -292,7 +309,7 @@ exports.uploadGalleryPhoto = async (req, res) => {
 
         const photo = await InstituteGalleryPhoto.create({
             institute_id: instituteId,
-            photo_url: `/uploads/public/${req.file.filename}`,
+            photo_url: req.file.path, // Cloudinary permanent URL
             label: req.body.label || null,
             sort_order: count
         });
@@ -315,9 +332,8 @@ exports.deleteGalleryPhoto = async (req, res) => {
         });
         if (!photo) return res.status(404).json({ success: false, message: "Photo not found" });
 
-        // Remove file from disk
-        const filePath = path.join(__dirname, '..', photo.photo_url);
-        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        // Delete from Cloudinary (permanent CDN)
+        destroyCloudinary(photo.photo_url);
 
         await photo.destroy();
         return res.json({ success: true, message: "Gallery photo deleted" });
@@ -343,7 +359,7 @@ exports.uploadFacultyImage = async (req, res) => {
 
         if (!req.file) return res.status(400).json({ success: false, message: "No file uploaded" });
 
-        const imageUrl = `/uploads/public/${req.file.filename}`;
+        const imageUrl = req.file.path; // Cloudinary permanent URL
 
         // Update or create profile faculty_images map
         let profile = await InstitutePublicProfile.findOne({ where: { institute_id: instituteId } });
@@ -354,13 +370,8 @@ exports.uploadFacultyImage = async (req, res) => {
         const existingImages = profile.faculty_images || {};
         const updatedImages = { ...existingImages, [facultyId]: imageUrl };
 
-        // Delete old file if exists
-        if (existingImages[facultyId]) {
-            const oldPath = path.join(__dirname, '..', existingImages[facultyId]);
-            if (fs.existsSync(oldPath)) {
-                try { fs.unlinkSync(oldPath); } catch (_) {}
-            }
-        }
+        // Delete old Cloudinary image if exists
+        if (existingImages[facultyId]) destroyCloudinary(existingImages[facultyId]);
 
         await profile.update({ faculty_images: updatedImages });
 
@@ -384,10 +395,8 @@ exports.deleteFacultyImage = async (req, res) => {
 
         const existingImages = profile.faculty_images || {};
         if (existingImages[facultyId]) {
-            const oldPath = path.join(__dirname, '..', existingImages[facultyId]);
-            if (fs.existsSync(oldPath)) {
-                try { fs.unlinkSync(oldPath); } catch (_) {}
-            }
+            // Delete from Cloudinary (non-blocking)
+            destroyCloudinary(existingImages[facultyId]);
             delete existingImages[facultyId];
             await profile.update({ faculty_images: existingImages });
         }

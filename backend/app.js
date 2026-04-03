@@ -105,9 +105,12 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 /**
  * Static Files
- * Serve uploaded files
+ * NOTE: Local /uploads folder is NO LONGER USED.
+ * All file uploads are now stored on Cloudinary (permanent cloud CDN).
+ * The line below is kept commented for reference during migration.
  */
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 
 // Note: Basic request logging is handled by the performanceLogger middleware above.
 // It provides richer data: duration, status codes, slow-request warnings.

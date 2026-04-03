@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../../services/api";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import { resolveFileUrl } from "../../utils/resolveUrl";
 import { toast } from "react-hot-toast";
 
 function StudentNotes() {
@@ -85,9 +86,8 @@ function StudentNotes() {
         try {
             await api.post(`/notes/download/${note.id}`);
         } catch (_) { }
-        // Build file URL from api baseURL (strips /api suffix)
-        const baseOrigin = api.defaults.baseURL.replace('/api', '');
-        window.open(`${baseOrigin}${note.file_url}`, "_blank");
+        // resolveFileUrl handles both Cloudinary URLs and legacy /uploads paths
+        window.open(resolveFileUrl(note.file_url), "_blank");
     };
 
     if (loading) return <div style={{ padding: 40 }}><LoadingSpinner /></div>;

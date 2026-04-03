@@ -1,24 +1,36 @@
+/**
+ * Assignment Upload Utility — Cloudinary Storage
+ * Faculty reference files & student submissions
+ * Files are permanently stored on Cloudinary (never lost on server restart)
+ */
+
 const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("../config/cloudinary");
 
-// Ensure upload directory exists
-const uploadDir = path.join(__dirname, "..", "uploads", "assignments");
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
+// ── Cloudinary storage for assignments ───────────────────────────
+const storage = new CloudinaryStorage({
+    cloudinary,
+    params: (req, file) => {
+        const imageTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
+        const isImage = imageTypes.includes(file.mimetype);
 
-// Multer storage configuration
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, uploadDir);
+        return {
+            folder: "student-saas/assignments",
+            resource_type: isImage ? "image" : "raw",
+            public_id: `asg-${Date.now()}-${Math.round(Math.random() * 1e6)}`,
+            ...(isImage && {
+                transformation: [
+                    { width: 2000, height: 2000, crop: "limit" },
+                    { quality: "auto" },
+                    { fetch_format: "auto" },
+                ],
+            }),
+        };
     },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1E9);
-        cb(null, "asg-" + uniqueSuffix + path.extname(file.originalname));
-    }
 });
 
+// ── Allowed MIME types ────────────────────────────────────────────
 const allowedTypes = [
     "application/pdf",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -26,8 +38,9 @@ const allowedTypes = [
     "image/jpeg",
     "image/png",
     "image/jpg",
+    "image/webp",
     "application/zip",
-    "application/x-zip-compressed"
+    "application/x-zip-compressed",
 ];
 
 const fileFilter = (req, file, cb) => {
@@ -39,13 +52,9 @@ const fileFilter = (req, file, cb) => {
 };
 
 const uploadAssignment = multer({
-    storage: storage,
-    limits: {
-        fileSize: 50 * 1024 * 1024 // Global max before specific checks
-    },
-    fileFilter: fileFilter
+    storage,
+    limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
+    fileFilter,
 });
 
-module.exports = {
-    uploadAssignment
-};
+module.exports = { uploadAssignment };

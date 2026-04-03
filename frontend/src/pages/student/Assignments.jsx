@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
 import BackButton from '../../components/common/BackButton';
+import { resolveFileUrl } from '../../utils/resolveUrl';
 import '../faculty/Assignments.css';
 import '../admin/Dashboard.css';
 
@@ -206,7 +207,7 @@ export default function StudentAssignments() {
 
                     {detailAsg.reference_file_url && (
                         <div style={{ marginBottom: 20 }}>
-                            <a href={`${import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') : (import.meta.env.DEV ? 'http://localhost:5000' : 'https://student-saas-backend.onrender.com')}${detailAsg.reference_file_url}`} target="_blank" rel="noreferrer" className="btn btn-secondary">
+                            <a href={resolveFileUrl(detailAsg.reference_file_url)} target="_blank" rel="noreferrer" className="btn btn-secondary">
                                 📥 Download Reference File
                             </a>
                         </div>

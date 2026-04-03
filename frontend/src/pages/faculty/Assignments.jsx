@@ -4,6 +4,7 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api';
+import { resolveFileUrl } from '../../utils/resolveUrl';
 import '../admin/Dashboard.css';
 import './Assignments.css';
 
@@ -498,7 +499,7 @@ export default function FacultyAssignments() {
                                             <td>{sub.submitted_at ? new Date(sub.submitted_at).toLocaleString() : '—'}</td>
                                             <td>
                                                 {sub.submission_file_url ? (
-                                                    <a href={`${import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') : (import.meta.env.DEV ? 'http://localhost:5000' : 'https://student-saas-backend.onrender.com')}${sub.submission_file_url}`} target="_blank" rel="noreferrer" className="fa-file-link">
+                                                    <a href={resolveFileUrl(sub.submission_file_url)} target="_blank" rel="noreferrer" className="fa-file-link">
                                                         📥 {sub.submission_file_name || 'Download'} {sub.submission_file_size_kb ? `(${sub.submission_file_size_kb} KB)` : ''}
                                                     </a>
                                                 ) : '—'}
@@ -555,7 +556,7 @@ export default function FacultyAssignments() {
                             <p><strong>Student:</strong> {gradingTarget.Student?.User?.name}</p>
                             <p><strong>Assignment:</strong> {selected.title} ({selected.max_marks} marks)</p>
                             {gradingTarget.submission_file_url && (
-                                <a href={`${import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') : (import.meta.env.DEV ? 'http://localhost:5000' : 'https://student-saas-backend.onrender.com')}${gradingTarget.submission_file_url}`} target="_blank" rel="noreferrer" className="fa-file-link" style={{ display: 'inline-block', marginBottom: 16 }}>
+                                <a href={resolveFileUrl(gradingTarget.submission_file_url)} target="_blank" rel="noreferrer" className="fa-file-link" style={{ display: 'inline-block', marginBottom: 16 }}>
                                     📥 View Submission
                                 </a>
                             )}

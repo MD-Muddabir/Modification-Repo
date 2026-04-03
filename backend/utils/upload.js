@@ -1,36 +1,50 @@
+/**
+ * Notes Upload Utility — Cloudinary Storage
+ * PDF/DOCX/PPT/Image/ZIP files for faculty notes
+ * Files are permanently stored on Cloudinary (never lost on server restart)
+ */
+
 const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const cloudinary = require("../config/cloudinary");
 
-// Ensure upload directory exists
-const uploadDir = path.join(__dirname, "..", "uploads", "notes");
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
+// ── Cloudinary storage for notes ──────────────────────────────────
+const storage = new CloudinaryStorage({
+    cloudinary,
+    params: (req, file) => {
+        // Determine resource_type (raw for non-images)
+        const imageTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
+        const isImage = imageTypes.includes(file.mimetype);
 
-// Multer storage configuration
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, uploadDir);
+        return {
+            folder: "student-saas/notes",
+            resource_type: isImage ? "image" : "raw",
+            public_id: `note-${Date.now()}-${Math.round(Math.random() * 1e6)}`,
+            // Only apply image transformations when the file is an image
+            ...(isImage && {
+                transformation: [
+                    { width: 2000, height: 2000, crop: "limit" },
+                    { quality: "auto" },
+                    { fetch_format: "auto" },
+                ],
+            }),
+        };
     },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1E9);
-        cb(null, "note-" + uniqueSuffix + path.extname(file.originalname));
-    }
 });
 
-// File filter based on allowed types
+// ── Allowed MIME types ────────────────────────────────────────────
 const allowedTypes = [
-    "application/pdf", // PDF
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // DOCX
-    "application/msword", // DOC
-    "application/vnd.ms-powerpoint", // PPT
-    "application/vnd.openxmlformats-officedocument.presentationml.presentation", // PPTX
-    "image/jpeg", // JPEG
-    "image/png", // PNG
-    "image/jpg", // JPG
-    "application/zip", // ZIP
-    "application/x-zip-compressed" // ZIP alternative
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/msword",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "image/jpeg",
+    "image/png",
+    "image/jpg",
+    "image/webp",
+    "application/zip",
+    "application/x-zip-compressed",
 ];
 
 const fileFilter = (req, file, cb) => {
@@ -41,15 +55,10 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-// Multer upload instance
 const uploadNote = multer({
-    storage: storage,
-    limits: {
-        fileSize: 20 * 1024 * 1024 // 20 MB max file size
-    },
-    fileFilter: fileFilter
+    storage,
+    limits: { fileSize: 20 * 1024 * 1024 }, // 20 MB
+    fileFilter,
 });
 
-module.exports = {
-    uploadNote
-};
+module.exports = { uploadNote };

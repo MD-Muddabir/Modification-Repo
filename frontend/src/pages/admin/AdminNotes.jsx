@@ -1,10 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import api from "../../services/api";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import { resolveFileUrl } from "../../utils/resolveUrl";
 import { toast } from "react-hot-toast";
-
-// Build the base server URL from the api config (strips /api suffix)
-const SERVER_URL = api.defaults.baseURL.replace("/api", "");
 
 // Helper: human-readable file size
 function formatSize(bytes) {
@@ -256,9 +254,7 @@ function AdminNotes() {
                                         || note.Faculty?.User?.email
                                         || `Faculty #${note.faculty_id}`;
 
-                                    const fileUrl = note.file_url
-                                        ? `${SERVER_URL}${note.file_url}`
-                                        : null;
+                                    const fileUrl = resolveFileUrl(note.file_url);
 
                                     return (
                                         <tr key={note.id}>

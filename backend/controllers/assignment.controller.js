@@ -10,8 +10,16 @@ const {
     sequelize
 } = require("../models");
 const { Op } = require("sequelize");
-const fs = require("fs");
-const path = require("path");
+const cloudinary = require("../config/cloudinary");
+
+// Helper: silently delete a Cloudinary asset
+async function destroyCloudinary(url, resourceType = "raw") {
+    if (!url || !url.includes("cloudinary.com")) return;
+    const match = url.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.[a-z0-9]+)?$/i);
+    const publicId = match ? match[1] : null;
+    if (!publicId) return;
+    try { await cloudinary.uploader.destroy(publicId, { resource_type: resourceType }); } catch (_) {}
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
@@ -54,7 +62,7 @@ exports.createAssignment = async (req, res) => {
         let reference_file_url = null;
         let reference_file_type = null;
         if (req.file) {
-            reference_file_url = `/uploads/assignments/${req.file.filename}`;
+            reference_file_url = req.file.path; // Cloudinary permanent URL
             reference_file_type = req.file.mimetype;
         }
 
@@ -239,9 +247,9 @@ exports.deleteAssignment = async (req, res) => {
         if (assignment.status !== 'draft') return res.status(400).json({ success: false, message: 'Only draft assignments can be deleted' });
         const count = await AssignmentSubmission.count({ where: { assignment_id: id } });
         if (count > 0) return res.status(400).json({ success: false, message: 'Cannot delete assignment with submissions' });
+        // Delete reference file from Cloudinary if exists
         if (assignment.reference_file_url) {
-            const filePath = path.join(__dirname, '..', assignment.reference_file_url);
-            if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+            destroyCloudinary(assignment.reference_file_url);
         }
         await assignment.destroy();
         res.status(200).json({ success: true, message: 'Assignment deleted successfully' });
@@ -484,7 +492,7 @@ exports.submitAssignment = async (req, res) => {
                 institute_id,
                 assignment_id: id,
                 student_id: student.id,
-                submission_file_url: `/uploads/assignments/${req.file.filename}`,
+                submission_file_url: req.file.path,  // Cloudinary permanent URL
                 submission_file_name: req.file.originalname,
                 submission_file_type: req.file.mimetype,
                 submission_file_size_kb: Math.ceil(req.file.size / 1024),
@@ -530,7 +538,7 @@ exports.resubmitAssignment = async (req, res) => {
         const lateMinutes = isLate ? Math.floor((now - due) / 60000) : 0;
 
         await submission.update({
-            submission_file_url: `/uploads/assignments/${req.file.filename}`,
+            submission_file_url: req.file.path,  // Cloudinary permanent URL
             submission_file_name: req.file.originalname,
             submission_file_type: req.file.mimetype,
             submission_file_size_kb: Math.ceil(req.file.size / 1024),

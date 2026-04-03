@@ -1,6 +1,5 @@
 const { ChatRoom, ChatMessage, ChatParticipant, User, Faculty, Student, Class, Subject } = require("../models");
 const { Op } = require("sequelize");
-const fs = require("fs");
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────
 
@@ -164,13 +163,12 @@ exports.sendMessage = async (req, res) => {
             sender_id: userId,
             sender_role: userRole,
             message: message || null,
-            attachment_url: req.file ? `/uploads/notes/${req.file.filename}` : null,
+            attachment_url: req.file ? req.file.path : null,  // Cloudinary permanent URL
             attachment_type: req.file ? req.file.mimetype : null,
         });
 
         return res.status(201).json({ success: true, sender_display_name });
     } catch (err) {
-        if (req.file && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
         console.error("sendMessage:", err);
         return res.status(500).json({ success: false, message: err.message });
     }

@@ -1,6 +1,14 @@
-﻿const fs = require("fs");
-const path = require("path");
 const { Note, NoteDownload, Faculty, Subject, Class, User } = require("../models");
+const cloudinary = require("../config/cloudinary");
+
+// Helper: delete Cloudinary asset silently
+async function destroyCloudinary(url, resourceType = "image") {
+    if (!url || !url.includes("cloudinary.com")) return;
+    const match = url.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.[a-z0-9]+)?$/i);
+    const publicId = match ? match[1] : null;
+    if (!publicId) return;
+    try { await cloudinary.uploader.destroy(publicId, { resource_type: resourceType }); } catch (_) {}
+}
 
 // 1. Upload a note
 exports.uploadNote = async (req, res) => {
@@ -25,12 +33,8 @@ exports.uploadNote = async (req, res) => {
 
         // Input validation
         if (!title || !class_id || !subject_id) {
-            // Remove uploaded file if validation fails
-            if (req.file) fs.unlinkSync(req.file.path);
             return res.status(400).json({ success: false, message: "Title, class_id, and subject_id are required" });
         }
-
-        // Checking if class and subject are valid/exist could be added here
 
         const newNote = await Note.create({
             institute_id: user.institute_id,
@@ -39,7 +43,7 @@ exports.uploadNote = async (req, res) => {
             subject_id: subject_id,
             title: title,
             description: description || "",
-            file_url: `/uploads/notes/${req.file.filename}`,
+            file_url: req.file.path,  // Cloudinary permanent URL
             file_type: req.file.mimetype,
             file_size: req.file.size
         });
@@ -52,9 +56,6 @@ exports.uploadNote = async (req, res) => {
 
     } catch (error) {
         console.error("Upload note error:", error);
-        if (req.file && fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
-        }
         res.status(500).json({ success: false, message: "Server error", error: error.message });
     }
 };
@@ -121,11 +122,11 @@ exports.deleteNote = async (req, res) => {
             return res.status(403).json({ success: false, message: "You do not have permission to delete this note" });
         }
 
-        // Delete the file from the filesystem
-        const filePath = path.join(__dirname, "..", "..", note.file_url);
-        if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-        }
+        // Delete from Cloudinary (permanent CDN)
+        // Detect resource type: 'raw' for documents, 'image' for images
+        const imageTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
+        const resourceType = imageTypes.includes(note.file_type) ? "image" : "raw";
+        destroyCloudinary(note.file_url, resourceType);
 
         await note.destroy();
 
