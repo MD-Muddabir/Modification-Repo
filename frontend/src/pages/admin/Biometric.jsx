@@ -35,7 +35,7 @@ export default function BiometricPage() {
                     </p>
                 </div>
                 <button
-                    className="animated-btn secondary"
+                    className="animated-btn secondary btn btn-secondary"
                     onClick={() => window.location.href = "/admin/dashboard"}
                 >
                     <span className="icon icon-back">←</span> Back to Dashboard

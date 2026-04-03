@@ -65,7 +65,7 @@ function FacultySchedule() {
                     <h1>📅 My Teaching Schedule</h1>
                     <p>View the full timetable for classes you teach. Your subjects are highlighted.</p>
                 </div>
-                <button className="animated-btn secondary" onClick={() => window.location.href = "/faculty/dashboard"}>
+                <button className="animated-btn secondary btn btn-secondary" onClick={() => window.location.href = "/faculty/dashboard"}>
                     <span className="icon icon-back">←</span> Back to Dashboard
                 </button>
             </div>

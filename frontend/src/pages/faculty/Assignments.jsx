@@ -247,7 +247,7 @@ export default function FacultyAssignments() {
                             + Create Assignment
                         </button>
                     )}
-                    <button className="animated-btn secondary" onClick={() => window.location.href = "/faculty/dashboard"}>
+                    <button className="animated-btn secondary btn btn-secondary" onClick={() => window.location.href = "/faculty/dashboard"}>
                         <span className="icon icon-back">←</span> Back to Dashboard
                     </button>
                 </div>

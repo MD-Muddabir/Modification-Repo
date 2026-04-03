@@ -53,3 +53,50 @@
     background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
     box-shadow: 0 10px 15px -3px rgba(220, 38, 38, 0.4);
 }
+
+/* Variant: Secondary (for Back Buttons - strictly follows themes) */
+.animated-btn.secondary {
+    background: var(--gray-200, #e5e7eb);
+    color: var(--gray-900, #111827);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    border: 1px solid transparent;
+}
+
+.animated-btn.secondary:hover {
+    background: var(--gray-300, #d1d5db);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+}
+
+/* Dark Mode Adaptation */
+html.dark-mode .animated-btn.secondary {
+    background: var(--gray-800, #1e293b);
+    color: var(--gray-100, #f1f5f9);
+    border-color: var(--gray-700, #334155);
+}
+
+html.dark-mode .animated-btn.secondary:hover {
+    background: var(--gray-700, #374151);
+}
+
+/* Pro Theme Adaptation */
+html.theme-pro .animated-btn.secondary {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+html.theme-pro .animated-btn.secondary:hover {
+    background: rgba(255, 255, 255, 0.9);
+}
+
+/* Deep Dark Pro Theme Adaptation */
+html.theme-pro.dark-mode .animated-btn.secondary {
+    background: rgba(30, 41, 59, 0.5);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+html.theme-pro.dark-mode .animated-btn.secondary:hover {
+    background: rgba(51, 65, 85, 0.8);
+}

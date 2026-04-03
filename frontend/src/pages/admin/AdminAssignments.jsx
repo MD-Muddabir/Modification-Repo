@@ -8,16 +8,16 @@ import '../faculty/Assignments.css';
 import './Dashboard.css';
 
 const STATUS_CONFIG = {
-    draft:     { label: 'Draft',     color: '#6b7280', bg: '#f3f4f6', icon: '✏️' },
+    draft: { label: 'Draft', color: '#6b7280', bg: '#f3f4f6', icon: '✏️' },
     published: { label: 'Published', color: '#2563eb', bg: '#eff6ff', icon: '📢' },
-    closed:    { label: 'Closed',    color: '#dc2626', bg: '#fee2e2', icon: '🔒' },
+    closed: { label: 'Closed', color: '#dc2626', bg: '#fee2e2', icon: '🔒' },
 };
 const SUB_STATUS_CONFIG = {
-    pending:            { label: 'Not Submitted',   color: '#6b7280', bg: '#f3f4f6' },
-    submitted:          { label: 'Submitted',        color: '#2563eb', bg: '#eff6ff' },
-    late:               { label: 'Late',             color: '#d97706', bg: '#fef3c7' },
-    graded:             { label: 'Graded',           color: '#16a34a', bg: '#f0fdf4' },
-    resubmit_requested: { label: 'Resubmit Req.',   color: '#7c3aed', bg: '#f5f3ff' },
+    pending: { label: 'Not Submitted', color: '#6b7280', bg: '#f3f4f6' },
+    submitted: { label: 'Submitted', color: '#2563eb', bg: '#eff6ff' },
+    late: { label: 'Late', color: '#d97706', bg: '#fef3c7' },
+    graded: { label: 'Graded', color: '#16a34a', bg: '#f0fdf4' },
+    resubmit_requested: { label: 'Resubmit Req.', color: '#7c3aed', bg: '#f5f3ff' },
 };
 
 function Badge({ status, type = 'assignment' }) {
@@ -40,19 +40,19 @@ function StatCard({ icon, label, value, color, sub }) {
 }
 
 export default function AdminAssignments() {
-    const [view, setView]             = useState('list');   // list | detail | overdue | pending
+    const [view, setView] = useState('list');   // list | detail | overdue | pending
     const [assignments, setAssignments] = useState([]);
-    const [stats, setStats]           = useState({});
-    const [selected, setSelected]     = useState(null);
+    const [stats, setStats] = useState({});
+    const [selected, setSelected] = useState(null);
     const [submissions, setSubmissions] = useState([]);
-    const [pending, setPending]       = useState([]);
-    const [overdue, setOverdue]       = useState([]);
-    const [classes, setClasses]       = useState([]);
-    const [subjects, setSubjects]     = useState([]);
-    const [faculty, setFaculty]       = useState([]);
-    const [loading, setLoading]       = useState(true);
-    const [exporting, setExporting]   = useState(false);
-    const [msg, setMsg]               = useState(null);
+    const [pending, setPending] = useState([]);
+    const [overdue, setOverdue] = useState([]);
+    const [classes, setClasses] = useState([]);
+    const [subjects, setSubjects] = useState([]);
+    const [faculty, setFaculty] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [exporting, setExporting] = useState(false);
+    const [msg, setMsg] = useState(null);
 
     const [filters, setFilters] = useState({ status: 'all', class_id: '', subject_id: '', faculty_id: '', q: '' });
 
@@ -63,7 +63,7 @@ export default function AdminAssignments() {
         try {
             const params = {};
             if (filters.status !== 'all') params.status = filters.status;
-            if (filters.class_id)   params.class_id   = filters.class_id;
+            if (filters.class_id) params.class_id = filters.class_id;
             if (filters.subject_id) params.subject_id = filters.subject_id;
             if (filters.faculty_id) params.faculty_id = filters.faculty_id;
 
@@ -165,8 +165,8 @@ export default function AdminAssignments() {
                 </div>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
                     {view !== 'list' && (
-                        <button className="animated-btn secondary" onClick={() => { setView('list'); setSelected(null); }}>
-                             <span className="icon icon-back">←</span> Back
+                        <button className="animated-btn secondary btn btn-secondary" onClick={() => { setView('list'); setSelected(null); }}>
+                            <span className="icon icon-back">←</span> Back
                         </button>
                     )}
                     {view === 'list' && (
@@ -176,7 +176,7 @@ export default function AdminAssignments() {
                             <button className="btn btn-secondary" onClick={handleExport} disabled={exporting}>
                                 {exporting ? 'Exporting...' : '📊 Export CSV'}
                             </button>
-                            <button className="animated-btn secondary" onClick={() => window.location.href = "/admin/dashboard"}>
+                            <button className="animated-btn secondary btn btn-secondary" onClick={() => window.location.href = "/admin/dashboard"}>
                                 <span className="icon icon-back">←</span> Back to Dashboard
                             </button>
                         </>
