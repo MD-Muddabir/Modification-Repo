@@ -40,7 +40,8 @@ const ChatRoom = sequelize.define("ChatRoom", {
         },
     },
     type: {
-        type: DataTypes.ENUM("subject", "group", "direct"),
+        type: DataTypes.STRING(20),
+        validate: { isIn: [["subject", "group", "direct"]] },
         allowNull: false,
     },
     name: {
@@ -48,7 +49,8 @@ const ChatRoom = sequelize.define("ChatRoom", {
         allowNull: true,
     },
     target_gender: {
-        type: DataTypes.ENUM("male", "female", "both"),
+        type: DataTypes.STRING(20),
+        validate: { isIn: [["male", "female", "both"]] },
         defaultValue: "both",
     }
 }, {

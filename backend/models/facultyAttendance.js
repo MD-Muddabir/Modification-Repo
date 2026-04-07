@@ -5,7 +5,10 @@ const FacultyAttendance = sequelize.define("FacultyAttendance", {
     institute_id: DataTypes.INTEGER,
     faculty_id: DataTypes.INTEGER,
     date: DataTypes.DATEONLY,
-    status: DataTypes.ENUM("present", "absent", "late", "half_day", "holiday"),
+    status: {
+        type: DataTypes.STRING(20),
+        validate: { isIn: [["present", "absent", "late", "half_day", "holiday"]] }
+    },
     marked_by: DataTypes.INTEGER, // admin ID who marked it or self if smart QR
     remarks: DataTypes.TEXT,
 }, {

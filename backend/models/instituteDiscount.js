@@ -12,7 +12,8 @@ const InstituteDiscount = sequelize.define("InstituteDiscount", {
         allowNull: false
     },
     discount_type: {
-        type: DataTypes.ENUM('percentage', 'fixed'),
+        type: DataTypes.STRING(20),
+        validate: { isIn: [['percentage', 'fixed']] },
         defaultValue: 'fixed'
     },
     discount_value: {
@@ -24,7 +25,8 @@ const InstituteDiscount = sequelize.define("InstituteDiscount", {
         allowNull: true
     },
     status: {
-        type: DataTypes.ENUM('active', 'used', 'expired'),
+        type: DataTypes.STRING(20),
+        validate: { isIn: [['active', 'used', 'expired']] },
         defaultValue: 'active'
     },
     applied_by: {

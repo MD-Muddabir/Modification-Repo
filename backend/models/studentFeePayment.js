@@ -9,7 +9,11 @@ const StudentFeePayment = sequelize.define("StudentFeePayment", {
     razorpay_payment_id: { type: DataTypes.STRING(100), allowNull: true },
     amount_paid: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
     payment_method: { type: DataTypes.STRING(50), allowNull: true },
-    payment_status: { type: DataTypes.ENUM('pending','paid','failed'), defaultValue: 'pending' },
+    payment_status: { 
+        type: DataTypes.STRING(20), 
+        validate: { isIn: [['pending','paid','failed']] }, 
+        defaultValue: 'pending' 
+    },
     receipt_number: { type: DataTypes.STRING(50), unique: true, allowNull: true },
     paid_at: { type: DataTypes.DATE, allowNull: true },
     collected_by: { type: DataTypes.INTEGER, allowNull: true }, // admin/manager

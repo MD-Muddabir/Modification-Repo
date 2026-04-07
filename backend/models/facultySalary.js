@@ -44,7 +44,8 @@ const FacultySalary = sequelize.define("FacultySalary", {
         allowNull: true
     },
     payment_method: {
-        type: DataTypes.ENUM('cash', 'bank_transfer', 'upi', 'cheque'),
+        type: DataTypes.STRING(20),
+        validate: { isIn: [['cash', 'bank_transfer', 'upi', 'cheque']] },
         defaultValue: 'bank_transfer'
     },
     transaction_ref: {
@@ -52,7 +53,8 @@ const FacultySalary = sequelize.define("FacultySalary", {
         allowNull: true
     },
     status: {
-        type: DataTypes.ENUM('pending', 'paid', 'on_hold'),
+        type: DataTypes.STRING(20),
+        validate: { isIn: [['pending', 'paid', 'on_hold']] },
         defaultValue: 'pending'
     },
     working_days: {

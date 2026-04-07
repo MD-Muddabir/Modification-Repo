@@ -14,12 +14,16 @@ const Assignment = sequelize.define("Assignment", {
     due_date: { type: DataTypes.DATE, allowNull: false },
     max_marks: { type: DataTypes.DECIMAL(5, 2), allowNull: true },
     allowed_file_types: {
-        type: DataTypes.JSON,
+        type: DataTypes.JSONB,
         defaultValue: ['pdf', 'docx', 'jpg', 'png', 'zip']
     },
     max_file_size_mb: { type: DataTypes.INTEGER, defaultValue: 10 },
     allow_late_submission: { type: DataTypes.BOOLEAN, defaultValue: true },
-    status: { type: DataTypes.ENUM('draft', 'published', 'closed'), defaultValue: 'draft' },
+    status: { 
+        type: DataTypes.STRING(20), 
+        validate: { isIn: [['draft', 'published', 'closed']] }, 
+        defaultValue: 'draft' 
+    },
     total_submissions: { type: DataTypes.INTEGER, defaultValue: 0 }
 }, {
     tableName: 'assignments',

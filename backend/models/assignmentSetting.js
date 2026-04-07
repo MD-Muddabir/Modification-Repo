@@ -7,7 +7,7 @@ const AssignmentSetting = sequelize.define("AssignmentSetting", {
     late_submission_penalty_percent: { type: DataTypes.INTEGER, defaultValue: 0 },
     max_file_size_mb: { type: DataTypes.INTEGER, defaultValue: 10 },
     allowed_file_types: {
-        type: DataTypes.JSON,
+        type: DataTypes.JSONB,
         defaultValue: ['pdf', 'docx', 'jpg', 'png', 'zip']
     },
     auto_close_after_days: { type: DataTypes.INTEGER, defaultValue: 7 },

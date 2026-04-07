@@ -76,7 +76,8 @@ const Plan = sequelize.define("Plan", {
 
     // Advanced Features
     feature_attendance: {
-        type: DataTypes.ENUM('none', 'basic', 'advanced'),
+        type: DataTypes.STRING(10),
+        validate: { isIn: [['none', 'basic', 'advanced']] },
         defaultValue: 'basic'
     },
     feature_auto_attendance: {
@@ -88,7 +89,8 @@ const Plan = sequelize.define("Plan", {
         defaultValue: false
     },
     feature_reports: {
-        type: DataTypes.ENUM('none', 'basic', 'advanced'),
+        type: DataTypes.STRING(10),
+        validate: { isIn: [['none', 'basic', 'advanced']] },
         defaultValue: 'none'
     },
     feature_announcements: {
@@ -156,7 +158,8 @@ const Plan = sequelize.define("Plan", {
 
     // Plan Status
     status: {
-        type: DataTypes.ENUM('active', 'inactive', 'archived'),
+        type: DataTypes.STRING(20),
+        validate: { isIn: [['active', 'inactive', 'archived']] },
         defaultValue: 'active'
     },
     is_popular: {

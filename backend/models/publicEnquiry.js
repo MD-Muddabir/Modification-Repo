@@ -45,7 +45,8 @@ const PublicEnquiry = sequelize.define("PublicEnquiry", {
         allowNull: true
     },
     status: {
-        type: DataTypes.ENUM('new', 'contacted', 'enrolled', 'closed'),
+        type: DataTypes.STRING(20),
+        validate: { isIn: [['new', 'contacted', 'enrolled', 'closed']] },
         defaultValue: 'new'
     },
     ip_address: {

@@ -87,12 +87,12 @@ const InstitutePublicProfile = sequelize.define("InstitutePublicProfile", {
         allowNull: true
     },
     enrollment_benefits: {
-        type: DataTypes.JSON,
+        type: DataTypes.JSONB,
         allowNull: true,
         defaultValue: []
     },
     usp_points: {
-        type: DataTypes.JSON,
+        type: DataTypes.JSONB,
         allowNull: true,
         defaultValue: []
     },
@@ -139,12 +139,12 @@ const InstitutePublicProfile = sequelize.define("InstitutePublicProfile", {
     },
     // Faculty & Course visibility (JSON arrays of selected IDs)
     selected_faculty_ids: {
-        type: DataTypes.JSON,
+        type: DataTypes.JSONB,
         allowNull: true,
         defaultValue: []
     },
     selected_subject_ids: {
-        type: DataTypes.JSON,
+        type: DataTypes.JSONB,
         allowNull: true,
         defaultValue: []
     },
@@ -156,7 +156,7 @@ const InstitutePublicProfile = sequelize.define("InstitutePublicProfile", {
     },
     // Manual courses: JSON array of { id, name, description, image_url, duration_months, max_students, hours_per_day, badge }
     manual_courses: {
-        type: DataTypes.JSON,
+        type: DataTypes.JSONB,
         allowNull: true,
         defaultValue: null
     },
@@ -166,7 +166,7 @@ const InstitutePublicProfile = sequelize.define("InstitutePublicProfile", {
         defaultValue: 'auto'
     },
     manual_faculty: {
-        type: DataTypes.JSON,
+        type: DataTypes.JSONB,
         allowNull: true,
         defaultValue: null
     },
@@ -177,7 +177,7 @@ const InstitutePublicProfile = sequelize.define("InstitutePublicProfile", {
     },
     // Faculty profile images: JSON object { "faculty_id": "/uploads/public/..." }
     faculty_images: {
-        type: DataTypes.JSON,
+        type: DataTypes.JSONB,
         allowNull: true,
         defaultValue: null
     },

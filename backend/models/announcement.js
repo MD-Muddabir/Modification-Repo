@@ -5,8 +5,14 @@ const Announcement = sequelize.define("Announcement", {
     institute_id: DataTypes.INTEGER,
     title: DataTypes.STRING,
     content: DataTypes.TEXT,
-    target_audience: DataTypes.ENUM('all', 'students', 'faculty'),
-    priority: DataTypes.ENUM('normal', 'high', 'urgent'),
+    target_audience: {
+        type: DataTypes.STRING(20),
+        validate: { isIn: [['all', 'students', 'faculty']] }
+    },
+    priority: {
+        type: DataTypes.STRING(20),
+        validate: { isIn: [['normal', 'high', 'urgent']] }
+    },
     created_by: DataTypes.INTEGER,
     subject_id: DataTypes.INTEGER, // added subject field
 });

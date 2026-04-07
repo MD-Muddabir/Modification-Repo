@@ -38,7 +38,8 @@ const Lead = sequelize.define('Lead', {
     defaultValue: 'landing-page-contact'
   },
   status: {
-    type: DataTypes.ENUM('new', 'contacted', 'demo_scheduled', 'closed_won', 'closed_lost'),
+    type: DataTypes.STRING(20),
+    validate: { isIn: [['new', 'contacted', 'demo_scheduled', 'closed_won', 'closed_lost']] },
     defaultValue: 'new'
   }
 }, {

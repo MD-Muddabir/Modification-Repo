@@ -441,7 +441,7 @@ const syncDatabase = async () => {
     await createSuperAdmin();
   } catch (error) {
     console.error("❌ Database error:", error.message);
-    console.error("Please ensure MySQL is running and database 'student_saas' exists");
+    console.error("Please ensure PostgreSQL is running and database exists / credentials are correct");
   }
 };
 

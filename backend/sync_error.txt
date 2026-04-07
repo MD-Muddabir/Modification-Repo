@@ -1,0 +1,419 @@
+﻿[dotenv@17.3.1] injecting env (13) from .env -- tip: ΓÜÖ∩╕Å  specify custom .env file path with { path: '/custom/path/.env' }
+≡ƒùä∩╕Å  Connecting to DB via PostgreSQL...
+≡ƒöÆ  SSL: disabled (localhost)
+Starting sync...
+Γ£à PostgreSQL DB Pool Ready
+node : Sync failed:
+At line:1 char:1
++ node test_db.js 2>&1 | 
+Out-File -Encoding utf8 
+sync_error.txt
++ ~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo        
+      : NotSpecified: (S  
+  ync failed::String) [   
+ ], RemoteException
+    + FullyQualifiedError 
+   Id : NativeCommandErr  
+  or
+ 
+Error
+    at Query.run 
+(D:\Modification\Version 
+1.1.2 Deploy\Student_SaaS\
+backend\node_modules\seque
+lize\lib\dialects\postgres
+\query.js:50:25)
+    at 
+D:\Modification\Version 
+1.1.2 Deploy\Student_SaaS\
+backend\node_modules\seque
+lize\lib\sequelize.js:315:
+28
+    at process.processTick
+sAndRejections (node:inter
+nal/process/task_queues:10
+3:5)
+    at async PostgresQuery
+Interface.createTable 
+(D:\Modification\Version 
+1.1.2 Deploy\Student_SaaS\
+backend\node_modules\seque
+lize\lib\dialects\abstract
+\query-interface.js:98:12)
+    at async Plan.sync 
+(D:\Modification\Version 
+1.1.2 Deploy\Student_SaaS\
+backend\node_modules\seque
+lize\lib\model.js:942:7)
+    at async 
+Sequelize.sync 
+(D:\Modification\Version 
+1.1.2 Deploy\Student_SaaS\
+backend\node_modules\seque
+lize\lib\sequelize.js:377:
+9) {
+  name: 
+'SequelizeDatabaseError',
+  parent: error: 
+permission denied for 
+schema public
+      at 
+parseErrorMessage 
+(D:\Modification\Version 
+1.1.2 Deploy\Student_SaaS\
+backend\node_modules\pg-pr
+otocol\dist\parser.js:305:
+11)
+      at 
+Parser.handlePacket 
+(D:\Modification\Version 
+1.1.2 Deploy\Student_SaaS\
+backend\node_modules\pg-pr
+otocol\dist\parser.js:143:
+27)
+      at Parser.parse 
+(D:\Modification\Version 
+1.1.2 Deploy\Student_SaaS\
+backend\node_modules\pg-pr
+otocol\dist\parser.js:37:3
+8)
+      at 
+Socket.<anonymous> 
+(D:\Modification\Version 
+1.1.2 Deploy\Student_SaaS\
+backend\node_modules\pg-pr
+otocol\dist\index.js:11:42
+)
+      at Socket.emit 
+(node:events:508:28)
+      at addChunk (node:in
+ternal/streams/readable:55
+9:12)
+      at readableAddChunkP
+ushByteMode (node:internal
+/streams/readable:510:3)
+      at Readable.push (no
+de:internal/streams/readab
+le:390:5)
+      at TCP.onStreamRead 
+(node:internal/stream_base
+_commons:189:23) {
+    length: 99,
+    severity: 'ERROR',
+    code: '42501',
+    detail: undefined,
+    hint: undefined,
+    position: '28',
+    internalPosition: 
+undefined,
+    internalQuery: 
+undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'aclchk.c',
+    line: '2845',
+    routine: 
+'aclcheck_error',
+    sql: `CREATE TABLE IF 
+NOT EXISTS "plans" ("id"  
+SERIAL , "name" 
+VARCHAR(255) NOT NULL, 
+"description" TEXT, 
+"price" DECIMAL(10,2) NOT 
+NULL, "is_free_trial" 
+BOOLEAN DEFAULT false, 
+"trial_days" INTEGER 
+DEFAULT 0, "max_students" 
+INTEGER NOT NULL DEFAULT 
+100, "max_faculty" 
+INTEGER NOT NULL DEFAULT 
+5, "max_classes" INTEGER 
+NOT NULL DEFAULT 5, 
+"max_admin_users" INTEGER 
+NOT NULL DEFAULT 1, 
+"feature_students" 
+BOOLEAN DEFAULT true, 
+"feature_faculty" BOOLEAN 
+DEFAULT true, 
+"feature_classes" BOOLEAN 
+DEFAULT true, 
+"feature_subjects" 
+BOOLEAN DEFAULT true, 
+"feature_attendance" 
+VARCHAR(10) DEFAULT 
+'basic', 
+"feature_auto_attendance" 
+BOOLEAN DEFAULT false, 
+"feature_fees" BOOLEAN 
+DEFAULT false, 
+"feature_reports" 
+VARCHAR(10) DEFAULT 
+'none', 
+"feature_announcements" 
+BOOLEAN DEFAULT false, 
+"feature_exams" BOOLEAN 
+DEFAULT false, 
+"feature_export" BOOLEAN 
+DEFAULT false, 
+"feature_email" BOOLEAN 
+DEFAULT false, 
+"feature_sms" BOOLEAN 
+DEFAULT false, 
+"feature_whatsapp" 
+BOOLEAN DEFAULT false, 
+"feature_timetable" 
+BOOLEAN DEFAULT false, 
+"feature_notes" BOOLEAN 
+DEFAULT false, 
+"feature_chat" BOOLEAN 
+DEFAULT false, 
+"feature_custom_branding" 
+BOOLEAN DEFAULT false, 
+"feature_multi_branch" 
+BOOLEAN DEFAULT false, 
+"feature_api_access" 
+BOOLEAN DEFAULT false, 
+"feature_parent_portal" 
+BOOLEAN DEFAULT false, 
+"feature_mobile_app" 
+BOOLEAN DEFAULT false, 
+"feature_public_page" 
+BOOLEAN DEFAULT false, 
+"status" VARCHAR(20) 
+DEFAULT 'active', 
+"is_popular" BOOLEAN 
+DEFAULT false, 
+"razorpay_plan_id" 
+VARCHAR(255), 
+"created_at" TIMESTAMP 
+WITH TIME ZONE NOT NULL, 
+"updated_at" TIMESTAMP 
+WITH TIME ZONE NOT NULL, 
+PRIMARY KEY ("id"));`,
+    parameters: undefined
+  },
+  original: error: 
+permission denied for 
+schema public
+      at 
+parseErrorMessage 
+(D:\Modification\Version 
+1.1.2 Deploy\Student_SaaS\
+backend\node_modules\pg-pr
+otocol\dist\parser.js:305:
+11)
+      at 
+Parser.handlePacket 
+(D:\Modification\Version 
+1.1.2 Deploy\Student_SaaS\
+backend\node_modules\pg-pr
+otocol\dist\parser.js:143:
+27)
+      at Parser.parse 
+(D:\Modification\Version 
+1.1.2 Deploy\Student_SaaS\
+backend\node_modules\pg-pr
+otocol\dist\parser.js:37:3
+8)
+      at 
+Socket.<anonymous> 
+(D:\Modification\Version 
+1.1.2 Deploy\Student_SaaS\
+backend\node_modules\pg-pr
+otocol\dist\index.js:11:42
+)
+      at Socket.emit 
+(node:events:508:28)
+      at addChunk (node:in
+ternal/streams/readable:55
+9:12)
+      at readableAddChunkP
+ushByteMode (node:internal
+/streams/readable:510:3)
+      at Readable.push (no
+de:internal/streams/readab
+le:390:5)
+      at TCP.onStreamRead 
+(node:internal/stream_base
+_commons:189:23) {
+    length: 99,
+    severity: 'ERROR',
+    code: '42501',
+    detail: undefined,
+    hint: undefined,
+    position: '28',
+    internalPosition: 
+undefined,
+    internalQuery: 
+undefined,
+    where: undefined,
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'aclchk.c',
+    line: '2845',
+    routine: 
+'aclcheck_error',
+    sql: `CREATE TABLE IF 
+NOT EXISTS "plans" ("id"  
+SERIAL , "name" 
+VARCHAR(255) NOT NULL, 
+"description" TEXT, 
+"price" DECIMAL(10,2) NOT 
+NULL, "is_free_trial" 
+BOOLEAN DEFAULT false, 
+"trial_days" INTEGER 
+DEFAULT 0, "max_students" 
+INTEGER NOT NULL DEFAULT 
+100, "max_faculty" 
+INTEGER NOT NULL DEFAULT 
+5, "max_classes" INTEGER 
+NOT NULL DEFAULT 5, 
+"max_admin_users" INTEGER 
+NOT NULL DEFAULT 1, 
+"feature_students" 
+BOOLEAN DEFAULT true, 
+"feature_faculty" BOOLEAN 
+DEFAULT true, 
+"feature_classes" BOOLEAN 
+DEFAULT true, 
+"feature_subjects" 
+BOOLEAN DEFAULT true, 
+"feature_attendance" 
+VARCHAR(10) DEFAULT 
+'basic', 
+"feature_auto_attendance" 
+BOOLEAN DEFAULT false, 
+"feature_fees" BOOLEAN 
+DEFAULT false, 
+"feature_reports" 
+VARCHAR(10) DEFAULT 
+'none', 
+"feature_announcements" 
+BOOLEAN DEFAULT false, 
+"feature_exams" BOOLEAN 
+DEFAULT false, 
+"feature_export" BOOLEAN 
+DEFAULT false, 
+"feature_email" BOOLEAN 
+DEFAULT false, 
+"feature_sms" BOOLEAN 
+DEFAULT false, 
+"feature_whatsapp" 
+BOOLEAN DEFAULT false, 
+"feature_timetable" 
+BOOLEAN DEFAULT false, 
+"feature_notes" BOOLEAN 
+DEFAULT false, 
+"feature_chat" BOOLEAN 
+DEFAULT false, 
+"feature_custom_branding" 
+BOOLEAN DEFAULT false, 
+"feature_multi_branch" 
+BOOLEAN DEFAULT false, 
+"feature_api_access" 
+BOOLEAN DEFAULT false, 
+"feature_parent_portal" 
+BOOLEAN DEFAULT false, 
+"feature_mobile_app" 
+BOOLEAN DEFAULT false, 
+"feature_public_page" 
+BOOLEAN DEFAULT false, 
+"status" VARCHAR(20) 
+DEFAULT 'active', 
+"is_popular" BOOLEAN 
+DEFAULT false, 
+"razorpay_plan_id" 
+VARCHAR(255), 
+"created_at" TIMESTAMP 
+WITH TIME ZONE NOT NULL, 
+"updated_at" TIMESTAMP 
+WITH TIME ZONE NOT NULL, 
+PRIMARY KEY ("id"));`,
+    parameters: undefined
+  },
+  sql: `CREATE TABLE IF 
+NOT EXISTS "plans" ("id"  
+SERIAL , "name" 
+VARCHAR(255) NOT NULL, 
+"description" TEXT, 
+"price" DECIMAL(10,2) NOT 
+NULL, "is_free_trial" 
+BOOLEAN DEFAULT false, 
+"trial_days" INTEGER 
+DEFAULT 0, "max_students" 
+INTEGER NOT NULL DEFAULT 
+100, "max_faculty" 
+INTEGER NOT NULL DEFAULT 
+5, "max_classes" INTEGER 
+NOT NULL DEFAULT 5, 
+"max_admin_users" INTEGER 
+NOT NULL DEFAULT 1, 
+"feature_students" 
+BOOLEAN DEFAULT true, 
+"feature_faculty" BOOLEAN 
+DEFAULT true, 
+"feature_classes" BOOLEAN 
+DEFAULT true, 
+"feature_subjects" 
+BOOLEAN DEFAULT true, 
+"feature_attendance" 
+VARCHAR(10) DEFAULT 
+'basic', 
+"feature_auto_attendance" 
+BOOLEAN DEFAULT false, 
+"feature_fees" BOOLEAN 
+DEFAULT false, 
+"feature_reports" 
+VARCHAR(10) DEFAULT 
+'none', 
+"feature_announcements" 
+BOOLEAN DEFAULT false, 
+"feature_exams" BOOLEAN 
+DEFAULT false, 
+"feature_export" BOOLEAN 
+DEFAULT false, 
+"feature_email" BOOLEAN 
+DEFAULT false, 
+"feature_sms" BOOLEAN 
+DEFAULT false, 
+"feature_whatsapp" 
+BOOLEAN DEFAULT false, 
+"feature_timetable" 
+BOOLEAN DEFAULT false, 
+"feature_notes" BOOLEAN 
+DEFAULT false, 
+"feature_chat" BOOLEAN 
+DEFAULT false, 
+"feature_custom_branding" 
+BOOLEAN DEFAULT false, 
+"feature_multi_branch" 
+BOOLEAN DEFAULT false, 
+"feature_api_access" 
+BOOLEAN DEFAULT false, 
+"feature_parent_portal" 
+BOOLEAN DEFAULT false, 
+"feature_mobile_app" 
+BOOLEAN DEFAULT false, 
+"feature_public_page" 
+BOOLEAN DEFAULT false, 
+"status" VARCHAR(20) 
+DEFAULT 'active', 
+"is_popular" BOOLEAN 
+DEFAULT false, 
+"razorpay_plan_id" 
+VARCHAR(255), 
+"created_at" TIMESTAMP 
+WITH TIME ZONE NOT NULL, 
+"updated_at" TIMESTAMP 
+WITH TIME ZONE NOT NULL, 
+PRIMARY KEY ("id"));`,
+  parameters: {}
+}

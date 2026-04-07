@@ -25,7 +25,7 @@ const InstituteReview = sequelize.define("InstituteReview", {
         allowNull: false
     },
     rating: {
-        type: DataTypes.TINYINT,
+        type: DataTypes.SMALLINT,
         defaultValue: 5,
         validate: { min: 1, max: 5 }
     },

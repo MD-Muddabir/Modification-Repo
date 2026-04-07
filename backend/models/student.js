@@ -10,7 +10,10 @@ const Student = sequelize.define("Student", {
     leave_date: DataTypes.DATEONLY,
     date_of_birth: DataTypes.DATEONLY,
 
-    gender: DataTypes.ENUM("male", "female", "other"),
+    gender: {
+        type: DataTypes.STRING(20),
+        validate: { isIn: [["male", "female", "other"]] }
+    },
     address: DataTypes.TEXT,
     is_full_course: {
         type: DataTypes.BOOLEAN,

@@ -7,13 +7,15 @@ const BiometricEnrollment = sequelize.define("BiometricEnrollment", {
     device_user_id: { type: DataTypes.STRING(50), allowNull: false },
     user_id: { type: DataTypes.INTEGER, allowNull: false },
     user_role: {
-        type: DataTypes.ENUM("student", "faculty"),
+        type: DataTypes.STRING(20),
+        validate: { isIn: [["student", "faculty"]] },
         allowNull: false
     },
     enrolled_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
     enrolled_by: { type: DataTypes.INTEGER },
     status: {
-        type: DataTypes.ENUM("active", "inactive"),
+        type: DataTypes.STRING(20),
+        validate: { isIn: [["active", "inactive"]] },
         defaultValue: "active"
     },
 }, {

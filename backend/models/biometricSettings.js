@@ -6,7 +6,7 @@ const BiometricSettings = sequelize.define("BiometricSettings", {
     late_threshold_minutes: { type: DataTypes.INTEGER, defaultValue: 15 },
     half_day_threshold_minutes: { type: DataTypes.INTEGER, defaultValue: 120 },
     working_days: {
-        type: DataTypes.JSON,
+        type: DataTypes.JSONB,
         defaultValue: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     },
     class_start_time: { type: DataTypes.TIME, defaultValue: "09:00:00" },

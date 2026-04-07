@@ -97,7 +97,7 @@ exports.getMonthlyTrend = async (req, res) => {
         // Revenue per month (from Payments)
         const revenueRows = await Payment.findAll({
             attributes: [
-                [fn("DATE_FORMAT", col("payment_date"), "%Y-%m"), "month_year"],
+                [literal("TO_CHAR(payment_date, 'YYYY-MM')"), "month_year"],
                 [fn("SUM", col("amount_paid")), "total"]
             ],
             where: {
@@ -107,23 +107,23 @@ exports.getMonthlyTrend = async (req, res) => {
                     [Op.gte]: new Date(months[0] + "-01")
                 }
             },
-            group: [literal("DATE_FORMAT(payment_date, '%Y-%m')")],
-            order: [[literal("DATE_FORMAT(payment_date, '%Y-%m')"), "ASC"]],
+            group: [literal("TO_CHAR(payment_date, 'YYYY-MM')")],
+            order: [[literal("TO_CHAR(payment_date, 'YYYY-MM')"), "ASC"]],
             raw: true
         });
 
         // Expenses per month
         const expenseRows = await Expense.findAll({
             attributes: [
-                [fn("DATE_FORMAT", col("date"), "%Y-%m"), "month_year"],
+                [literal("TO_CHAR(date, 'YYYY-MM')"), "month_year"],
                 [fn("SUM", col("amount")), "total"]
             ],
             where: {
                 institute_id,
                 date: { [Op.gte]: new Date(months[0] + "-01") }
             },
-            group: [literal("DATE_FORMAT(date, '%Y-%m')")],
-            order: [[literal("DATE_FORMAT(date, '%Y-%m')"), "ASC"]],
+            group: [literal("TO_CHAR(date, 'YYYY-MM')")],
+            order: [[literal("TO_CHAR(date, 'YYYY-MM')"), "ASC"]],
             raw: true
         });
 

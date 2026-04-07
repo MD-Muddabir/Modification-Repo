@@ -14,7 +14,8 @@ const AssignmentSubmission = sequelize.define("AssignmentSubmission", {
     is_late: { type: DataTypes.BOOLEAN, defaultValue: false },
     late_by_minutes: { type: DataTypes.INTEGER, defaultValue: 0 },
     status: {
-        type: DataTypes.ENUM('pending', 'submitted', 'late', 'graded', 'resubmit_requested'),
+        type: DataTypes.STRING(30),
+        validate: { isIn: [['pending', 'submitted', 'late', 'graded', 'resubmit_requested']] },
         defaultValue: 'pending'
     },
     marks_obtained: { type: DataTypes.DECIMAL(5, 2), allowNull: true },

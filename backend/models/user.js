@@ -3,15 +3,25 @@ const sequelize = require("../config/database");
 
 const User = sequelize.define("User", {
     institute_id: DataTypes.INTEGER,
-    role: DataTypes.ENUM("super_admin", "admin", "manager", "faculty", "student", "parent"),
+    role: {
+        type: DataTypes.STRING(20),
+        validate: { isIn: [["super_admin", "admin", "manager", "faculty", "student", "parent"]] }
+    },
     name: DataTypes.STRING,
     email: { type: DataTypes.STRING, unique: 'unique_user_email' },
     phone: DataTypes.STRING,
     password_hash: DataTypes.STRING,
-    status: DataTypes.ENUM("active", "blocked"),
+    status: {
+        type: DataTypes.STRING(20),
+        validate: { isIn: [["active", "blocked"]] }
+    },
     theme_dark: { type: DataTypes.BOOLEAN, defaultValue: false },
-    theme_style: { type: DataTypes.ENUM("simple", "pro"), defaultValue: "simple" },
-    permissions: { type: DataTypes.JSON, defaultValue: null },
+    theme_style: { 
+        type: DataTypes.STRING(20),
+        validate: { isIn: [["simple", "pro"]] },
+        defaultValue: "simple" 
+    },
+    permissions: { type: DataTypes.JSONB, defaultValue: null },
     last_announcement_seen_at: { type: DataTypes.DATE, defaultValue: null },
     last_chat_seen_at: { type: DataTypes.DATE, defaultValue: null },
 });

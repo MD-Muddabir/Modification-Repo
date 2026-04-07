@@ -6,14 +6,16 @@ const BiometricDevice = sequelize.define("BiometricDevice", {
     device_name: { type: DataTypes.STRING(100), allowNull: false },
     device_serial: { type: DataTypes.STRING(100), allowNull: false, unique: true },
     device_type: {
-        type: DataTypes.ENUM("fingerprint", "face", "rfid", "mobile"),
+        type: DataTypes.STRING(20),
+        validate: { isIn: [["fingerprint", "face", "rfid", "mobile"]] },
         defaultValue: "fingerprint"
     },
     location: { type: DataTypes.STRING(100) },
     ip_address: { type: DataTypes.STRING(45) },
     secret_key: { type: DataTypes.STRING(255), allowNull: false },
     status: {
-        type: DataTypes.ENUM("active", "inactive", "offline"),
+        type: DataTypes.STRING(20),
+        validate: { isIn: [["active", "inactive", "offline"]] },
         defaultValue: "active"
     },
     last_sync: { type: DataTypes.DATE },

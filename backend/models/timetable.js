@@ -28,7 +28,8 @@ const Timetable = sequelize.define("Timetable", {
         allowNull: false,
     },
     day_of_week: {
-        type: DataTypes.ENUM('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'),
+        type: DataTypes.STRING(20),
+        validate: { isIn: [['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']] },
         allowNull: false,
     },
     room_number: {

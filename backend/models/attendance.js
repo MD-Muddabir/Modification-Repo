@@ -7,12 +7,16 @@ const Attendance = sequelize.define("Attendance", {
     class_id: DataTypes.INTEGER,
     subject_id: DataTypes.INTEGER,
     date: DataTypes.DATEONLY,
-    status: DataTypes.ENUM("present", "absent", "late", "holiday", "half_day"),
+    status: {
+        type: DataTypes.STRING(20),
+        validate: { isIn: [["present", "absent", "late", "holiday", "half_day"]] }
+    },
     marked_by: DataTypes.INTEGER,
     remarks: DataTypes.TEXT,
     // Biometric fields
     marked_by_type: {
-        type: DataTypes.ENUM("manual", "biometric", "mobile_otp", "qr_code"),
+        type: DataTypes.STRING(20),
+        validate: { isIn: [["manual", "biometric", "mobile_otp", "qr_code"]] },
         defaultValue: "manual"
     },
     biometric_punch_id: { type: DataTypes.BIGINT, allowNull: true },

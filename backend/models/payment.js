@@ -9,7 +9,10 @@ const Payment = sequelize.define("Payment", {
     payment_date: DataTypes.DATEONLY,
     payment_method: DataTypes.STRING,
     transaction_id: DataTypes.STRING,
-    status: DataTypes.ENUM("success", "failed", "pending"),
+    status: {
+        type: DataTypes.STRING(20),
+        validate: { isIn: [["success", "failed", "pending"]] }
+    },
     collected_by: {
         type: DataTypes.INTEGER,
         allowNull: true

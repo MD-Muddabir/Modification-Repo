@@ -11,7 +11,11 @@ const StudentFee = sequelize.define("StudentFee", {
     final_amount: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0 },
     paid_amount: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0 },
     due_amount: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0 },
-    status: { type: DataTypes.ENUM("pending", "partial", "paid"), defaultValue: "pending" },
+    status: { 
+        type: DataTypes.STRING(20), 
+        validate: { isIn: [["pending", "partial", "paid"]] }, 
+        defaultValue: "pending" 
+    },
     created_by: { type: DataTypes.INTEGER, allowNull: true },
     reminder_date: { type: DataTypes.DATEONLY, allowNull: true }
 }, {

@@ -8,10 +8,11 @@ const BiometricPunch = sequelize.define("BiometricPunch", {
     device_user_id: { type: DataTypes.STRING(50), allowNull: false },
     punch_time: { type: DataTypes.DATE, allowNull: false },
     punch_type: {
-        type: DataTypes.ENUM("in", "out", "break"),
+        type: DataTypes.STRING(20),
+        validate: { isIn: [["in", "out", "break"]] },
         defaultValue: "in"
     },
-    raw_payload: { type: DataTypes.JSON },
+    raw_payload: { type: DataTypes.JSONB },
     processed: { type: DataTypes.BOOLEAN, defaultValue: false },
 }, {
     tableName: "biometric_punches",
