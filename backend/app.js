@@ -68,7 +68,7 @@ app.use("/api/auth/login", authLimiter);
  * Specific origins only (faster than wildcard) + preflight cache (24h)
  */
 const allowedOrigins = [
-  "https://student-saa-s-version-1-0-0-md-muddabirs-projects.vercel.app",
+  "https://students-saas.vercel.app",
   process.env.FRONTEND_URL,
   "http://localhost:5173",
   "http://localhost:5174",
