@@ -4,7 +4,7 @@ import axios from "axios";
  * Resolve API Base URL (Production-ready)
  */
 const getBaseURL = () => {
-    let baseURL = import.meta.env.VITE_API_BASE_URL;
+    let baseURL = import.meta.env.VITE_API_URL;
 
     // Remove trailing slash if present
     if (baseURL) {
@@ -12,7 +12,7 @@ const getBaseURL = () => {
     }
 
     if (!baseURL || !baseURL.trim()) {
-        console.warn("⚠️ VITE_API_BASE_URL is not defined in environment variables");
+        console.warn("⚠️ VITE_API_URL is not defined in environment variables");
 
         if (import.meta.env.DEV) {
             // Development fallback

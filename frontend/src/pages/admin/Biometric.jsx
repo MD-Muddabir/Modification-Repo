@@ -591,7 +591,7 @@ function ReportsTab() {
                 <button
                     onClick={() => {
                         const token = localStorage.getItem("token");
-                        const url = `${import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') : (import.meta.env.DEV ? 'http://localhost:5000' : 'https://institutes-saas.onrender.com')}/api/biometric/export/excel?start_date=${startDate}&end_date=${endDate}`;
+                        const url = `${import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : (import.meta.env.DEV ? 'http://localhost:5000' : 'https://institutes-saas.onrender.com')}/api/biometric/export/excel?start_date=${startDate}&end_date=${endDate}`;
                         const a = document.createElement("a");
                         a.href = url;
                         a.target = "_blank";

@@ -19,8 +19,8 @@
  *   <img src={resolveImgUrl(student.profile_photo)} />
  */
 
-const API_BASE = (import.meta.env.VITE_API_BASE_URL
-    ? import.meta.env.VITE_API_BASE_URL.replace('/api', '')
+const API_BASE = (import.meta.env.VITE_API_URL
+    ? import.meta.env.VITE_API_URL.replace('/api', '')
     : import.meta.env.DEV
         ? 'http://localhost:5000'
         : 'https://institutes-saas.onrender.com').replace(/\/$/, '');

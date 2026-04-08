@@ -22,7 +22,7 @@ export default function Contact() {
         message: formData.get('message')
       };
 
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') : (import.meta.env.DEV ? 'http://localhost:5000' : 'https://institutes-saas.onrender.com')}/api/leads`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : (import.meta.env.DEV ? 'http://localhost:5000' : 'https://institutes-saas.onrender.com')}/api/leads`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
