@@ -136,13 +136,17 @@ function ParentDashboard() {
                     <div className="tabs-container">
                         {[
                             { id: 'overview', label: '🏠 Overview' },
-                            { id: 'attendance', label: '📋 Attendance' },
-                            { id: 'marks', label: '📈 Marks' },
-                            { id: 'fees', label: '💳 Fees' },
-                            { id: 'timetable', label: '📅 Timetable' },
-                            { id: 'assignments', label: '📝 Assignments' },
-                            { id: 'chat', label: '💬 Chat' }
-                        ].map(tab => (
+                            { id: 'attendance', label: '📋 Attendance', featureKey: 'attendance' },
+                            { id: 'marks', label: '📈 Marks', featureKey: 'exams' },
+                            { id: 'fees', label: '💳 Fees', featureKey: 'fees' },
+                            { id: 'timetable', label: '📅 Timetable', featureKey: 'timetable' },
+                            { id: 'assignments', label: '📝 Assignments', featureKey: 'notes' },
+                            { id: 'chat', label: '💬 Chat', featureKey: 'chat' }
+                        ].filter(tab => {
+                            if (!tab.featureKey) return true;
+                            if (tab.featureKey === 'attendance') return user?.features?.attendance !== 'none';
+                            return user?.features?.[tab.featureKey];
+                        }).map(tab => (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
@@ -236,12 +240,15 @@ function ParentDashboard() {
                                         <h3>⚡ Quick Actions</h3>
                                         <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
                                             {[
-                                                { label: "📅 View Timetable", tab: "timetable", color: "#6366f1" },
-                                                { label: "📋 View Attendance", tab: "attendance", color: "#10b981" },
-                                                { label: "📝 View Assignments", action: () => navigate('/parent/assignments'), color: "#0ea5e9" },
-                                                { label: "💬 Chat with Faculty", action: () => navigate('/parent/chat'), color: "#f59e0b" },
-                                                { label: "💳 View Fees", tab: "fees", color: "#ef4444" }
-                                            ].map((a, i) => (
+                                                { label: "📅 View Timetable", tab: "timetable", color: "#6366f1", featureKey: 'timetable' },
+                                                { label: "📋 View Attendance", tab: "attendance", color: "#10b981", featureKey: 'attendance' },
+                                                { label: "📝 View Assignments", action: () => navigate('/parent/assignments'), color: "#0ea5e9", featureKey: 'notes' },
+                                                { label: "💬 Chat with Faculty", action: () => navigate('/parent/chat'), color: "#f59e0b", featureKey: 'chat' },
+                                                { label: "💳 View Fees", tab: "fees", color: "#ef4444", featureKey: 'fees' }
+                                            ].filter(a => {
+                                                if (a.featureKey === 'attendance') return user?.features?.attendance !== 'none';
+                                                return user?.features?.[a.featureKey];
+                                            }).map((a, i) => (
                                                 <button
                                                     key={i}
                                                     onClick={a.action || (() => setActiveTab(a.tab))}

@@ -97,9 +97,8 @@ function AdminDashboard() {
         return <BlockedScreen />;
     }
 
-    const handleNavigation = (path, featureKey) => {
-        if (!planDetails) { navigate(path); return; }
-
+    const checkFeatureAccess = (featureKey) => {
+        if (!planDetails) return { hasAccess: true, featureName: "" };
         const features = planDetails.features;
         let hasAccess = true;
         let featureName = "";
@@ -129,9 +128,35 @@ function AdminDashboard() {
             case 'timetable':
                 if (!features.timetable) { hasAccess = false; featureName = "Master Timetable"; }
                 break;
+            case 'exams':
+                if (!features.exams) { hasAccess = false; featureName = "Examinations"; }
+                break;
+            case 'notes':
+                if (!features.notes) { hasAccess = false; featureName = "Notes Management"; }
+                break;
+            case 'chat':
+                if (!features.chat) { hasAccess = false; featureName = "Academic Chat"; }
+                break;
+            case 'assignments':
+                // Check if they have notes feature or we fallback to true since we dont have explicit assignment feature
+                if (features.notes === false) { hasAccess = false; featureName = "Assignments"; }
+                break;
+            case 'biometric':
+                if (!features.auto_attendance) { hasAccess = false; featureName = "Biometric (Smart Attendance)"; }
+                break;
+            case 'public_page':
+                if (!features.public_page) { hasAccess = false; featureName = "Public Web Page"; }
+                break;
             default:
                 hasAccess = true;
         }
+        return { hasAccess, featureName };
+    };
+
+    const handleNavigation = (path, featureKey) => {
+        if (!planDetails) { navigate(path); return; }
+
+        const { hasAccess, featureName } = checkFeatureAccess(featureKey);
 
         if (hasAccess) { navigate(path); }
         else { setBlockedFeature(featureName); setShowUpgradeModal(true); }
@@ -145,44 +170,46 @@ function AdminDashboard() {
         return false;
     };
 
-    const ActionCard = ({ icon, title, path, featureKey, highlight, badge }) => (
-        <div
-            onClick={(e) => {
-                if (planDetails && planDetails.plan.is_free_trial && getTrialDaysLeft() <= 0) {
-                    e.preventDefault();
-                    setShowUpgradeModal(true);
-                    setBlockedFeature("All Features (Trial Expired)");
-                    return;
-                }
-                handleNavigation(path, featureKey);
-            }}
-            className={`action-card ${(planDetails && planDetails.plan.is_free_trial && getTrialDaysLeft() <= 0) ? 'disabled-card' : ''}`}
-            style={{ cursor: 'pointer', position: 'relative', ...(highlight ? { borderColor: '#6366f1', boxShadow: '0 0 0 2px rgba(99,102,241,0.3)' } : {}), opacity: (planDetails && planDetails.plan.is_free_trial && getTrialDaysLeft() <= 0) ? 0.6 : 1 }}
-        >
-            <span className="action-icon">{icon}</span>
-            <span className="action-title">{title}</span>
-            {badge > 0 && (
-                <span style={{ position: 'absolute', top: 10, right: 10, background: 'var(--danger, #ef4444)', color: 'white', padding: '2px 6px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 'bold', zIndex: 10 }}>
-                    {badge > 99 ? '99+' : badge}
-                </span>
-            )}
-            {planDetails && (
-                ((planDetails.plan.is_free_trial && getTrialDaysLeft() <= 0) || 
-                (featureKey && (
-                    (featureKey === 'fees' && !planDetails.features.fees) ||
-                    (featureKey === 'finance' && !planDetails.features.finance) ||
-                    (featureKey === 'salary' && !planDetails.features.salary) ||
-                    (featureKey === 'announcements' && !planDetails.features.announcements) ||
-                    (featureKey === 'attendance' && planDetails.features.attendance === 'none') ||
-                    (featureKey === 'reports' && planDetails.features.reports === 'none') ||
-                    (featureKey === 'auto_attendance' && !planDetails.features.auto_attendance) ||
-                    (featureKey === 'timetable' && !planDetails.features.timetable)
-                )))
-            ) && (
-                    <span style={{ position: 'absolute', top: 5, right: 5, fontSize: '10px', background: '#e5e7eb', padding: '2px 5px', borderRadius: '4px' }}>🔒</span>
+    const ActionCard = ({ icon, title, path, featureKey, highlight, badge }) => {
+        const isTrialLocked = planDetails && planDetails.plan.is_free_trial && getTrialDaysLeft() <= 0;
+        const featureAccess = checkFeatureAccess(featureKey);
+        const isFeatureLocked = planDetails && !featureAccess.hasAccess;
+        const isLocked = isTrialLocked || isFeatureLocked;
+
+        return (
+            <div
+                onClick={(e) => {
+                    if (isTrialLocked) {
+                        e.preventDefault();
+                        setShowUpgradeModal(true);
+                        setBlockedFeature("All Features (Trial Expired)");
+                        return;
+                    }
+                    handleNavigation(path, featureKey);
+                }}
+                className={`action-card ${isLocked ? 'disabled-card' : ''}`}
+                style={{
+                    cursor: 'pointer',
+                    position: 'relative',
+                    ...(highlight ? { borderColor: '#6366f1', boxShadow: '0 0 0 2px rgba(99,102,241,0.3)' } : {}),
+                    opacity: isLocked ? 0.6 : 1
+                }}
+            >
+                <span className="action-icon">{icon}</span>
+                <span className="action-title">{title}</span>
+                {badge > 0 && !isLocked && (
+                    <span style={{ position: 'absolute', top: 10, right: 10, background: 'var(--danger, #ef4444)', color: 'white', padding: '2px 6px', borderRadius: '10px', fontSize: '0.75rem', fontWeight: 'bold', zIndex: 10 }}>
+                        {badge > 99 ? '99+' : badge}
+                    </span>
                 )}
-        </div>
-    );
+                {isLocked && (
+                    <div style={{ position: 'absolute', top: 5, right: 5, fontSize: '10px', background: '#e5e7eb', padding: '2px 5px', borderRadius: '4px', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        🔒
+                    </div>
+                )}
+            </div>
+        );
+    };
 
     const getTrialDaysLeft = () => {
         if (!planDetails?.institute?.subscription_end) return 0;

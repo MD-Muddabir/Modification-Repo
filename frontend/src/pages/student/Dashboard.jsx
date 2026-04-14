@@ -23,11 +23,13 @@ function StudentDashboard() {
         }
 
         // Fetch chat unread count
-        api.get('/chat/unread-count').then(res => {
-            if (res.data.success) {
-                setChatUnreadCount(res.data.count);
-            }
-        }).catch(err => console.log(err));
+        if (user?.features?.chat) {
+            api.get('/chat/unread-count').then(res => {
+                if (res.data.success) {
+                    setChatUnreadCount(res.data.count);
+                }
+            }).catch(err => console.log(err));
+        }
 
     }, [user]);
 
@@ -70,18 +72,28 @@ function StudentDashboard() {
                     {user?.features?.auto_attendance && (
                         <ActionCard path="/student/scan-attendance" icon="🤳" title="My QR Code" />
                     )}
-                    <ActionCard path="/student/exams" icon="📝" title="View Marks" />
+                    {user?.features?.exams && (
+                        <ActionCard path="/student/exams" icon="📝" title="View Marks" />
+                    )}
                     {user?.features?.fees && (
                         <ActionCard path="/student/fees" icon="💳" title="Pay Fees" />
                     )}
-                    <ActionCard path="/student/timetable" icon="📅" title="My Timetable" />
+                    {user?.features?.timetable && (
+                        <ActionCard path="/student/timetable" icon="📅" title="My Timetable" />
+                    )}
                     {user?.features?.announcements && (
                         <ActionCard path="/student/announcements" icon="📢" title="Announcements" badge={unreadCount} />
                     )}
 
-                    <ActionCard path="/student/notes" icon="📚" title="My Notes" />
-                    <ActionCard path="/student/assignments" icon="📝" title="Assignments" />
-                    <ActionCard path="/student/chat" icon="💬" title="Subject Chat" badge={chatUnreadCount} />
+                    {user?.features?.notes && (
+                        <>
+                            <ActionCard path="/student/notes" icon="📚" title="My Notes" />
+                            <ActionCard path="/student/assignments" icon="📝" title="Assignments" />
+                        </>
+                    )}
+                    {user?.features?.chat && (
+                        <ActionCard path="/student/chat" icon="💬" title="Subject Chat" badge={chatUnreadCount} />
+                    )}
 
                     <ActionCard path="/student/profile" icon="👤" title="My Profile" />
                 </div>
