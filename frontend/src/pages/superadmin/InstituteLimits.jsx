@@ -34,6 +34,7 @@ const BOOL_FEATURES = [
     { key: "current_feature_multi_branch",    label: "Multi-Branch",          icon: "🏢", desc: "Manage multiple campuses" },
     { key: "current_feature_api_access",      label: "API Access",            icon: "🔌", desc: "External API integration" },
     { key: "current_feature_public_page",     label: "Public Web Page",       icon: "🌐", desc: "Publicly visible institute page" },
+    { key: "current_feature_mobile_app",      label: "Mobile App",            icon: "📱", desc: "Mobile application access" },
 ];
 
 // QR sub-features that are gated by Smart Attendance

@@ -179,12 +179,28 @@ exports.registerInstitute = async (req, res) => {
  */
 exports.login = async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, source } = req.body;
 
         const user = await authService.loginUser(email, password);
         const token = generateToken(user);
 
         let features = {};
+        
+        // Block mobile app login if plan does not include mobile app feature
+        if (source === 'mobile' && user.Institute && user.Institute.Plan) {
+            const plan = user.Institute.Plan;
+            const hasMobileApp = user.Institute.current_feature_mobile_app !== undefined && user.Institute.current_feature_mobile_app !== null 
+                ? user.Institute.current_feature_mobile_app 
+                : plan.feature_mobile_app;
+                
+            if (!hasMobileApp) {
+                return res.status(403).json({
+                    success: false,
+                    message: "Login failed. Your institute's plan does not include Mobile App access. Please log in through the website."
+                });
+            }
+        }
+        
         if (user.Institute && user.Institute.Plan) {
             const plan = user.Institute.Plan;
             features = {

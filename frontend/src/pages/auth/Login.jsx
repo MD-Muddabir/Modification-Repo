@@ -93,7 +93,7 @@ function Login() {
     setLoading(true);
     setErrors({});
     try {
-      await login(formData);
+      await login({ ...formData, source: isMobileApp ? 'mobile' : 'web' });
       const user = JSON.parse(sessionStorage.getItem("user"));
       if (isMobileApp) {
         if (MOBILE_ALLOWED_ROLE && user.role !== MOBILE_ALLOWED_ROLE) {

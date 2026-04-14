@@ -246,7 +246,8 @@ exports.getInstituteDetails = async (req, res) => {
             'current_feature_api_access',
             'current_feature_public_page',
             'current_feature_assignment',
-            'current_feature_transport'
+            'current_feature_transport',
+            'current_feature_mobile_app'
         ];
 
         let totalFeatures = 0;
@@ -305,7 +306,8 @@ exports.updateInstituteLimits = async (req, res) => {
             current_feature_api_access,
             current_feature_public_page,
             current_feature_assignment,
-            current_feature_transport
+            current_feature_transport,
+            current_feature_mobile_app
         } = req.body;
 
         const institute = await Institute.findByPk(id);
@@ -332,6 +334,7 @@ exports.updateInstituteLimits = async (req, res) => {
         if (current_feature_public_page !== undefined) updates.current_feature_public_page = !!current_feature_public_page;
         if (current_feature_assignment !== undefined) updates.current_feature_assignment = !!current_feature_assignment;
         if (current_feature_transport !== undefined) updates.current_feature_transport = !!current_feature_transport;
+        if (current_feature_mobile_app !== undefined) updates.current_feature_mobile_app = !!current_feature_mobile_app;
 
         await institute.update(updates);
 

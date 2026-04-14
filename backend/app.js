@@ -73,6 +73,9 @@ const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",
   "http://localhost:3000",
+  "http://localhost",
+  "capacitor://localhost",
+  "http://10.0.2.2:5000",
 ].filter(Boolean);
 
 app.use(cors({
@@ -330,7 +333,8 @@ const syncDatabase = async () => {
     try { await sequelize.query(`ALTER TABLE plans ADD COLUMN feature_finance BOOLEAN DEFAULT false;`); } catch (e) { }
     try { await sequelize.query(`ALTER TABLE institutes ADD COLUMN current_feature_finance BOOLEAN DEFAULT false;`); } catch (e) { }
     try { await sequelize.query(`ALTER TABLE institutes ADD COLUMN current_feature_salary BOOLEAN DEFAULT false;`); } catch (e) { }
-    console.log("✅ Finance module feature columns ensured");
+    try { await sequelize.query(`ALTER TABLE institutes ADD COLUMN current_feature_mobile_app BOOLEAN DEFAULT false;`); } catch (e) { }
+    console.log("✅ Finance & Mobile module feature columns ensured");
 
     // ── Manager Type columns (CreateManager.md — Phase 1 DB changes) ────────
     // PostgreSQL-safe: CREATE TYPE IF NOT EXISTS, then ADD COLUMN IF NOT EXISTS
