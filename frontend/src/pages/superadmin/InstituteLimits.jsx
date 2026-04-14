@@ -17,20 +17,47 @@ import "./Plans.css";
 const fmt = (n) => (n !== undefined && n !== null ? n : "N/A");
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString("en-IN", { year: "numeric", month: "short", day: "numeric" }) : "N/A");
 
+// Smart Attendance is index 0 — the Feature Toggles renderer treats it specially
+// (shows QR sub-feature dependency cards beneath it)
 const BOOL_FEATURES = [
-    { key: "current_feature_auto_attendance", label: "Smart Attendance" },
-    { key: "current_feature_fees", label: "Fees Management" },
-    { key: "current_feature_finance", label: "Finance Dashboard" },
-    { key: "current_feature_salary", label: "Faculty Salary Management" },
-    { key: "current_feature_announcements", label: "Announcements" },
-    { key: "current_feature_export", label: "Export Data" },
-    { key: "current_feature_timetable", label: "Timetable" },
-    { key: "current_feature_whatsapp", label: "WhatsApp Integration" },
-    { key: "current_feature_custom_branding", label: "Custom Branding" },
-    { key: "current_feature_multi_branch", label: "Multi-Branch" },
-    { key: "current_feature_api_access", label: "API Access" },
-    { key: "current_feature_public_page", label: "Public Web Page" },
+    { key: "current_feature_auto_attendance", label: "Smart Attendance",       icon: "📸", desc: "QR-based smart attendance system" },
+    { key: "current_feature_fees",            label: "Fees Management",        icon: "💰", desc: "Student fee collection & tracking" },
+    { key: "current_feature_finance",         label: "Finance Dashboard",      icon: "📊", desc: "Institute-wide finance analytics" },
+    { key: "current_feature_salary",          label: "Faculty Salary",         icon: "💼", desc: "Faculty payroll management" },
+    { key: "current_feature_assignment",      label: "Assignments",            icon: "📝", desc: "Homework & assignment submissions" },
+    { key: "current_feature_transport",       label: "Finances & Transport",   icon: "🚌", desc: "Expense tracking & transport fees" },
+    { key: "current_feature_announcements",   label: "Announcements",          icon: "📢", desc: "Broadcast notices to users" },
+    { key: "current_feature_export",          label: "Export Data",            icon: "📥", desc: "CSV / PDF data exports" },
+    { key: "current_feature_timetable",       label: "Timetable",             icon: "📅", desc: "Class & faculty timetables" },
+    { key: "current_feature_whatsapp",        label: "WhatsApp Integration",   icon: "💬", desc: "Automated WhatsApp notifications" },
+    { key: "current_feature_custom_branding", label: "Custom Branding",       icon: "🎨", desc: "Institute logo & colour themes" },
+    { key: "current_feature_multi_branch",    label: "Multi-Branch",          icon: "🏢", desc: "Manage multiple campuses" },
+    { key: "current_feature_api_access",      label: "API Access",            icon: "🔌", desc: "External API integration" },
+    { key: "current_feature_public_page",     label: "Public Web Page",       icon: "🌐", desc: "Publicly visible institute page" },
 ];
+
+// QR sub-features that are gated by Smart Attendance
+const QR_SUB_FEATURES = [
+    { label: "Scan Student QR", icon: "👨‍🎓", desc: "Students scan QR to mark attendance" },
+    { label: "Scan Faculty QR", icon: "👩‍🏫", desc: "Faculty scan QR to mark attendance" },
+];
+
+// Reusable inline toggle switch
+const ToggleSwitch = ({ val }) => (
+    <span style={{
+        width: "38px", height: "21px", borderRadius: "11px", display: "inline-block",
+        background: val ? "#10b981" : "#d1d5db",
+        position: "relative", flexShrink: 0, transition: "background 0.25s"
+    }}>
+        <span style={{
+            position: "absolute", top: "2.5px",
+            left: val ? "19px" : "2.5px",
+            width: "16px", height: "16px", borderRadius: "50%",
+            background: "#fff", transition: "left 0.25s",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.25)"
+        }} />
+    </span>
+);
 
 function InstituteLimits() {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -114,6 +141,8 @@ function InstituteLimits() {
                 current_feature_multi_branch: !!inst.current_feature_multi_branch,
                 current_feature_api_access: !!inst.current_feature_api_access,
                 current_feature_public_page: !!inst.current_feature_public_page,
+                current_feature_assignment: !!inst.current_feature_assignment,
+                current_feature_transport: !!inst.current_feature_transport,
             });
         } catch (e) {
             console.error(e);
@@ -195,6 +224,8 @@ function InstituteLimits() {
             current_feature_multi_branch: !!plan.feature_multi_branch,
             current_feature_api_access: !!plan.feature_api_access,
             current_feature_public_page: !!plan.feature_public_page,
+            current_feature_assignment: !!plan.feature_assignment,
+            current_feature_transport: !!plan.feature_transport,
         }));
         setMsg("ℹ️ Limits synced from base plan. Click Save to apply.");
     };
@@ -530,44 +561,122 @@ function InstituteLimits() {
                                         </div>
                                     </div>
 
-                                    {/* Boolean Features */}
-                                    <h4 style={{ margin: "0 0 12px" }}>Feature Toggles</h4>
-                                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px,1fr))", gap: "10px" }}>
-                                        {BOOL_FEATURES.map(f => {
-                                            const val = editMode ? formData[f.key] : !!inst[f.key];
+                                    {/* ── Feature Toggles ── */}
+                                    <h4 style={{ margin: "0 0 16px", display: "flex", alignItems: "center", gap: "8px" }}>
+                                        Feature Toggles
+                                        <span style={{ fontSize: "12px", fontWeight: 500, color: "var(--text-secondary)", background: "var(--card-bg,#f3f4f6)", border: "1px solid var(--border-color)", borderRadius: "20px", padding: "2px 10px" }}>
+                                            {BOOL_FEATURES.filter(f => (editMode ? formData[f.key] : !!inst[f.key])).length} / {BOOL_FEATURES.length} active
+                                        </span>
+                                    </h4>
+
+                                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+
+                                        {/* ── Smart Attendance (parent) + QR sub-features ── */}
+                                        {(() => {
+                                            const f = BOOL_FEATURES[0]; // current_feature_auto_attendance
+                                            const val = editMode ? !!formData[f.key] : !!inst[f.key];
                                             return (
-                                                <div
-                                                    key={f.key}
-                                                    onClick={() => editMode && setFormData(p => ({ ...p, [f.key]: !p[f.key] }))}
-                                                    style={{
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        gap: "10px",
-                                                        padding: "12px 16px",
-                                                        borderRadius: "12px",
-                                                        border: `1px solid ${val ? "rgba(16,185,129,0.4)" : "var(--border-color)"}`,
-                                                        background: val ? "rgba(16,185,129,0.06)" : "var(--card-bg, #f9fafb)",
-                                                        cursor: editMode ? "pointer" : "default",
-                                                        userSelect: "none",
-                                                        transition: "all 0.2s"
-                                                    }}
-                                                >
-                                                    <span style={{
-                                                        width: "36px", height: "20px", borderRadius: "10px",
-                                                        background: val ? "#10b981" : "var(--border-color)",
-                                                        position: "relative", flexShrink: 0, transition: "background 0.2s"
-                                                    }}>
+                                                <div key={f.key}>
+                                                    {/* Parent toggle card */}
+                                                    <div
+                                                        onClick={() => editMode && setFormData(p => ({ ...p, [f.key]: !p[f.key] }))}
+                                                        style={{
+                                                            display: "flex", alignItems: "center", gap: "12px",
+                                                            padding: "14px 18px", borderRadius: "14px",
+                                                            border: `2px solid ${val ? "rgba(16,185,129,0.5)" : "var(--border-color)"}`,
+                                                            background: val ? "rgba(16,185,129,0.07)" : "var(--card-bg, #f9fafb)",
+                                                            cursor: editMode ? "pointer" : "default",
+                                                            userSelect: "none", transition: "all 0.25s",
+                                                            boxShadow: val ? "0 0 0 3px rgba(16,185,129,0.1)" : "none"
+                                                        }}
+                                                    >
+                                                        <span style={{ fontSize: "22px" }}>{f.icon}</span>
+                                                        <ToggleSwitch val={val} />
+                                                        <div style={{ flex: 1 }}>
+                                                            <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-primary)" }}>{f.label}</div>
+                                                            <div style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "2px" }}>{f.desc}</div>
+                                                        </div>
                                                         <span style={{
-                                                            position: "absolute", top: "2px",
-                                                            left: val ? "18px" : "2px",
-                                                            width: "16px", height: "16px", borderRadius: "50%",
-                                                            background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)"
-                                                        }} />
-                                                    </span>
-                                                    <span style={{ fontWeight: 600, fontSize: "13px" }}>{f.label}</span>
+                                                            fontSize: "11px", padding: "3px 10px", borderRadius: "20px", fontWeight: 700,
+                                                            background: val ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.1)",
+                                                            color: val ? "#10b981" : "#ef4444"
+                                                        }}>
+                                                            {val ? "ENABLED" : "DISABLED"}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* QR Sub-features — indented, gated by parent */}
+                                                    <div style={{
+                                                        marginLeft: "32px", marginTop: "8px",
+                                                        display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px"
+                                                    }}>
+                                                        {QR_SUB_FEATURES.map(sub => (
+                                                            <div key={sub.label} style={{
+                                                                display: "flex", alignItems: "center", gap: "10px",
+                                                                padding: "11px 14px", borderRadius: "10px",
+                                                                border: `1px solid ${val ? "rgba(99,102,241,0.35)" : "var(--border-color)"}`,
+                                                                background: val ? "rgba(99,102,241,0.05)" : "rgba(0,0,0,0.02)",
+                                                                opacity: val ? 1 : 0.55,
+                                                                position: "relative", overflow: "hidden",
+                                                                transition: "all 0.3s"
+                                                            }}>
+                                                                {/* Left accent bar */}
+                                                                <div style={{
+                                                                    position: "absolute", left: 0, top: 0, bottom: 0, width: "3px",
+                                                                    background: val
+                                                                        ? "linear-gradient(180deg, #6366f1, #8b5cf6)"
+                                                                        : "var(--border-color)",
+                                                                    borderRadius: "3px 0 0 3px"
+                                                                }} />
+                                                                <span style={{ fontSize: "18px" }}>{sub.icon}</span>
+                                                                <div style={{ flex: 1 }}>
+                                                                    <div style={{ fontWeight: 600, fontSize: "13px", display: "flex", alignItems: "center", gap: "5px" }}>
+                                                                        {sub.label}
+                                                                        {!val && <span style={{ fontSize: "11px" }}>🔒</span>}
+                                                                    </div>
+                                                                    <div style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "1px" }}>{sub.desc}</div>
+                                                                </div>
+                                                                <span style={{
+                                                                    fontSize: "10px", padding: "2px 8px", borderRadius: "20px", fontWeight: 700,
+                                                                    background: val ? "rgba(99,102,241,0.15)" : "rgba(107,114,128,0.1)",
+                                                                    color: val ? "#6366f1" : "var(--text-secondary)"
+                                                                }}>
+                                                                    {val ? "UNLOCKED" : "LOCKED"}
+                                                                </span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
                                                 </div>
                                             );
-                                        })}
+                                        })()}
+
+                                        {/* ── All other feature toggles ── */}
+                                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px,1fr))", gap: "10px", marginTop: "4px" }}>
+                                            {BOOL_FEATURES.slice(1).map(f => {
+                                                const val = editMode ? !!formData[f.key] : !!inst[f.key];
+                                                return (
+                                                    <div
+                                                        key={f.key}
+                                                        onClick={() => editMode && setFormData(p => ({ ...p, [f.key]: !p[f.key] }))}
+                                                        style={{
+                                                            display: "flex", alignItems: "center", gap: "10px",
+                                                            padding: "12px 16px", borderRadius: "12px",
+                                                            border: `1px solid ${val ? "rgba(16,185,129,0.4)" : "var(--border-color)"}`,
+                                                            background: val ? "rgba(16,185,129,0.06)" : "var(--card-bg, #f9fafb)",
+                                                            cursor: editMode ? "pointer" : "default",
+                                                            userSelect: "none", transition: "all 0.2s"
+                                                        }}
+                                                    >
+                                                        <span style={{ fontSize: "18px" }}>{f.icon}</span>
+                                                        <ToggleSwitch val={val} />
+                                                        <div style={{ flex: 1 }}>
+                                                            <div style={{ fontWeight: 600, fontSize: "13px" }}>{f.label}</div>
+                                                            <div style={{ fontSize: "11px", color: "var(--text-secondary)", marginTop: "1px" }}>{f.desc}</div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 </div>
                             )}

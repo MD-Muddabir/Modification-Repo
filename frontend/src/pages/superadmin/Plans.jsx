@@ -60,6 +60,8 @@ function Plans() {
         feature_parent_portal: false,
         feature_mobile_app: false,
         feature_public_page: false,
+        feature_assignment: false,
+        feature_transport: false,
 
         is_free_trial: false,
         trial_days: 0,
@@ -244,6 +246,12 @@ function Plans() {
                                 </li>
                                 <li style={{ marginBottom: "0.3rem", display: "flex", justifyContent: "space-between" }}>
                                     Timetable: <span>{plan.feature_timetable ? "✅" : "❌"}</span>
+                                </li>
+                                <li style={{ marginBottom: "0.3rem", display: "flex", justifyContent: "space-between" }}>
+                                    Assignments: <span>{plan.feature_assignment ? "✅" : "❌"}</span>
+                                </li>
+                                <li style={{ marginBottom: "0.3rem", display: "flex", justifyContent: "space-between" }}>
+                                    Finances & Transport: <span>{plan.feature_transport ? "✅" : "❌"}</span>
                                 </li>
                                 <li style={{ marginBottom: "0.3rem", display: "flex", justifyContent: "space-between" }}>
                                     Notes: <span>{plan.feature_notes ? "✅" : "❌"}</span>
@@ -482,6 +490,8 @@ function Plans() {
                                             { key: 'feature_parent_portal', label: 'Parent Portal' },
                                             { key: 'feature_mobile_app', label: 'Mobile App' },
                                             { key: 'feature_public_page', label: '🌐 Public Web Page' },
+                                            { key: 'feature_assignment', label: '📝 Assignments' },
+                                            { key: 'feature_transport', label: '🚌 Finances & Transport' },
                                             { key: 'is_free_trial', label: 'Start Free Trial' },
                                             { key: 'is_popular', label: 'Mark as Popular' },
                                         ].map(feature => (

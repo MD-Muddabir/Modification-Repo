@@ -104,6 +104,14 @@ const Institute = sequelize.define("Institute", {
         type: DataTypes.BOOLEAN,
         defaultValue: false
     },
+    current_feature_assignment: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
+    current_feature_transport: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
 });
 
 module.exports = Institute;

@@ -138,8 +138,10 @@ function AdminDashboard() {
                 if (!features.chat) { hasAccess = false; featureName = "Academic Chat"; }
                 break;
             case 'assignments':
-                // Check if they have notes feature or we fallback to true since we dont have explicit assignment feature
-                if (features.notes === false) { hasAccess = false; featureName = "Assignments"; }
+                if (!features.assignment) { hasAccess = false; featureName = "Assignments"; }
+                break;
+            case 'expenses':
+                if (!features.transport) { hasAccess = false; featureName = "Finances & Transport"; }
                 break;
             case 'biometric':
                 if (!features.auto_attendance) { hasAccess = false; featureName = "Biometric (Smart Attendance)"; }
@@ -529,7 +531,7 @@ function AdminDashboard() {
                     {hasPermission('faculty') && <ActionCard path={`${basePath}/faculty`} icon="👩‍🏫" title="Manage Faculty" featureKey="faculty" />}
                     {hasPermission('attendance') && <ActionCard path={`${basePath}/faculty-attendance`} icon="📋" title="Faculty Attendance" featureKey="attendance" />}
                     {hasPermission('attendance') && <ActionCard path={`${basePath}/view-faculty-attendance`} icon="📊" title="Faculty Tracker" featureKey="attendance" />}
-                    {hasPermission('attendance') && <ActionCard path={`${basePath}/scan-faculty-qr`} icon="📸" title="Scan Faculty QR" featureKey="attendance" />}
+                    {hasPermission('attendance') && <ActionCard path={`${basePath}/scan-faculty-qr`} icon="📸" title="Scan Faculty QR" featureKey="auto_attendance" />}
 
                     {hasPermission('subjects') && <ActionCard path={`${basePath}/subjects`} icon="📖" title="Manage Subjects" featureKey="subjects" />}
 

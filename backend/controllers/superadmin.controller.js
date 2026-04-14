@@ -244,7 +244,9 @@ exports.getInstituteDetails = async (req, res) => {
             'current_feature_custom_branding',
             'current_feature_multi_branch',
             'current_feature_api_access',
-            'current_feature_public_page'
+            'current_feature_public_page',
+            'current_feature_assignment',
+            'current_feature_transport'
         ];
 
         let totalFeatures = 0;
@@ -301,7 +303,9 @@ exports.updateInstituteLimits = async (req, res) => {
             current_feature_custom_branding,
             current_feature_multi_branch,
             current_feature_api_access,
-            current_feature_public_page
+            current_feature_public_page,
+            current_feature_assignment,
+            current_feature_transport
         } = req.body;
 
         const institute = await Institute.findByPk(id);
@@ -326,6 +330,8 @@ exports.updateInstituteLimits = async (req, res) => {
         if (current_feature_multi_branch !== undefined) updates.current_feature_multi_branch = !!current_feature_multi_branch;
         if (current_feature_api_access !== undefined) updates.current_feature_api_access = !!current_feature_api_access;
         if (current_feature_public_page !== undefined) updates.current_feature_public_page = !!current_feature_public_page;
+        if (current_feature_assignment !== undefined) updates.current_feature_assignment = !!current_feature_assignment;
+        if (current_feature_transport !== undefined) updates.current_feature_transport = !!current_feature_transport;
 
         await institute.update(updates);
 
@@ -738,7 +744,9 @@ exports.upgradePlan = async (req, res) => {
             current_feature_custom_branding: newPlan.feature_custom_branding,
             current_feature_multi_branch: newPlan.feature_multi_branch,
             current_feature_api_access: newPlan.feature_api_access,
-            current_feature_public_page: newPlan.feature_public_page
+            current_feature_public_page: newPlan.feature_public_page,
+            current_feature_assignment: newPlan.feature_assignment || false,
+            current_feature_transport: newPlan.feature_transport || false
         });
 
         res.json({

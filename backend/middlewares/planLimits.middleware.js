@@ -234,6 +234,8 @@ const checkFeatureAccess = (featureName) => {
                 multi_branch: institute.current_feature_multi_branch !== null ? institute.current_feature_multi_branch : plan.feature_multi_branch,
                 api_access: institute.current_feature_api_access !== null ? institute.current_feature_api_access : plan.feature_api_access,
                 timetable: institute.current_feature_timetable !== undefined && institute.current_feature_timetable !== null ? institute.current_feature_timetable : plan.feature_timetable,
+                assignment: institute.current_feature_assignment !== null && institute.current_feature_assignment !== undefined ? institute.current_feature_assignment : (plan.feature_assignment || false),
+                transport: institute.current_feature_transport !== null && institute.current_feature_transport !== undefined ? institute.current_feature_transport : (plan.feature_transport || false),
             };
 
             // NEW RULE: Trial Expiration
@@ -288,6 +290,12 @@ const checkFeatureAccess = (featureName) => {
                     break;
                 case 'api_access':
                     hasAccess = features.api_access === true;
+                    break;
+                case 'assignment':
+                    hasAccess = features.assignment === true;
+                    break;
+                case 'transport':
+                    hasAccess = features.transport === true;
                     break;
                 default:
                     hasAccess = true; // Unknown features are allowed by default
@@ -397,7 +405,9 @@ const getUsageStats = async (req, res) => {
                     whatsapp: institute.current_feature_whatsapp !== null ? institute.current_feature_whatsapp : institute.Plan.feature_whatsapp,
                     timetable: institute.current_feature_timetable !== undefined && institute.current_feature_timetable !== null ? institute.current_feature_timetable : institute.Plan.feature_timetable,
                     custom_branding: institute.current_feature_custom_branding !== null ? institute.current_feature_custom_branding : institute.Plan.feature_custom_branding,
-                    multi_branch: institute.current_feature_multi_branch !== null ? institute.current_feature_multi_branch : institute.Plan.feature_multi_branch
+                    multi_branch: institute.current_feature_multi_branch !== null ? institute.current_feature_multi_branch : institute.Plan.feature_multi_branch,
+                    assignment: institute.current_feature_assignment !== null && institute.current_feature_assignment !== undefined ? institute.current_feature_assignment : (institute.Plan.feature_assignment || false),
+                    transport: institute.current_feature_transport !== null && institute.current_feature_transport !== undefined ? institute.current_feature_transport : (institute.Plan.feature_transport || false)
                 }
             }
         });

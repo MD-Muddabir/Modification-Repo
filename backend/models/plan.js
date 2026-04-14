@@ -163,6 +163,14 @@ const Plan = sequelize.define("Plan", {
         type: DataTypes.BOOLEAN,
         defaultValue: false
     },
+    feature_assignment: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
+    feature_transport: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
 
     // Plan Status
     status: {
