@@ -48,7 +48,23 @@ api.interceptors.request.use(
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`;
             }
+            
+            // Check for plan expiration blocking mutating requests locally
+            const isPlanExpired = sessionStorage.getItem("isPlanExpired") === "true";
+            if (isPlanExpired && config.method && config.method.toUpperCase() !== 'GET') {
+                const url = config.url || '';
+                // Whitelist routes that shouldn't be blocked even if expired (e.g. auth, upgrade)
+                const isWhitelisted = url.includes('/auth/') || url.includes('/login') || url.includes('/checkout') || url.includes('/verify') || url.includes('/payment');
+                
+                if (!isWhitelisted) {
+                    throw { customName: "PLAN_EXPIRED_READONLY", message: "Action blocked: Plan is expired. Please upgrade." };
+                }
+            }
+
         } catch (err) {
+            if (err.customName === "PLAN_EXPIRED_READONLY") {
+                return Promise.reject(err);
+            }
             console.warn("⚠️ Token access error:", err.message);
         }
 
@@ -63,6 +79,15 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
+        // Handle client-side rejected requests (Plan Expired Read-only)
+        if (error.customName === "PLAN_EXPIRED_READONLY") {
+            import("react-hot-toast").then((module) => {
+                const toast = module.default || module.toast;
+                toast.error("Account in Read-Only Mode. Please upgrade your plan to perform actions.", { id: "plan_expired" });
+            });
+            return Promise.reject(error);
+        }
+        
         const { response } = error;
 
         // 🌐 Network error (Server Unreachable)

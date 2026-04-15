@@ -158,6 +158,12 @@ function AdminDashboard() {
     const handleNavigation = (path, featureKey) => {
         if (!planDetails) { navigate(path); return; }
 
+        const isPlanExpiredLocally = user?.isPlanExpired || (planDetails.plan.is_free_trial && getTrialDaysLeft() <= 0);
+        if (isPlanExpiredLocally) { 
+            navigate(path); 
+            return; 
+        }
+
         const { hasAccess, featureName } = checkFeatureAccess(featureKey);
 
         if (hasAccess) { navigate(path); }
@@ -174,19 +180,17 @@ function AdminDashboard() {
 
     const ActionCard = ({ icon, title, path, featureKey, highlight, badge }) => {
         const isTrialLocked = planDetails && planDetails.plan.is_free_trial && getTrialDaysLeft() <= 0;
+        const isPlanExpiredLocally = user?.isPlanExpired || isTrialLocked;
+        
         const featureAccess = checkFeatureAccess(featureKey);
-        const isFeatureLocked = planDetails && !featureAccess.hasAccess;
-        const isLocked = isTrialLocked || isFeatureLocked;
+        // Only lock if plan is active but feature is missing. Expired plans can view everything read-only.
+        const isFeatureLocked = planDetails && !featureAccess.hasAccess && !isPlanExpiredLocally;
+        
+        const isLocked = isFeatureLocked;
 
         return (
             <div
                 onClick={(e) => {
-                    if (isTrialLocked) {
-                        e.preventDefault();
-                        setShowUpgradeModal(true);
-                        setBlockedFeature("All Features (Trial Expired)");
-                        return;
-                    }
                     handleNavigation(path, featureKey);
                 }}
                 className={`action-card ${isLocked ? 'disabled-card' : ''}`}

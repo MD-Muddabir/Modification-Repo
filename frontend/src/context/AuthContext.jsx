@@ -18,7 +18,19 @@ export const AuthProvider = ({ children }) => {
         const { getProfile } = await import("../services/auth.service");
         const res = await getProfile();
         if (res.data && res.data.success) {
-           setUser(res.data.user);
+           const userData = res.data.user;
+           let isExpired = false;
+           
+           const subEnd = userData.subscription_end || userData.Institute?.subscription_end;
+           if (subEnd) {
+               const end = new Date(subEnd);
+               end.setHours(23, 59, 59, 999);
+               if (new Date() > end) isExpired = true;
+           }
+           
+           sessionStorage.setItem("isPlanExpired", isExpired ? "true" : "false");
+           userData.isPlanExpired = isExpired;
+           setUser(userData);
         } else {
            logout();
         }
@@ -38,8 +50,18 @@ export const AuthProvider = ({ children }) => {
 
     const { token, user } = response.data;
 
+    let isExpired = false;
+    if (user.subscription_end) {
+        const end = new Date(user.subscription_end);
+        end.setHours(23, 59, 59, 999);
+        if (new Date() > end) isExpired = true;
+    }
+    
+    user.isPlanExpired = isExpired;
+
     sessionStorage.setItem("token", token);
     sessionStorage.setItem("user", JSON.stringify(user));
+    sessionStorage.setItem("isPlanExpired", isExpired ? "true" : "false");
 
     setUser(user);
   };

@@ -8,6 +8,7 @@ import { Navigate } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import BlockedScreen from "../pages/admin/BlockedScreen";
+import ExpiredPlanBanner from "../components/common/ExpiredPlanBanner";
 
 /**
  * ProtectedRoute wrapper component
@@ -41,7 +42,12 @@ function ProtectedRoute({ children, allowedRoles = [] }) {
   }
 
   // User is authenticated and authorized
-  return children;
+  return (
+    <>
+      {user.isPlanExpired && user.role !== 'super_admin' && <ExpiredPlanBanner />}
+      {children}
+    </>
+  );
 }
 
 export default ProtectedRoute;
