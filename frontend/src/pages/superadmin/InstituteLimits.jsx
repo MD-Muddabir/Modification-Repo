@@ -441,18 +441,62 @@ function InstituteLimits() {
                                                 ))}
                                             </div>
 
-                                            <h4 style={{ marginBottom: "12px" }}>Plan Feature Flags</h4>
-                                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px,1fr))", gap: "8px" }}>
-                                                {BOOL_FEATURES.map(f => {
-                                                    const planKey = f.key.replace("current_", "");
-                                                    const enabled = !!inst.Plan[planKey];
-                                                    return (
-                                                        <div key={f.key} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "10px 14px", borderRadius: "10px", border: "1px solid var(--border-color)", background: enabled ? "rgba(16,185,129,0.06)" : "var(--card-bg, #f9fafb)" }}>
-                                                            <span style={{ fontSize: "18px" }}>{enabled ? "✅" : "❌"}</span>
-                                                            <span style={{ fontSize: "13px", fontWeight: 600 }}>{f.label}</span>
-                                                        </div>
-                                                    );
-                                                })}
+                                            <h4 style={{ marginBottom: "12px" }}>Active Features & Add-ons</h4>
+                                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px,1fr))", gap: "10px" }}>
+                                                {(() => {
+                                                    let expiries = {};
+                                                    try { expiries = (typeof inst.add_on_expiries === 'string' ? JSON.parse(inst.add_on_expiries) : inst.add_on_expiries) || {}; } catch(e) {}
+                                                    
+                                                    return BOOL_FEATURES.map(f => {
+                                                        const planKey = f.key.replace("current_", "");
+                                                        const includedInPlan = !!inst.Plan[planKey];
+                                                        const isManuallyEnabled = !!inst[f.key];
+                                                        const addonData = expiries[f.key];
+                                                        
+                                                        let isActive = includedInPlan || isManuallyEnabled;
+                                                        let isExpired = false;
+                                                        let startStr = null, endStr = null;
+                                                        
+                                                        if (addonData && !includedInPlan) {
+                                                            const endDate = typeof addonData === 'object' ? addonData.end : addonData;
+                                                            const startDate = typeof addonData === 'object' ? addonData.start : null;
+                                                            isExpired = new Date() > new Date(endDate);
+                                                            if (isExpired) isActive = false;
+                                                            
+                                                            startStr = startDate ? fmtDate(startDate) : "N/A";
+                                                            endStr = fmtDate(endDate);
+                                                        }
+                                                        
+                                                        const isTemporalAddon = !includedInPlan && !!addonData && !isExpired;
+
+                                                        return (
+                                                            <div key={f.key} style={{ 
+                                                                display: "flex", alignItems: "center", gap: "12px", 
+                                                                padding: "12px 14px", borderRadius: "12px", 
+                                                                border: `1px solid ${isActive ? (isTemporalAddon ? "rgba(245,158,11,0.4)" : "rgba(16,185,129,0.4)") : "var(--border-color)"}`, 
+                                                                background: isActive ? (isTemporalAddon ? "rgba(245,158,11,0.08)" : "rgba(16,185,129,0.06)") : "var(--card-bg, #f9fafb)",
+                                                                opacity: isExpired ? 0.6 : 1
+                                                            }}>
+                                                                <span style={{ fontSize: "20px" }}>
+                                                                    {isActive ? (isTemporalAddon ? "⏳" : "✅") : (isExpired ? "⌛" : "❌")}
+                                                                </span>
+                                                                <div style={{ flex: 1 }}>
+                                                                    <div style={{ fontSize: "13px", fontWeight: 700, color: isActive ? "var(--text-primary)" : "var(--text-secondary)" }}>
+                                                                        {f.label} 
+                                                                        {isExpired && <span style={{ fontSize: "10px", marginLeft: "6px", color: "#ef4444", background: "rgba(239,68,68,0.1)", padding: "2px 6px", borderRadius: "10px" }}>EXPIRED</span>}
+                                                                        {!isExpired && isTemporalAddon && <span style={{ fontSize: "10px", marginLeft: "6px", color: "#d97706", background: "rgba(245,158,11,0.15)", padding: "2px 6px", borderRadius: "10px" }}>ADD-ON</span>}
+                                                                    </div>
+                                                                    {addonData && (
+                                                                        <div style={{ fontSize: "11px", color: isExpired ? "#ef4444" : "var(--text-secondary)", marginTop: "4px", display: "flex", flexDirection: "column", gap: "2px" }}>
+                                                                            {startStr && <div><span style={{fontWeight:600}}>Start:</span> {startStr}</div>}
+                                                                            <div><span style={{fontWeight:600}}>End:</span> {endStr}</div>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    });
+                                                })()}
                                             </div>
 
                                             {sub && (

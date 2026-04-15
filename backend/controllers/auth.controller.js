@@ -227,6 +227,8 @@ exports.login = async (req, res) => {
                 status: user.status,
                 institute_id: user.institute_id,
                 institute_name: user.Institute?.name,
+                subscription_end: user.Institute?.subscription_end,
+                plan_name: user.Institute?.Plan?.name,
                 features,
                 permissions: user.permissions || [],
                 theme_dark: user.theme_dark ?? false,

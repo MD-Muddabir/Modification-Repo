@@ -310,7 +310,8 @@ exports.updateInstituteLimits = async (req, res) => {
             current_feature_mobile_app
         } = req.body;
 
-        const institute = await Institute.findByPk(id);
+        const { Plan } = require("../models");
+        const institute = await Institute.findByPk(id, { include: [{ model: Plan }] });
         if (!institute) return res.status(404).json({ error: "Institute not found" });
 
         const updates = {};
@@ -335,6 +336,41 @@ exports.updateInstituteLimits = async (req, res) => {
         if (current_feature_assignment !== undefined) updates.current_feature_assignment = !!current_feature_assignment;
         if (current_feature_transport !== undefined) updates.current_feature_transport = !!current_feature_transport;
         if (current_feature_mobile_app !== undefined) updates.current_feature_mobile_app = !!current_feature_mobile_app;
+
+        // Add 1-month expiration for manually unlocked Add-on features
+        let expiries = {};
+        try {
+             expiries = (typeof institute.add_on_expiries === 'string' ? JSON.parse(institute.add_on_expiries) : institute.add_on_expiries) || {};
+        } catch(e) {}
+        
+        const booleanFeatures = [
+            'current_feature_auto_attendance', 'current_feature_fees', 'current_feature_finance',
+            'current_feature_salary', 'current_feature_announcements', 'current_feature_export',
+            'current_feature_timetable', 'current_feature_whatsapp', 'current_feature_custom_branding',
+            'current_feature_multi_branch', 'current_feature_api_access', 'current_feature_public_page',
+            'current_feature_assignment', 'current_feature_transport', 'current_feature_mobile_app'
+        ];
+
+        booleanFeatures.forEach(feature => {
+            if (updates[feature] === true) {
+                const basePlanFeature = feature.replace('current_', '');
+                // If it's NOT in the base plan, lock it after 1 month automatically
+                if (institute.Plan && !institute.Plan[basePlanFeature]) {
+                    if (!expiries[feature]) {
+                        const startDate = new Date();
+                        const expiryDate = new Date();
+                        expiryDate.setMonth(expiryDate.getMonth() + 1);
+                        expiries[feature] = {
+                            start: startDate.toISOString(),
+                            end: expiryDate.toISOString()
+                        };
+                    }
+                }
+            } else if (updates[feature] === false) {
+                delete expiries[feature];
+            }
+        });
+        updates.add_on_expiries = expiries;
 
         await institute.update(updates);
 

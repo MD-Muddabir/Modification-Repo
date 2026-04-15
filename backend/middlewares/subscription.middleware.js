@@ -6,24 +6,35 @@ async function checkSubscription(req, res, next) {
     if (req.user.role === 'super_admin') return next();
 
     try {
-        const sub = await Subscription.findOne({
-            where: {
-                institute_id: req.user.institute_id,
-                payment_status: 'paid',
-                end_date: { [Op.gte]: new Date() },  // not expired
-            }
-        });
-
-        if (!sub) {
-            return res.status(402).json({   // 402 = Payment Required
-                success: false,
-                code: 'SUBSCRIPTION_EXPIRED',
-                message: 'Your subscription has expired or no active plan found. Please renew to continue.',
-                renew_url: '/subscription'
-            });
+        const { Institute } = require("../models");
+        const institute = await Institute.findByPk(req.user.institute_id);
+        
+        let isExpired = false;
+        if (institute && institute.subscription_end) {
+            const today = new Date();
+            const end = new Date(institute.subscription_end);
+            end.setHours(23, 59, 59, 999);
+            if (today > end) isExpired = true;
         }
 
-        req.subscription = sub;  // available in controllers
+        // Only enforce blocks strictly for POST/PUT/DELETE
+        if (req.method !== 'GET') {
+            if (institute?.status === 'pending') {
+                return res.status(402).json({
+                    success: false,
+                    code: 'PAYMENT_REQUIRED',
+                    message: 'Please complete your payment to activate your account.'
+                });
+            }
+            if (isExpired) {
+                return res.status(403).json({
+                    success: false,
+                    code: 'PLAN_EXPIRED_READONLY',
+                    message: 'Your account is in Read-Only Mode. Please upgrade your plan to perform actions.'
+                });
+            }
+        }
+
         next();
     } catch (error) {
         console.error("Subscription Check Error:", error);

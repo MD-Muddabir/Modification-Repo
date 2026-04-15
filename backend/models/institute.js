@@ -116,6 +116,10 @@ const Institute = sequelize.define("Institute", {
         type: DataTypes.BOOLEAN,
         defaultValue: false
     },
+    add_on_expiries: {
+        type: DataTypes.JSON,
+        defaultValue: {}
+    },
 });
 
 module.exports = Institute;

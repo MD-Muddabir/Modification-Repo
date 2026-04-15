@@ -6,6 +6,50 @@
 const { Institute, Plan, Student, User, Class } = require("../models");
 const { Op } = require("sequelize");
 
+const computeFeatures = (institute, plan) => {
+    const features = {
+        attendance: institute.current_feature_attendance !== 'none' ? institute.current_feature_attendance : plan.feature_attendance,
+        auto_attendance: institute.current_feature_auto_attendance !== null ? institute.current_feature_auto_attendance : plan.feature_auto_attendance,
+        fees: institute.current_feature_fees !== null ? institute.current_feature_fees : plan.feature_fees,
+        finance: institute.current_feature_finance !== null ? institute.current_feature_finance : plan.feature_finance,
+        salary: institute.current_feature_salary !== null ? institute.current_feature_salary : plan.feature_salary,
+        reports: institute.current_feature_reports || plan.feature_reports,
+        announcements: institute.current_feature_announcements !== null ? institute.current_feature_announcements : plan.feature_announcements,
+        export: institute.current_feature_export !== null ? institute.current_feature_export : plan.feature_export,
+        whatsapp: institute.current_feature_whatsapp !== null ? institute.current_feature_whatsapp : plan.feature_whatsapp,
+        custom_branding: institute.current_feature_custom_branding !== null ? institute.current_feature_custom_branding : plan.feature_custom_branding,
+        multi_branch: institute.current_feature_multi_branch !== null ? institute.current_feature_multi_branch : plan.feature_multi_branch,
+        api_access: institute.current_feature_api_access !== null ? institute.current_feature_api_access : plan.feature_api_access,
+        timetable: institute.current_feature_timetable !== undefined && institute.current_feature_timetable !== null ? institute.current_feature_timetable : plan.feature_timetable,
+        assignment: institute.current_feature_assignment !== null && institute.current_feature_assignment !== undefined ? institute.current_feature_assignment : (plan.feature_assignment || false),
+        transport: institute.current_feature_transport !== null && institute.current_feature_transport !== undefined ? institute.current_feature_transport : (plan.feature_transport || false),
+        notes: plan.feature_notes || false,
+        chat: plan.feature_chat || false,
+        exams: plan.feature_exams || false,
+        public_page: institute.current_feature_public_page !== null && institute.current_feature_public_page !== undefined ? institute.current_feature_public_page : (plan.feature_public_page || false),
+        mobile_app: institute.current_feature_mobile_app !== null && institute.current_feature_mobile_app !== undefined ? institute.current_feature_mobile_app : (plan.feature_mobile_app || false)
+    };
+
+    let expiries = {};
+    try {
+        expiries = (typeof institute.add_on_expiries === 'string' ? JSON.parse(institute.add_on_expiries) : institute.add_on_expiries) || {};
+    } catch(e) {}
+
+    const now = new Date();
+    Object.keys(features).forEach(key => {
+        let expKey = `current_feature_${key}`;
+        let expiryRaw = expiries[expKey];
+        if (expiryRaw) {
+            let expiryDateStr = typeof expiryRaw === 'object' ? expiryRaw.end : expiryRaw;
+            if (now > new Date(expiryDateStr)) {
+                features[key] = plan[`feature_${key}`] || (typeof features[key] === 'boolean' ? false : 'none');
+            }
+        }
+    });
+
+    return features;
+};
+
 /**
  * Check if institute can add more students
  */
@@ -34,6 +78,8 @@ const checkStudentLimit = async (req, res, next) => {
         const limit_students = institute.current_limit_students || institute.Plan.max_students;
 
         if (studentCount >= limit_students) {
+            if (req.method === 'GET') return next();
+            
             return res.status(403).json({
                 success: false,
                 message: `Student limit reached! Your plan allows up to ${limit_students} students. Please upgrade your plan.`,
@@ -83,6 +129,8 @@ const checkFacultyLimit = async (req, res, next) => {
         const limit_faculty = institute.current_limit_faculty || institute.Plan.max_faculty;
 
         if (facultyCount >= limit_faculty) {
+            if (req.method === 'GET') return next();
+            
             return res.status(403).json({
                 success: false,
                 message: `Faculty limit reached! Your plan allows up to ${limit_faculty} faculty members. Please upgrade your plan.`,
@@ -129,6 +177,8 @@ const checkClassLimit = async (req, res, next) => {
         const limit_classes = institute.current_limit_classes || institute.Plan.max_classes;
 
         if (classCount >= limit_classes) {
+            if (req.method === 'GET') return next();
+            
             return res.status(403).json({
                 success: false,
                 message: `Class limit reached! Your plan allows up to ${limit_classes} classes. Please upgrade your plan.`,
@@ -178,6 +228,8 @@ const checkAdminUserLimit = async (req, res, next) => {
         const limit_admins = institute.current_limit_admins || institute.Plan.max_admin_users;
 
         if (adminCount >= limit_admins) {
+            if (req.method === 'GET') return next();
+            
             return res.status(403).json({
                 success: false,
                 message: `Admin user limit reached! Your plan allows up to ${limit_admins} admin users. Please upgrade your plan.`,
@@ -219,39 +271,26 @@ const checkFeatureAccess = (featureName) => {
 
             const plan = institute.Plan;
 
-            // Determine feature access (Snapshot first, then Plan fallback)
-            const features = {
-                attendance: institute.current_feature_attendance !== 'none' ? institute.current_feature_attendance : plan.feature_attendance,
-                auto_attendance: institute.current_feature_auto_attendance !== null ? institute.current_feature_auto_attendance : plan.feature_auto_attendance,
-                fees: institute.current_feature_fees !== null ? institute.current_feature_fees : plan.feature_fees,
-                finance: institute.current_feature_finance !== null ? institute.current_feature_finance : plan.feature_finance,
-                salary: institute.current_feature_salary !== null ? institute.current_feature_salary : plan.feature_salary,
-                reports: institute.current_feature_reports || plan.feature_reports,
-                announcements: institute.current_feature_announcements !== null ? institute.current_feature_announcements : plan.feature_announcements,
-                export: institute.current_feature_export !== null ? institute.current_feature_export : plan.feature_export,
-                whatsapp: institute.current_feature_whatsapp !== null ? institute.current_feature_whatsapp : plan.feature_whatsapp,
-                custom_branding: institute.current_feature_custom_branding !== null ? institute.current_feature_custom_branding : plan.feature_custom_branding,
-                multi_branch: institute.current_feature_multi_branch !== null ? institute.current_feature_multi_branch : plan.feature_multi_branch,
-                api_access: institute.current_feature_api_access !== null ? institute.current_feature_api_access : plan.feature_api_access,
-                timetable: institute.current_feature_timetable !== undefined && institute.current_feature_timetable !== null ? institute.current_feature_timetable : plan.feature_timetable,
-                assignment: institute.current_feature_assignment !== null && institute.current_feature_assignment !== undefined ? institute.current_feature_assignment : (plan.feature_assignment || false),
-                transport: institute.current_feature_transport !== null && institute.current_feature_transport !== undefined ? institute.current_feature_transport : (plan.feature_transport || false),
-            };
+            // Determine feature access, evaluating add_on_expiries
+            const features = computeFeatures(institute, plan);
 
-            // NEW RULE: Trial Expiration
-            if (plan.is_free_trial && institute.subscription_end) {
+            // NEW RULE: Trial Expiration or General Expiration
+            let isExpired = false;
+            if (institute.subscription_end) {
                 const today = new Date();
                 const end = new Date(institute.subscription_end);
                 end.setHours(23, 59, 59, 999);
-                if (today > end) {
-                    return res.status(403).json({
-                        success: false,
-                        message: "Your free trial has expired. Please upgrade your plan to access features.",
-                        feature_locked: true,
-                        trial_expired: true,
-                        upgrade_required: true
-                    });
-                }
+                if (today > end) isExpired = true;
+            }
+
+            if (isExpired && req.method !== 'GET') {
+                return res.status(403).json({
+                    success: false,
+                    message: "Your subscription has expired. Your account is in read-only mode.",
+                    plan_expired: true,
+                    feature_locked: true,
+                    upgrade_required: true
+                });
             }
 
             // Check if feature is enabled
@@ -297,11 +336,23 @@ const checkFeatureAccess = (featureName) => {
                 case 'transport':
                     hasAccess = features.transport === true;
                     break;
+                case 'notes':
+                    hasAccess = features.notes === true;
+                    break;
+                case 'chat':
+                    hasAccess = features.chat === true;
+                    break;
+                case 'exams':
+                    hasAccess = features.exams === true;
+                    break;
+                case 'public_page':
+                    hasAccess = features.public_page === true;
+                    break;
                 default:
                     hasAccess = true; // Unknown features are allowed by default
             }
 
-            if (!hasAccess) {
+            if (!hasAccess && req.method !== 'GET') {
                 return res.status(403).json({
                     success: false,
                     message: `This feature is not available in your ${plan.name} plan. Please upgrade to access ${featureName}.`,
@@ -393,22 +444,7 @@ const getUsageStats = async (req, res) => {
                         remaining: Math.max(0, limit_admins - adminCount)
                     }
                 },
-                features: {
-                    attendance: institute.current_feature_attendance !== 'none' ? institute.current_feature_attendance : institute.Plan.feature_attendance,
-                    auto_attendance: institute.current_feature_auto_attendance !== null ? institute.current_feature_auto_attendance : institute.Plan.feature_auto_attendance,
-                    fees: institute.current_feature_fees !== null ? institute.current_feature_fees : institute.Plan.feature_fees,
-                    finance: institute.current_feature_finance !== null ? institute.current_feature_finance : institute.Plan.feature_finance,
-                    salary: institute.current_feature_salary !== null ? institute.current_feature_salary : institute.Plan.feature_salary,
-                    reports: institute.current_feature_reports || institute.Plan.feature_reports,
-                    announcements: institute.current_feature_announcements !== null ? institute.current_feature_announcements : institute.Plan.feature_announcements,
-                    export: institute.current_feature_export !== null ? institute.current_feature_export : institute.Plan.feature_export,
-                    whatsapp: institute.current_feature_whatsapp !== null ? institute.current_feature_whatsapp : institute.Plan.feature_whatsapp,
-                    timetable: institute.current_feature_timetable !== undefined && institute.current_feature_timetable !== null ? institute.current_feature_timetable : institute.Plan.feature_timetable,
-                    custom_branding: institute.current_feature_custom_branding !== null ? institute.current_feature_custom_branding : institute.Plan.feature_custom_branding,
-                    multi_branch: institute.current_feature_multi_branch !== null ? institute.current_feature_multi_branch : institute.Plan.feature_multi_branch,
-                    assignment: institute.current_feature_assignment !== null && institute.current_feature_assignment !== undefined ? institute.current_feature_assignment : (institute.Plan.feature_assignment || false),
-                    transport: institute.current_feature_transport !== null && institute.current_feature_transport !== undefined ? institute.current_feature_transport : (institute.Plan.feature_transport || false)
-                }
+                features: computeFeatures(institute, institute.Plan)
             }
         });
     } catch (error) {

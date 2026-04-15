@@ -56,6 +56,10 @@ exports.initiatePayment = async (req, res) => {
                 current_feature_custom_branding: plan.feature_custom_branding,
                 current_feature_multi_branch: plan.feature_multi_branch,
                 current_feature_api_access: plan.feature_api_access,
+                current_feature_assignment: plan.feature_assignment,
+                current_feature_transport: plan.feature_transport,
+                current_feature_public_page: plan.feature_public_page,
+                current_feature_mobile_app: plan.feature_mobile_app,
             });
 
             return res.json({ success: true, trial_activated: true });
@@ -252,6 +256,10 @@ exports.verifyPayment = async (req, res) => {
                 current_feature_custom_branding: plan.feature_custom_branding,
                 current_feature_multi_branch: plan.feature_multi_branch,
                 current_feature_api_access: plan.feature_api_access,
+                current_feature_assignment: plan.feature_assignment,
+                current_feature_transport: plan.feature_transport,
+                current_feature_public_page: plan.feature_public_page,
+                current_feature_mobile_app: plan.feature_mobile_app,
             },
             { where: { id: instituteId } }
         );
