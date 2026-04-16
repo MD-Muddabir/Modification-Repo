@@ -4,7 +4,7 @@
  * Implements institute-level data isolation
  */
 
-const { Student, User, Class, Institute, Plan, Subject, StudentSubject, StudentClass, Faculty } = require("../models");
+const { Student, User, Class, Institute, Plan, Subject, StudentSubject, StudentClass, Faculty, StudentParent } = require("../models");
 const { Op } = require("sequelize");
 const { hashPassword } = require("../utils/hashPassword");
 
@@ -283,6 +283,12 @@ exports.getMe = async (req, res) => {
                     model: Subject,
                     attributes: ["id", "name"],
                     through: { attributes: [] }
+                },
+                {
+                    model: User,
+                    as: "Parents",
+                    attributes: ["id", "name", "phone"],
+                    through: { attributes: ["relationship"] }
                 }
             ],
         });
@@ -343,6 +349,12 @@ exports.getStudentById = async (req, res) => {
                     model: Subject,
                     attributes: ["id", "name"],
                     through: { attributes: [] }
+                },
+                {
+                    model: User,
+                    as: "Parents",
+                    attributes: ["id", "name", "phone"],
+                    through: { attributes: ["relationship"] }
                 }
             ],
         });

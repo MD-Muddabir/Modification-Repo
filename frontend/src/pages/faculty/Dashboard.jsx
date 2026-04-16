@@ -1,10 +1,9 @@
 import { useContext, useState, useEffect } from "react";
 import ThemeSelector from "../../components/ThemeSelector";
 import { Link, useNavigate } from "react-router-dom";
-// import ThemeSelector from "../../components/ThemeSelector";
 import { AuthContext } from "../../context/AuthContext";
-// import ThemeSelector from "../../components/ThemeSelector";
 import api from "../../services/api";
+import InstituteLogo from "../../components/common/InstituteLogo";
 import "../admin/Dashboard.css";
 
 function FacultyDashboard() {
@@ -51,9 +50,12 @@ function FacultyDashboard() {
     return (
         <div className="dashboard-container">
             <div className="dashboard-header">
-                <div>
-                    <h1>Faculty Dashboard</h1>
-                    <p>Welcome back, {user?.name || "Professor"}! Have a great day.</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <InstituteLogo size="md" />
+                    <div>
+                        <h1>Faculty Dashboard</h1>
+                        <p>Welcome back, {user?.name || "Professor"}! Have a great day.</p>
+                    </div>
                 </div>
                 <div className="dashboard-header-right">
                     <ThemeSelector />

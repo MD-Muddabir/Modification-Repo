@@ -1,0 +1,72 @@
+/* ── InstituteLogo Component Styles ── */
+
+.inst-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(6px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.inst-logo:hover {
+    transform: scale(1.04);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2);
+}
+
+/* Size variants */
+.inst-logo--sm {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+}
+
+.inst-logo--md {
+    width: 46px;
+    height: 46px;
+    border-radius: 10px;
+}
+
+.inst-logo--lg {
+    width: 60px;
+    height: 60px;
+    border-radius: 14px;
+}
+
+/* Logo image */
+.inst-logo__img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 3px;
+}
+
+/* Fallback: initials circle */
+.inst-logo--fallback {
+    background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.1) 100%);
+}
+
+.inst-logo__initials {
+    font-weight: 800;
+    color: #fff;
+    font-family: 'Inter', 'Outfit', -apple-system, sans-serif;
+    letter-spacing: -0.5px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.25);
+    line-height: 1;
+    user-select: none;
+}
+
+.inst-logo--sm .inst-logo__initials { font-size: 0.85rem; }
+.inst-logo--md .inst-logo__initials { font-size: 1.05rem; }
+.inst-logo--lg .inst-logo__initials { font-size: 1.4rem; }
+
+/* Dark mode */
+html.dark-mode .inst-logo {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.08);
+}

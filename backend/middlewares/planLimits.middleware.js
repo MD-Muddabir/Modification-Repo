@@ -462,5 +462,6 @@ module.exports = {
     checkClassLimit,
     checkAdminUserLimit,
     checkFeatureAccess,
-    getUsageStats
+    getUsageStats,
+    computeFeatures
 };

@@ -3,6 +3,7 @@ import { AuthContext } from "../../context/AuthContext";
 import ThemeSelector from "../../components/ThemeSelector";
 import { useNavigate } from "react-router-dom";
 import * as parentService from "../../services/parent.service";
+import InstituteLogo from "../../components/common/InstituteLogo";
 import "./Dashboard.css";
 
 function ParentDashboard() {
@@ -93,9 +94,12 @@ function ParentDashboard() {
         <div className="parent-dashboard-container">
             {/* Header */}
             <header className="dashboard-header">
-                <div>
-                    <h1>👨‍👩‍👧 Parent Dashboard</h1>
-                    <p>Welcome back, <strong>{user?.name}</strong>! Monitoring your child's progress.</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <InstituteLogo size="md" />
+                    <div>
+                        <h1>👨‍👩‍👧 Parent Dashboard</h1>
+                        <p>Welcome back, <strong>{user?.name}</strong>! Monitoring your child's progress.</p>
+                    </div>
                 </div>
                 <div className="dashboard-header-right">
                     <ThemeSelector />

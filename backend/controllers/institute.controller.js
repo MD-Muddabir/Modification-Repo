@@ -185,7 +185,12 @@ exports.getInstituteById = async (req, res) => {
 exports.updateInstitute = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, email, phone, address, logo } = req.body;
+        const { name, email, phone, address } = req.body;
+        
+        let newLogoPath = null;
+        if (req.file) {
+            newLogoPath = `/uploads/logos/${req.file.filename}`;
+        }
 
         // If not super admin, ensure user can only update their own institute
         if (req.user.role !== "super_admin" && req.user.institute_id != id) {
@@ -204,13 +209,39 @@ exports.updateInstitute = async (req, res) => {
             });
         }
 
+        // Clean up old logo if replacing
+        if (newLogoPath && institute.logo) {
+            const fs = require('fs');
+            const path = require('path');
+            const oldPath = path.join(__dirname, '..', institute.logo);
+            try {
+                if (fs.existsSync(oldPath)) {
+                    fs.unlinkSync(oldPath);
+                }
+            } catch (err) {
+                console.error("Failed to delete old logo:", err);
+            }
+        }
+
         await institute.update({
             name: name || institute.name,
             email: email || institute.email,
-            phone: phone || institute.phone,
-            address: address || institute.address,
-            logo: logo || institute.logo,
+            phone: phone !== undefined ? phone : institute.phone,
+            address: address !== undefined ? address : institute.address,
+            logo: newLogoPath || institute.logo,
         });
+
+        // Sync name and logo with public profile if it exists
+        const { InstitutePublicProfile } = require('../models');
+        const publicProfile = await InstitutePublicProfile.findOne({ where: { institute_id: id } });
+        if (publicProfile) {
+            const updates = {};
+            if (newLogoPath) updates.logo_url = newLogoPath;
+            if (name) updates.name = name;
+            if (Object.keys(updates).length > 0) {
+                await publicProfile.update(updates);
+            }
+        }
 
         res.status(200).json({
             success: true,

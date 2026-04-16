@@ -9,6 +9,7 @@ import api from "../../services/api";
 import { AuthContext } from "../../context/AuthContext";
 import ThemeSelector from "../../components/ThemeSelector";
 import BlockedScreen from "./BlockedScreen";
+import InstituteLogo from "../../components/common/InstituteLogo";
 import "./Dashboard.css";
 
 function AdminDashboard() {
@@ -261,9 +262,12 @@ function AdminDashboard() {
 
             {/* ── Header ── */}
             <div className="dashboard-header">
-                <div>
-                    <h1>{user?.role === 'manager' ? '👨‍💼 Manager Dashboard' : '🏫 Admin Dashboard'}</h1>
-                    <p>Welcome back, <strong>{user?.name}</strong>! {planDetails ? `Plan: ${planDetails.plan.name}` : "Here's what's happening today."}</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <InstituteLogo size="md" />
+                    <div>
+                        <h1>{user?.role === 'manager' ? '👨‍💼 Manager Dashboard' : '🏫 Admin Dashboard'}</h1>
+                        <p>Welcome back, <strong>{user?.name}</strong>! {planDetails ? `Plan: ${planDetails.plan.name}` : "Here's what's happening today."}</p>
+                    </div>
                 </div>
                 <div className="dashboard-header-right">
                     <ThemeSelector />

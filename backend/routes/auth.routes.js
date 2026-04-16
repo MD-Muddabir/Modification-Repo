@@ -3,6 +3,7 @@ const router     = express.Router();
 const rateLimit  = require("express-rate-limit");
 const authController = require("../controllers/auth.controller");
 const verifyToken    = require("../middlewares/auth.middleware");
+const uploadLogo     = require("../middlewares/upload.middleware");
 
 // ── Rate limiter: max 5 OTP-email requests per IP per 15 minutes ────────────
 const otpLimiter = rateLimit({
@@ -14,8 +15,8 @@ const otpLimiter = rateLimit({
 });
 
 // ── Legacy routes (kept for backward compatibility) ─────────────────────────
-router.post("/register",           authController.register);
-router.post("/register-institute", authController.registerInstitute);
+router.post("/register",           uploadLogo.single("logo"), authController.register);
+router.post("/register-institute", uploadLogo.single("logo"), authController.registerInstitute);
 router.post("/send-otp",           authController.sendOtp);
 
 // ── Public: OTP Mode status (no auth required) ───────────────────────────────
@@ -31,7 +32,7 @@ router.put( "/theme",            verifyToken, authController.saveTheme);
 
 // ── NEW: Registration with OTP ───────────────────────────────────────────────
 router.post("/register-init",       otpLimiter, authController.registerInit);
-router.post("/verify-registration",             authController.verifyRegistrationOtp);
+router.post("/verify-registration", uploadLogo.single("logo"), authController.verifyRegistrationOtp);
 router.post("/resend-otp",                      authController.resendOtp);
 
 // ── NEW: Forgot Password with OTP ────────────────────────────────────────────

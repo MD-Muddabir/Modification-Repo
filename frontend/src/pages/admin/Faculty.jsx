@@ -8,6 +8,8 @@ import ThemeSelector from "../../components/ThemeSelector";
 import { Link } from "react-router-dom";
 import api from "../../services/api";
 import { AuthContext } from "../../context/AuthContext";
+import { QRCodeSVG, QRCodeCanvas } from "qrcode.react";
+import QRCode from "qrcode";
 import "./Dashboard.css";
 
 function Faculty() {
@@ -20,6 +22,203 @@ function Faculty() {
     const [showModal, setShowModal] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [search, setSearch] = useState("");
+
+    // Bulk selection and QR State
+    const [selectedFaculty, setSelectedFaculty] = useState([]);
+    const [bulkDownloading, setBulkDownloading] = useState(false);
+    const [showQrModal, setShowQrModal] = useState(false);
+    const [qrFaculty, setQrFaculty] = useState(null);
+    const [qrDownloading, setQrDownloading] = useState(false);
+    const [qrLoading, setQrLoading] = useState(false);
+
+    const handleSelectAll = (e) => {
+        if (e.target.checked) setSelectedFaculty(filteredFaculty.map(f => f.id));
+        else setSelectedFaculty([]);
+    };
+
+    const handleSelectRow = (id) => {
+        setSelectedFaculty(prev => prev.includes(id) ? prev.filter(fid => fid !== id) : [...prev, id]);
+    };
+
+    const handleViewQr = async (fm) => {
+        setQrLoading(true);
+        try {
+            const res = await api.get(`/faculty/${fm.id}`);
+            setQrFaculty(res.data.data || fm);
+        } catch (err) {
+            setQrFaculty(fm);
+        } finally {
+            setQrLoading(false);
+            setShowQrModal(true);
+        }
+    };
+
+    const getBase64ImageFromUrl = async (imageUrl) => {
+        try {
+            const response = await fetch(imageUrl);
+            const blob = await response.blob();
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = () => resolve(null);
+                reader.readAsDataURL(blob);
+            });
+        } catch (e) { return null; }
+    };
+
+    const generateIdCard = async (doc, fm, logoBase64, instName, instPhone, qrDataUrl) => {
+        const designation = fm.designation || 'Faculty';
+        const fName = fm.User?.name || '';
+        const fEmail = fm.User?.email || '';
+        const fPhone = fm.User?.phone || 'N/A';
+        const joinDate = fm.join_date ? new Date(fm.join_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A';
+        
+        let teachingText = 'N/A';
+        if (fm.Subjects && fm.Subjects.length > 0) {
+            teachingText = fm.Subjects.map(s => s.name).join(', ');
+        }
+
+        // ── Faculty Distinct "Emerald Green" Theme ──
+        doc.setFillColor(240, 253, 244); // Green-50 background (instead of blue)
+        doc.rect(0, 0, 85, 155, 'F');
+        doc.setFillColor(6, 78, 59); // Green-900 dark primary
+        doc.rect(0, 0, 85, 28, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+
+        if (logoBase64) {
+            doc.addImage(logoBase64, 'PNG', 5, 4, 20, 20);
+            doc.setFontSize(10);
+            doc.text(doc.splitTextToSize(instName.toUpperCase(), 50), 28, 14);
+            if (instPhone) {
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(7.5);
+                doc.setTextColor(209, 250, 229); // Green-100 highlight text
+                doc.text(`Ph: ${instPhone}`, 28, 20);
+            }
+        } else {
+             doc.setFontSize(11);
+             const nameY = instPhone ? 12 : 16;
+             doc.text(doc.splitTextToSize(instName.toUpperCase(), 72), 42.5, nameY, { align: 'center' });
+             if (instPhone) {
+                 doc.setFont('helvetica', 'normal');
+                 doc.setFontSize(7.5);
+                 doc.setTextColor(209, 250, 229);
+                 doc.text(`Ph: ${instPhone}`, 42.5, 18, { align: 'center' });
+             }
+        }
+
+        doc.setDrawColor(6, 78, 59); doc.setLineWidth(0.5); doc.line(6, 30, 79, 30);
+        doc.setTextColor(100, 100, 120); doc.setFontSize(6);
+        doc.text('QR CODE', 21, 35, { align: 'center' });
+        doc.text('PHOTO', 64, 35, { align: 'center' });
+
+        if (qrDataUrl) doc.addImage(qrDataUrl, 'PNG', 5, 37, 33, 33);
+        
+        doc.setFillColor(209, 250, 229); doc.rect(47, 37, 33, 33, 'F'); // Green-100
+        doc.setDrawColor(167, 243, 208); doc.setLineWidth(0.3); doc.rect(47, 37, 33, 33); // Green-200
+        doc.setDrawColor(16, 185, 129); doc.setLineWidth(0.2); doc.circle(63.5, 47, 4, 'S'); // Green-500
+        doc.line(55, 69, 55, 60); doc.line(55, 60, 72, 60); doc.line(72, 60, 72, 69);
+        doc.setTextColor(52, 211, 153); doc.setFontSize(5); doc.text('PHOTO', 63.5, 72, { align: 'center' }); // Green-400
+
+        doc.setDrawColor(167, 243, 208); doc.setLineWidth(0.3); doc.line(6, 74, 79, 74); // Green-200
+
+        const infoStartY = 80;
+        doc.setFillColor(5, 150, 105); doc.rect(5, infoStartY - 4, 75, 8, 'F'); // Green-600 Name Banner
+        doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
+        doc.text(fName.toUpperCase(), 42.5, infoStartY, { align: 'center' });
+
+        const rows = [
+            { label: 'Role', value: designation },
+            { label: 'Emp ID', value: `EMP-${fm.id}` },
+            { label: 'Email', value: fEmail },
+            { label: 'Phone', value: fPhone },
+            { label: 'Teaching', value: teachingText },
+            { label: 'Join Date', value: joinDate },
+        ];
+
+        let y = infoStartY + 7;
+        rows.forEach((row, i) => {
+            doc.setFillColor(...(i % 2 === 0 ? [240, 253, 244] : [209, 250, 229])); // Green-50 / Green-100
+            doc.rect(5, y - 3.5, 75, 6.5, 'F');
+            doc.setTextColor(5, 150, 105); doc.setFont('helvetica', 'bold'); doc.setFontSize(6); // Green-600 text
+            doc.text(`${row.label}:`, 8, y + 0.5);
+            doc.setTextColor(2, 44, 34); doc.setFont('helvetica', 'normal'); // Green-950 text
+            doc.text(doc.splitTextToSize(String(row.value), 46)[0], 30, y + 0.5);
+            y += 7;
+        });
+
+        doc.setFillColor(6, 78, 59); doc.rect(0, 149, 85, 6, 'F'); // Green-900 bottom footer
+        doc.setTextColor(255,255,255); doc.setFont('helvetica', 'normal'); doc.setFontSize(5.5);
+        doc.text('Official Educational Staff Identity Card', 42.5, 152.5, { align: 'center' });
+    };
+
+    const handleDownloadSingleCard = async () => {
+        if (!qrFaculty) return;
+        setQrDownloading(true);
+        try {
+            const { jsPDF } = await import('jspdf');
+            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [85, 148] });
+
+            let logoBase64 = null;
+            if (user?.institute_logo) {
+                let logoUrl = user.institute_logo;
+                if (logoUrl.startsWith('/')) {
+                    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+                    logoUrl = `${apiUrl.replace(/\/api\/?$/, "")}${logoUrl}`;
+                }
+                logoBase64 = await getBase64ImageFromUrl(logoUrl);
+            }
+
+            const qrDataUrl = await QRCode.toDataURL(`FACULTY_QR_${qrFaculty.id}`, { width: 300, margin: 1 });
+            await generateIdCard(doc, qrFaculty, logoBase64, user?.institute_name || '', user?.institute_phone || '', qrDataUrl);
+            doc.save(`${qrFaculty.User?.name || 'Faculty'}_ID_Card.pdf`);
+        } catch (e) {
+            alert('Failed to generate PDF: ' + e.message);
+        } finally {
+            setQrDownloading(false);
+        }
+    };
+
+    const handleBulkDownloadCards = async () => {
+        if (selectedFaculty.length === 0) return;
+        setBulkDownloading(true);
+        try {
+            const { jsPDF } = await import('jspdf');
+            const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: [85, 148] });
+
+            let logoBase64 = null;
+            if (user?.institute_logo) {
+                let logoUrl = user.institute_logo;
+                if (logoUrl.startsWith('/')) {
+                    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+                    logoUrl = `${apiUrl.replace(/\/api\/?$/, "")}${logoUrl}`;
+                }
+                logoBase64 = await getBase64ImageFromUrl(logoUrl);
+            }
+
+            let firstPage = true;
+            for (const fId of selectedFaculty) {
+                let fm = filteredFaculty.find(f => f.id === fId);
+                if (!fm) continue;
+                try {
+                    const stRes = await api.get(`/faculty/${fId}`);
+                    if (stRes.data && stRes.data.data) fm = stRes.data.data;
+                } catch (e) {}
+
+                if (!firstPage) doc.addPage([85, 148], 'portrait');
+                firstPage = false;
+                
+                const qrDataUrl = await QRCode.toDataURL(`FACULTY_QR_${fm.id}`, { width: 300, margin: 1 });
+                await generateIdCard(doc, fm, logoBase64, user?.institute_name || '', user?.institute_phone || '', qrDataUrl);
+            }
+            doc.save(`Bulk_Faculty_ID_Cards_${selectedFaculty.length}.pdf`);
+        } catch (e) {
+            alert('Download failed: ' + e.message);
+        } finally {
+            setBulkDownloading(false);
+        }
+    };
 
     const [formData, setFormData] = useState({
         name: "",
@@ -230,13 +429,31 @@ function Faculty() {
 
             {/* Faculty Table */}
             <div className="card">
-                <div className="card-header">
-                    <h3 className="card-title">All Faculty ({filteredFaculty.length})</h3>
+                <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                    <h3 className="card-title" style={{ margin: 0 }}>All Faculty ({filteredFaculty.length})</h3>
+                    {selectedFaculty.length > 0 && (
+                        <button 
+                            className="btn btn-sm" 
+                            style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', fontWeight: 600, border: 'none', borderRadius: '6px' }}
+                            onClick={handleBulkDownloadCards}
+                            disabled={bulkDownloading}
+                        >
+                            {bulkDownloading ? '⏳ Generating PDF...' : `⬇ Download ${selectedFaculty.length} Selected Cards`}
+                        </button>
+                    )}
                 </div>
                 <div className="table-container">
                     <table className="table">
                         <thead>
                             <tr>
+                                <th style={{ width: '40px' }}>
+                                    <input 
+                                        type="checkbox" 
+                                        checked={selectedFaculty.length === filteredFaculty.length && filteredFaculty.length > 0} 
+                                        onChange={handleSelectAll} 
+                                        style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                                    />
+                                </th>
                                 <th>ID</th>
                                 <th>Name</th>
                                 <th>Email</th>
@@ -252,13 +469,21 @@ function Faculty() {
                         <tbody>
                             {filteredFaculty.length === 0 ? (
                                 <tr>
-                                    <td colSpan="9" style={{ textAlign: "center", padding: "2rem" }}>
+                                    <td colSpan="11" style={{ textAlign: "center", padding: "2rem" }}>
                                         No faculty found
                                     </td>
                                 </tr>
                             ) : (
                                 filteredFaculty.map((facultyMember) => (
                                     <tr key={facultyMember.id}>
+                                        <td>
+                                            <input 
+                                                type="checkbox" 
+                                                checked={selectedFaculty.includes(facultyMember.id)} 
+                                                onChange={() => handleSelectRow(facultyMember.id)}
+                                                style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                                            />
+                                        </td>
                                         <td>{facultyMember.id}</td>
                                         <td>{facultyMember.User?.name}</td>
                                         <td>{facultyMember.User?.email}</td>
@@ -299,6 +524,13 @@ function Faculty() {
                                         </td>
                                         <td>
                                             <div style={{ display: "flex", gap: "0.5rem" }}>
+                                                <button
+                                                    className="btn btn-sm"
+                                                    style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 600 }}
+                                                    onClick={() => handleViewQr(facultyMember)}
+                                                >
+                                                    🔲 View QR
+                                                </button>
                                                 {canUpdate && (
                                                     <button
                                                         className="btn btn-sm btn-primary"
@@ -477,6 +709,50 @@ function Faculty() {
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* QR Code Single Modal */}
+            {showQrModal && qrFaculty && (
+                <div className="modal-overlay" onClick={() => setShowQrModal(false)}>
+                    <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px', textAlign: 'center' }}>
+                        <div className="modal-header">
+                            <h3>Faculty Identity Card</h3>
+                            <button onClick={() => setShowQrModal(false)} className="btn btn-sm">×</button>
+                        </div>
+                        <div className="modal-body">
+                            {qrLoading ? (
+                                <p>Loading deep profile metrics...</p>
+                            ) : (
+                                <>
+                                    <div style={{
+                                        background: 'white', padding: '1rem',
+                                        borderRadius: '12px', border: '2px solid #e5e7eb',
+                                        display: 'inline-block', marginBottom: '1.5rem'
+                                    }}>
+                                        <QRCodeSVG
+                                            value={`FACULTY_QR_${qrFaculty.id}`}
+                                            size={200}
+                                            level={"H"}
+                                            includeMargin={true}
+                                        />
+                                    </div>
+                                    <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>{qrFaculty.User?.name}</h3>
+                                    <p style={{ margin: '0.25rem 0 1.5rem 0', color: 'var(--text-secondary)' }}>
+                                        {qrFaculty.designation || 'Faculty'} · {qrFaculty.User?.email}
+                                    </p>
+                                    <button
+                                        className="btn btn-primary btn-animated"
+                                        style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}
+                                        onClick={handleDownloadSingleCard}
+                                        disabled={qrDownloading}
+                                    >
+                                        {qrDownloading ? '⏳ Generating Native Format...' : '⬇ Download Single Card'}
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

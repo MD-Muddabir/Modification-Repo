@@ -21,6 +21,7 @@ function Register() {
     planId: planId || "",
     password: "",
     confirmPassword: "",
+    logo: null,
   });
 
   const [loading, setLoading] = useState(false);
@@ -65,13 +66,19 @@ function Register() {
     }
 
     try {
-      await api.post("/auth/register", {
-        instituteName: formData.instituteName,
-        email: formData.email,
-        phone: formData.phone,
-        address: formData.address,
-        password: formData.password,
-        planId: formData.planId,
+      const formPayload = new FormData();
+      formPayload.append("instituteName", formData.instituteName);
+      formPayload.append("email", formData.email);
+      formPayload.append("phone", formData.phone);
+      formPayload.append("address", formData.address);
+      formPayload.append("password", formData.password);
+      formPayload.append("planId", formData.planId || "");
+      if (formData.logo) {
+          formPayload.append("logo", formData.logo);
+      }
+
+      await api.post("/auth/register", formPayload, {
+          headers: { "Content-Type": "multipart/form-data" }
       });
 
       setSuccess(true);
@@ -196,6 +203,26 @@ function Register() {
               onChange={handleChange}
               required
               rows="2"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="logo" className="form-label">
+              Institute Logo (Optional)
+            </label>
+            <input
+              type="file"
+              id="logo"
+              name="logo"
+              accept="image/*"
+              className="form-input"
+              onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                      setFormData({ ...formData, logo: e.target.files[0] });
+                      setError("");
+                  }
+              }}
+              style={{ padding: "0.5rem" }}
             />
           </div>
 

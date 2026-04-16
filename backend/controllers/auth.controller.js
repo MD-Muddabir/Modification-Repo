@@ -3,6 +3,7 @@ const generateToken = require("../utils/generateToken");
 const emailService  = require("../services/email.service");
 const bcrypt        = require("bcrypt");
 const jwt           = require("jsonwebtoken");
+const { InstitutePublicProfile } = require("../models");
 const { generateOtp, saveOtp, validateOtp, invalidateOtp } = require("../utils/otp.util");
 const { Institute, OtpVerification } = require("../models");
 const { Op } = require("sequelize");
@@ -48,7 +49,11 @@ exports.setOtpMode = (req, res) => {
  */
 exports.register = async (req, res) => {
     try {
-        const result = await authService.registerInstitute(req.body);
+        const payload = { ...req.body };
+        if (req.file && req.file.path) {
+            payload.logo = req.file.path;
+        }
+        const result = await authService.registerInstitute(payload);
 
         // TODO: Send welcome email (emailService not configured yet)
         // const emailService = require("../services/email.service");
@@ -78,6 +83,9 @@ exports.register = async (req, res) => {
 exports.registerInstitute = async (req, res) => {
     try {
         const { name, email, password, phone, address, city, state, pincode, plan_id, otp } = req.body;
+        
+        // Handle logo upload
+        const logo = req.file ? req.file.path : null;
 
         // Phase 3: OTP Validation
         if (!otp || otpCache.get(email.trim().toLowerCase()) !== otp) {
@@ -203,16 +211,20 @@ exports.login = async (req, res) => {
         
         if (user.Institute && user.Institute.Plan) {
             const plan = user.Institute.Plan;
-            features = {
-                attendance: user.Institute.current_feature_attendance !== 'none' ? user.Institute.current_feature_attendance : plan.feature_attendance,
-                auto_attendance: user.Institute.current_feature_auto_attendance !== null ? user.Institute.current_feature_auto_attendance : plan.feature_auto_attendance,
-                fees: user.Institute.current_feature_fees !== null ? user.Institute.current_feature_fees : plan.feature_fees,
-                finance: user.Institute.current_feature_finance !== null ? user.Institute.current_feature_finance : plan.feature_finance,
-                salary: user.Institute.current_feature_salary !== null ? user.Institute.current_feature_salary : plan.feature_salary,
-                reports: user.Institute.current_feature_reports || plan.feature_reports,
-                announcements: user.Institute.current_feature_announcements !== null ? user.Institute.current_feature_announcements : plan.feature_announcements,
-                timetable: user.Institute.current_feature_timetable !== undefined && user.Institute.current_feature_timetable !== null ? user.Institute.current_feature_timetable : plan.feature_timetable,
-            };
+            const { computeFeatures } = require('../middlewares/planLimits.middleware');
+            features = computeFeatures(user.Institute, plan);
+        }
+
+        // Fetch institute logo (non-blocking, fallback to public profile)
+        let instituteLogo = user.Institute?.logo || null;
+        if (!instituteLogo) {
+            try {
+                const pubProfile = await InstitutePublicProfile.findOne({
+                    where: { institute_id: user.institute_id },
+                    attributes: ['logo_url']
+                });
+                instituteLogo = pubProfile?.logo_url || null;
+            } catch (_) {}
         }
 
         res.json({
@@ -227,6 +239,8 @@ exports.login = async (req, res) => {
                 status: user.status,
                 institute_id: user.institute_id,
                 institute_name: user.Institute?.name,
+                institute_phone: user.Institute?.phone,
+                institute_logo: instituteLogo,
                 subscription_end: user.Institute?.subscription_end,
                 plan_name: user.Institute?.Plan?.name,
                 features,
@@ -367,7 +381,8 @@ exports.sendOtp = async (req, res) => {
 exports.registerInit = async (req, res) => {
     try {
         const { name, email, phone, password, plan_id } = req.body;
-
+        
+        // Validation
         if (!name || !email || !phone || !password || !plan_id) {
             return res.status(400).json({ success: false, message: "All fields are required." });
         }
@@ -444,7 +459,8 @@ exports.verifyRegistrationOtp = async (req, res) => {
             state:    state?.trim(),
             pincode:  pincode?.trim(),
             plan_id,
-            status: "pending" // stays pending until payment
+            status: "pending", // stays pending until payment
+            logo: req.file ? req.file.path : null
         });
 
         // Mark email as verified after account creation

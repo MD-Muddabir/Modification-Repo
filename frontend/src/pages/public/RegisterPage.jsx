@@ -42,7 +42,7 @@ function RegisterPage() {
     const [formData, setFormData] = useState({
         instituteName: "", email: "", password: "", confirmPassword: "",
         phone: "", address: "", city: "", state: "", pincode: "", planId: "",
-        agreedToTerms: false
+        agreedToTerms: false, logo: null
     });
 
     useEffect(() => {
@@ -127,9 +127,16 @@ function RegisterPage() {
     };
 
     const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setFormData(prev => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
-        if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
+        const { name, value, type, checked, files } = e.target;
+        if (type === "file") {
+            if (files && files[0]) {
+                setFormData(prev => ({ ...prev, [name]: files[0] }));
+                if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
+            }
+        } else {
+            setFormData(prev => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+            if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
+        }
     };
 
     // ── Step 1: Submit form → POST /register-init ──────────────────────────
@@ -230,17 +237,24 @@ function RegisterPage() {
         setOtpLoading(true);
         setOtpError("");
         try {
-            const res = await api.post("/auth/verify-registration", {
-                name:     formData.instituteName.trim(),
-                email:    formData.email.trim().toLowerCase(),
-                otp,
-                password: formData.password,
-                phone:    formData.phone.replace(/\s/g, ""),
-                address:  formData.address.trim(),
-                city:     formData.city.trim(),
-                state:    formData.state.trim(),
-                pincode:  formData.pincode.trim(),
-                plan_id:  formData.planId
+            const submitData = new FormData();
+            submitData.append("name", formData.instituteName.trim());
+            submitData.append("email", formData.email.trim().toLowerCase());
+            submitData.append("otp", otp);
+            submitData.append("password", formData.password);
+            submitData.append("phone", formData.phone.replace(/\s/g, ""));
+            submitData.append("address", formData.address.trim());
+            submitData.append("city", formData.city.trim());
+            submitData.append("state", formData.state.trim());
+            submitData.append("pincode", formData.pincode.trim());
+            submitData.append("plan_id", formData.planId);
+            
+            if (formData.logo) {
+                submitData.append("logo", formData.logo);
+            }
+
+            const res = await api.post("/auth/verify-registration", submitData, {
+                headers: { "Content-Type": "multipart/form-data" }
             });
             if (res.data.success) {
                 setTimerActive(false);
@@ -598,6 +612,17 @@ function RegisterPage() {
                                             placeholder="123456" value={formData.pincode} onChange={handleChange} maxLength="6" />
                                         {errors.pincode && <span className="reg-error">{errors.pincode}</span>}
                                     </div>
+                                </div>
+                                <div className="auth-field" style={{ marginTop: "1rem" }}>
+                                    <label className="auth-label"><span className="auth-label__icon">🖼️</span> Institute Logo (Optional)</label>
+                                    <input 
+                                        type="file" 
+                                        name="logo" 
+                                        accept="image/*" 
+                                        className="auth-input" 
+                                        onChange={handleChange} 
+                                        style={{ padding: "0.5rem" }}
+                                    />
                                 </div>
                             </div>
 

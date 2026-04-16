@@ -24,6 +24,9 @@ function Settings() {
         logo: ""
     });
 
+    const [logoFile, setLogoFile] = useState(null);
+    const [logoPreview, setLogoPreview] = useState(null);
+
     // Password Change State
     const [passwords, setPasswords] = useState({
         oldPassword: "",
@@ -42,6 +45,15 @@ function Settings() {
             setLoading(true);
             const res = await api.get(`/institutes/${user.institute_id}`);
             setInstitute(res.data.data);
+            if (res.data.data.logo) {
+                let logoPath = res.data.data.logo;
+                if (logoPath.startsWith('/')) {
+                    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+                    const backendBase = apiUrl.replace(/\/api\/?$/, ""); 
+                    logoPath = `${backendBase}${logoPath}`;
+                }
+                setLogoPreview(logoPath);
+            }
         } catch (error) {
             console.error("Error fetching institute details", error);
         } finally {
@@ -49,11 +61,34 @@ function Settings() {
         }
     };
 
+    const handleFileChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setLogoFile(file);
+            const previewUrl = URL.createObjectURL(file);
+            setLogoPreview(previewUrl);
+        }
+    };
+
     const handleInstituteUpdate = async (e) => {
         e.preventDefault();
         try {
-            await api.put(`/institutes/${user.institute_id}`, institute);
+            const formData = new FormData();
+            formData.append("name", institute.name);
+            formData.append("email", institute.email);
+            formData.append("phone", institute.phone || "");
+            formData.append("address", institute.address || "");
+            if (logoFile) {
+                formData.append("logo", logoFile);
+            }
+
+            await api.put(`/institutes/${user.institute_id}`, formData, {
+                headers: { "Content-Type": "multipart/form-data" }
+            });
             alert("Institute details updated successfully");
+            
+            // Force reload to sync global AuthContext (e.g., Navbar Logo)
+            window.location.reload();
         } catch (error) {
             alert(error.response?.data?.message || "Error updating settings");
         }
@@ -127,6 +162,36 @@ function Settings() {
                     {activeTab === "institute" ? (
                         <form onSubmit={handleInstituteUpdate}>
                             <h3 style={{ marginBottom: "1rem" }}>Institute Information</h3>
+                            
+                            <div className="form-group" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginBottom: '20px' }}>
+                                <label className="form-label">Institute Logo</label>
+                                <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                                    <div style={{ 
+                                        width: '80px', height: '80px', borderRadius: '8px', 
+                                        border: '1px solid #e5e7eb', display: 'flex', 
+                                        alignItems: 'center', justifyContent: 'center',
+                                        overflow: 'hidden', backgroundColor: '#f9fafb'
+                                    }}>
+                                        {logoPreview ? (
+                                            <img src={logoPreview} alt="Logo Preview" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                                        ) : (
+                                            <span style={{ fontSize: '2rem', color: '#9ca3af' }}>🏢</span>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <input 
+                                            type="file" 
+                                            accept="image/*" 
+                                            onChange={handleFileChange}
+                                            style={{ display: 'block', padding: '8px', border: '1px solid #e5e7eb', borderRadius: '6px' }}
+                                        />
+                                        <small style={{ color: "#6b7280", display: 'block', marginTop: '5px' }}>
+                                            Recommended size: 200x200px (PNG, JPG)
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div className="form-group">
                                 <label className="form-label">Institute Name</label>
                                 <input

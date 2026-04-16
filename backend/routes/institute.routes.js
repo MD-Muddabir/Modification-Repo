@@ -30,12 +30,14 @@ router.get("/", verifyToken, allowRoles("super_admin"), instituteController.getA
  */
 router.get("/:id", verifyToken, allowRoles("super_admin", "admin"), instituteController.getInstituteById);
 
+const uploadLogo = require("../middlewares/upload.middleware");
+
 /**
  * @route   PUT /api/institutes/:id
  * @desc    Update institute details
  * @access  Super Admin or Institute Admin
  */
-router.put("/:id", verifyToken, allowRoles("super_admin", "admin"), instituteController.updateInstitute);
+router.put("/:id", verifyToken, allowRoles("super_admin", "admin"), uploadLogo.single("logo"), instituteController.updateInstitute);
 
 /**
  * @route   PATCH /api/institutes/:id/status

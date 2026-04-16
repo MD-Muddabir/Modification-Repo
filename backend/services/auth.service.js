@@ -1,4 +1,4 @@
-const { Institute, User, Plan, Subscription } = require("../models");
+const { Institute, User, Plan, Subscription, InstitutePublicProfile } = require("../models");
 const { hashPassword, comparePassword } = require("../utils/hashPassword");
 
 exports.registerInstitute = async (data) => {
@@ -77,6 +77,7 @@ exports.registerInstitute = async (data) => {
 
         // Snapshot features
         current_feature_attendance: plan ? plan.feature_attendance : 'basic',
+        current_feature_auto_attendance: plan ? plan.feature_auto_attendance : false,
         current_feature_fees: plan ? plan.feature_fees : false,
         current_feature_finance: plan ? plan.feature_finance : false,
         current_feature_salary: plan ? plan.feature_salary : false,
@@ -88,8 +89,24 @@ exports.registerInstitute = async (data) => {
         current_feature_custom_branding: plan ? plan.feature_custom_branding : false,
         current_feature_multi_branch: plan ? plan.feature_multi_branch : false,
         current_feature_api_access: plan ? plan.feature_api_access : false,
+        current_feature_assignment: plan ? plan.feature_assignment : false,
+        current_feature_transport: plan ? plan.feature_transport : false,
+        current_feature_mobile_app: plan ? plan.feature_mobile_app : false,
+        current_feature_public_page: plan ? plan.feature_public_page : false,
         has_used_trial: hasUsedTrial,
+        logo: data.logo || null,
     });
+
+    if (data.logo) {
+        const slugBase = instituteName ? instituteName.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'institute';
+        const uniqueSlug = `${slugBase}-${Date.now()}`;
+        await InstitutePublicProfile.create({
+            institute_id: institute.id,
+            slug: uniqueSlug.replace(/^-+|-+$/g, ''), // cleans trailing dashes
+            logo_url: data.logo,
+            theme_color: '#4f46e5'
+        });
+    }
 
     // Hash Password
     const hashedPassword = await hashPassword(password);
@@ -213,6 +230,19 @@ exports.getProfile = async (userId) => {
 
     const userData = user.toJSON();
     userData.features = features;
+    userData.institute_name = user.Institute?.name;
+    userData.institute_phone = user.Institute?.phone;
+    userData.institute_logo = user.Institute?.logo || null;
+    if (!userData.institute_logo) {
+        try {
+            const publicProfile = await InstitutePublicProfile.findOne({
+                where: { institute_id: user.institute_id },
+                attributes: ['logo_url']
+            });
+            userData.institute_logo = publicProfile?.logo_url || null;
+        } catch (_) {
+        }
+    }
     return userData;
 };
 
