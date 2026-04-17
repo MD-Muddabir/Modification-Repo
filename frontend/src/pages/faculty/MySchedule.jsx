@@ -153,6 +153,11 @@ function FacultySchedule() {
                                                                             (Your Class)
                                                                         </small>
                                                                     )}
+                                                                    {entry.room_number && (
+                                                                        <small style={{ marginTop: '3px', opacity: 0.85, fontSize: "0.72rem", display: "block" }}>
+                                                                            🚪 Room {entry.room_number}
+                                                                        </small>
+                                                                    )}
                                                                 </div>
                                                             ) : (
                                                                 <div style={pillStyle}>

@@ -19,6 +19,10 @@ function ParentTimetable() {
     const [classes, setClasses] = useState([]);
     const [selectedClass, setSelectedClass] = useState("");
 
+    // ── Enrolled subject IDs fetched from selected student ──
+    const [enrolledSubjectIds, setEnrolledSubjectIds] = useState(new Set());
+    const [enrolledSubjectNames, setEnrolledSubjectNames] = useState([]);
+
     useEffect(() => {
         fetchStudents();
     }, []);
@@ -26,6 +30,16 @@ function ParentTimetable() {
     useEffect(() => {
         if (selectedStudentId) {
             const stu = students.find(s => s.id === parseInt(selectedStudentId));
+            
+            // ── Store enrolled subject IDs as a Set for O(1) lookup ──
+            if (stu && stu.Subjects && stu.Subjects.length > 0) {
+                setEnrolledSubjectIds(new Set(stu.Subjects.map(s => s.id)));
+                setEnrolledSubjectNames(stu.Subjects.map(s => s.name));
+            } else {
+                setEnrolledSubjectIds(new Set());
+                setEnrolledSubjectNames([]);
+            }
+
             if (stu && stu.Classes && stu.Classes.length > 0) {
                 setClasses(stu.Classes);
                 setSelectedClass(stu.Classes[0].id);
@@ -35,7 +49,7 @@ function ParentTimetable() {
                 setTimetable([]);
             }
         }
-    }, [selectedStudentId]);
+    }, [selectedStudentId, students]);
 
     useEffect(() => {
         if (selectedClass) {
@@ -100,33 +114,66 @@ function ParentTimetable() {
 
             <div className="dashboard-content">
                 {students.length > 0 && (
-                    <div className="filter-container" style={{ marginBottom: "2rem", display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "center" }}>
-                        <div>
-                            <span className="filter-label" style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold" }}>Select Student:</span>
-                            <select
-                                className="form-select"
-                                style={{ minWidth: "250px", padding: "0.75rem", borderRadius: "8px", border: "1px solid var(--border-color)" }}
-                                value={selectedStudentId}
-                                onChange={(e) => setSelectedStudentId(e.target.value)}
-                            >
-                                {students.map(stu => (
-                                    <option key={stu.id} value={stu.id}>{stu.User?.name} ({stu.roll_number})</option>
-                                ))}
-                            </select>
-                        </div>
-                        {classes.length > 0 && (
+                    <div className="filter-container" style={{ marginBottom: "2rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+                        <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", alignItems: "center" }}>
                             <div>
-                                <span className="filter-label" style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold" }}>Select Class:</span>
+                                <span className="filter-label" style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold" }}>Select Student:</span>
                                 <select
                                     className="form-select"
                                     style={{ minWidth: "250px", padding: "0.75rem", borderRadius: "8px", border: "1px solid var(--border-color)" }}
-                                    value={selectedClass}
-                                    onChange={(e) => setSelectedClass(e.target.value)}
+                                    value={selectedStudentId}
+                                    onChange={(e) => setSelectedStudentId(e.target.value)}
                                 >
-                                    {classes.map(cls => (
-                                        <option key={cls.id} value={cls.id}>{cls.name}</option>
+                                    {students.map(stu => (
+                                        <option key={stu.id} value={stu.id}>{stu.User?.name} ({stu.roll_number})</option>
                                     ))}
                                 </select>
+                            </div>
+                            {classes.length > 0 && (
+                                <div>
+                                    <span className="filter-label" style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold" }}>Select Class:</span>
+                                    <select
+                                        className="form-select"
+                                        style={{ minWidth: "250px", padding: "0.75rem", borderRadius: "8px", border: "1px solid var(--border-color)" }}
+                                        value={selectedClass}
+                                        onChange={(e) => setSelectedClass(e.target.value)}
+                                    >
+                                        {classes.map(cls => (
+                                            <option key={cls.id} value={cls.id}>{cls.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+                        </div>
+                        
+                        {/* ── Enrolled Subjects Info Banner ── */}
+                        {enrolledSubjectNames.length > 0 && (
+                            <div style={{
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: '8px',
+                                alignItems: 'center',
+                                padding: '0.85rem 1.2rem',
+                                background: 'var(--bg-card, #f8fafc)',
+                                borderRadius: '12px',
+                                border: '1px solid var(--border-color)',
+                            }}>
+                                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', marginRight: '4px' }}>
+                                    📚 Enrolled subjects:
+                                </span>
+                                {enrolledSubjectNames.map((name, i) => (
+                                    <span key={i} style={{
+                                        fontSize: '0.8rem',
+                                        fontWeight: 600,
+                                        padding: '3px 10px',
+                                        borderRadius: '999px',
+                                        background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                                        color: '#fff',
+                                        letterSpacing: '0.02em'
+                                    }}>
+                                        {name}
+                                    </span>
+                                ))}
                             </div>
                         )}
                     </div>
@@ -165,17 +212,27 @@ function ParentTimetable() {
                                         {DAYS_OF_WEEK.map(day => {
                                             const entry = timetable.find(t => t.slot_id === slot.id && t.day_of_week === day);
 
+                                            // ── Only show entry if the student is enrolled in that subject ──
+                                            const isEnrolled = entry && enrolledSubjectIds.has(entry.subject_id);
+
                                             let colorClass = "pill-color-0";
-                                            if (entry && entry.subject_id) {
+                                            if (isEnrolled) {
                                                 colorClass = `pill-color-${entry.subject_id % 7}`;
                                             }
 
                                             return (
                                                 <td key={`${slot.id}-${day}`} style={{ padding: "1rem", borderBottom: "1px solid var(--border-color)", textAlign: "center" }}>
-                                                    {entry ? (
+                                                    {isEnrolled ? (
                                                         <div className={`timetable-pill ${colorClass}`} style={{ padding: "0.75rem", borderRadius: "8px", background: "var(--bg-hover, #f1f5f9)" }}>
                                                             <strong style={{ display: "block", color: "var(--text-primary)" }}>{entry.Subject?.name}</strong>
-                                                            <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "4px" }}>👤 {entry.Faculty?.User?.name}</div>
+                                                            <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "4px" }}>
+                                                                👤 {entry.Faculty?.User?.name}
+                                                            </div>
+                                                            {entry.room_number && (
+                                                                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "3px", fontWeight: 500 }}>
+                                                                    🚪 Room {entry.room_number}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     ) : (
                                                         <div className="timetable-pill" style={{ backgroundColor: 'transparent', border: '1px dashed var(--border-color)', color: 'var(--text-muted)', padding: "0.75rem", borderRadius: "8px", height: "100%" }}>

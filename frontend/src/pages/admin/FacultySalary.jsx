@@ -117,6 +117,40 @@ function FacultySalaryPage() {
 
   useEffect(() => { loadData(); }, [monthFilter]);
 
+  // ── Auto-Detect Present Days ──────────────────────────────────────────────
+  useEffect(() => {
+    const fetchPresentDays = async () => {
+      // Only inject aggressively on new "Create" procedures. Protect "Edit" modifications.
+      if (!form.faculty_id || !form.month_year || editingRecord) return;
+      
+      const year = parseInt(form.month_year.split("-")[0], 10);
+      const month = parseInt(form.month_year.split("-")[1], 10);
+      const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
+      const endDateObj = new Date(year, month, 0); 
+      const endDate = `${year}-${String(month).padStart(2, "0")}-${String(endDateObj.getDate()).padStart(2, "0")}`;
+
+      try {
+        const res = await api.get(`/faculty-attendance/grid?start_date=${startDate}&end_date=${endDate}`);
+        const gridData = res.data.data || [];
+        const facStats = gridData.find(f => String(f.faculty_id) === String(form.faculty_id));
+        if (facStats) {
+           setForm(prev => ({
+             ...prev,
+             present_days: facStats.present_days,
+             // Set working days based on actual month constraints natively recorded
+             working_days: facStats.working_days > 0 ? facStats.working_days : prev.working_days 
+           }));
+        } else {
+           setForm(prev => ({ ...prev, present_days: 0 }));
+        }
+      } catch (e) {
+         console.warn("Tracker Bypass: Could not auto-fetch present days. Admin fallback allowed.", e);
+      }
+    };
+    
+    fetchPresentDays();
+  }, [form.faculty_id, form.month_year, editingRecord]);
+
   const showSuccess = (msg) => {
     setSuccess(msg);
     setTimeout(() => setSuccess(""), 5000);

@@ -217,13 +217,21 @@ function AdminTimetable() {
                                                 <td key={`${slot.id}-${day}`}>
                                                     {entry ? (
                                                         <div className={`timetable-pill ${colorClass}`}>
-                                                            <span>{entry.Subject?.name}</span>
+                                                            <span style={{ fontWeight: 600 }}>{entry.Subject?.name}</span>
+                                                            <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "4px" }}>
+                                                                {entry.Faculty?.User?.name}
+                                                            </div>
+                                                            {entry.room_number && (
+                                                                <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "3px", fontWeight: 500 }}>
+                                                                    🚪 Room {entry.room_number}
+                                                                </div>
+                                                            )}
                                                             <button
                                                                 onClick={() => handleDeleteEntry(entry.id)}
                                                                 style={{ position: "absolute", top: "2px", right: "2px", background: "none", border: "none", color: "inherit", cursor: "pointer", fontSize: "1rem", opacity: 0.5 }}
                                                                 title="Remove"
                                                             >
-                                                                ×
+                                                                &times;
                                                             </button>
                                                         </div>
                                                     ) : (

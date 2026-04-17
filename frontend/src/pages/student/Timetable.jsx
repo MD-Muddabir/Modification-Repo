@@ -15,6 +15,10 @@ function StudentTimetable() {
     const [classes, setClasses] = useState([]);
     const [selectedClass, setSelectedClass] = useState("");
 
+    // ── Enrolled subject IDs fetched from /students/me ──
+    const [enrolledSubjectIds, setEnrolledSubjectIds] = useState(new Set());
+    const [enrolledSubjectNames, setEnrolledSubjectNames] = useState([]);
+
     useEffect(() => {
         fetchStudentData();
     }, []);
@@ -32,6 +36,13 @@ function StudentTimetable() {
         try {
             const res = await api.get("/students/me");
             const studentData = res.data.data;
+
+            // ── Store enrolled subject IDs as a Set for O(1) lookup ──
+            if (studentData?.Subjects?.length > 0) {
+                setEnrolledSubjectIds(new Set(studentData.Subjects.map(s => s.id)));
+                setEnrolledSubjectNames(studentData.Subjects.map(s => s.name));
+            }
+
             if (studentData && studentData.Classes && studentData.Classes.length > 0) {
                 setClasses(studentData.Classes);
                 setSelectedClass(studentData.Classes[0].id);
@@ -69,10 +80,42 @@ function StudentTimetable() {
             <div className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                     <h1>📅 My Class Timetable</h1>
-                    <p>View your weekly class schedule and subjects.</p>
+                    <p>Showing only your enrolled subjects' schedule.</p>
                 </div>
                 <BackButton to="/student/dashboard" />
             </div>
+
+            {/* ── Enrolled Subjects Info Banner ── */}
+            {enrolledSubjectNames.length > 0 && (
+                <div style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '8px',
+                    alignItems: 'center',
+                    marginBottom: '1.5rem',
+                    padding: '0.85rem 1.2rem',
+                    background: 'var(--bg-card, #f8fafc)',
+                    borderRadius: '12px',
+                    border: '1px solid var(--border-color)',
+                }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', marginRight: '4px' }}>
+                        📚 Your enrolled subjects:
+                    </span>
+                    {enrolledSubjectNames.map((name, i) => (
+                        <span key={i} style={{
+                            fontSize: '0.8rem',
+                            fontWeight: 600,
+                            padding: '3px 10px',
+                            borderRadius: '999px',
+                            background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                            color: '#fff',
+                            letterSpacing: '0.02em'
+                        }}>
+                            {name}
+                        </span>
+                    ))}
+                </div>
+            )}
 
             {classes.length > 1 && (
                 <div className="filter-container" style={{ marginBottom: "2rem" }}>
@@ -113,22 +156,37 @@ function StudentTimetable() {
                                         <span>{slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}</span>
                                     </td>
                                     {DAYS_OF_WEEK.map(day => {
+                                        // Find the full class timetable entry for this slot+day
                                         const entry = timetable.find(t => t.slot_id === slot.id && t.day_of_week === day);
 
+                                        // ── Only show entry if the student is enrolled in that subject ──
+                                        const isEnrolled = entry && enrolledSubjectIds.has(entry.subject_id);
+
                                         let colorClass = "pill-color-0";
-                                        if (entry && entry.subject_id) {
+                                        if (isEnrolled) {
                                             colorClass = `pill-color-${entry.subject_id % 7}`;
                                         }
 
                                         return (
                                             <td key={`${slot.id}-${day}`}>
-                                                {entry ? (
+                                                {isEnrolled ? (
                                                     <div className={`timetable-pill ${colorClass}`}>
-                                                        <span>{entry.Subject?.name}</span>
-                                                        <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "4px" }}>{entry.Faculty?.User?.name}</div>
+                                                        <span style={{ fontWeight: 600 }}>{entry.Subject?.name}</span>
+                                                        <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", marginTop: "4px" }}>
+                                                            {entry.Faculty?.User?.name}
+                                                        </div>
+                                                        {entry.room_number && (
+                                                            <div style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: "3px", fontWeight: 500 }}>
+                                                                🚪 Room {entry.room_number}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 ) : (
-                                                    <div className="timetable-pill" style={{ backgroundColor: 'transparent', border: '1px dashed var(--border-color)', color: 'var(--text-muted)' }}>
+                                                    <div className="timetable-pill" style={{
+                                                        backgroundColor: 'transparent',
+                                                        border: '1px dashed var(--border-color)',
+                                                        color: 'var(--text-muted)'
+                                                    }}>
                                                         -
                                                     </div>
                                                 )}

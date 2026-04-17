@@ -1,5 +1,6 @@
 const { Institute, User, Plan, Subscription, InstitutePublicProfile } = require("../models");
 const { hashPassword, comparePassword } = require("../utils/hashPassword");
+const { computeFeatures } = require("../middlewares/planLimits.middleware");
 
 exports.registerInstitute = async (data) => {
     // Handle both snake_case and camelCase inputs
@@ -217,15 +218,7 @@ exports.getProfile = async (userId) => {
     let features = {};
     if (user.Institute && user.Institute.Plan) {
         const plan = user.Institute.Plan;
-        features = {
-            attendance: user.Institute.current_feature_attendance !== 'none' ? user.Institute.current_feature_attendance : plan.feature_attendance,
-            auto_attendance: user.Institute.current_feature_auto_attendance !== null ? user.Institute.current_feature_auto_attendance : plan.feature_auto_attendance,
-            fees: user.Institute.current_feature_fees !== null ? user.Institute.current_feature_fees : plan.feature_fees,
-            finance: user.Institute.current_feature_finance !== null ? user.Institute.current_feature_finance : plan.feature_finance,
-            salary: user.Institute.current_feature_salary !== null ? user.Institute.current_feature_salary : plan.feature_salary,
-            reports: user.Institute.current_feature_reports || plan.feature_reports,
-            announcements: user.Institute.current_feature_announcements !== null ? user.Institute.current_feature_announcements : plan.feature_announcements,
-        };
+        features = computeFeatures(user.Institute, plan);
     }
 
     const userData = user.toJSON();
