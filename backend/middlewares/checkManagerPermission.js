@@ -29,7 +29,7 @@ const checkManagerPermission = (featureKey, alsoAllowedWith = []) => {
 
             // Cross-module: allow if manager has any of the listed "also allowed with" perms
             // Example: fees perm lets manager read students for the collection screen
-            if (alsoAllowedWith.some(p => perms.includes(p))) return next();
+            if (alsoAllowedWith.some(p => perms.includes(p) || perms.some(perm => perm.startsWith(p + '.')))) return next();
 
             return res.status(403).json({
                 success: false,

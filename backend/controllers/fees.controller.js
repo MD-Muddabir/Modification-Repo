@@ -156,7 +156,11 @@ exports.getAllFeeStructures = async (req, res) => {
                     if (fee.subject_id) {
                         // Subject-specific fee
                         if (isEnrolled) {
-                            filteredFees.push(fee);
+                            if (studentObj.is_full_course && fee.fee_type === 'Tuition Fee') {
+                                // Full course students shouldn't see individual subject tuition fees
+                            } else {
+                                filteredFees.push(fee);
+                            }
                         }
                     } else {
                         // Full course / General fee
@@ -442,7 +446,14 @@ exports.getAssignedStudentFees = async (req, res) => {
                     if (s.id === fs.individual_student_id) applies = true;
                 } else if (classIds.includes(fs.class_id)) {
                     if (fs.subject_id !== null) {
-                        if (subjectIds.includes(fs.subject_id)) applies = true;
+                        if (subjectIds.includes(fs.subject_id)) {
+                            // Subject-level Tuition Fees should NOT apply to full course students
+                            if (fs.fee_type === 'Tuition Fee' && s.is_full_course) {
+                                applies = false;
+                            } else {
+                                applies = true;
+                            }
+                        }
                     } else {
                         // If no specific subject and it's Tuition Fee, it means "All Subjects (Full Class)"
                         if (fs.fee_type === 'Tuition Fee') {

@@ -75,6 +75,9 @@ function Fees() {
     const [reminderDateInput, setReminderDateInput] = useState('');
     const [updatingRem, setUpdatingRem] = useState(false);
 
+    // Receipt Modal
+    const [viewingReceipt, setViewingReceipt] = useState(null);
+
     useEffect(() => { init(); }, []);
 
     const init = async () => {
@@ -686,25 +689,11 @@ function Fees() {
                                             <td>
                                                 {p.status === 'success' && (
                                                     <button 
-                                                        onClick={() => {
-                                                            import('jspdf').then(({ default: jsPDF }) => {
-                                                                const doc = new jsPDF();
-                                                                doc.setFontSize(22);
-                                                                doc.text("Fee Payment Receipt", 105, 20, null, null, "center");
-                                                                doc.setFontSize(12);
-                                                                doc.text(`Transaction ID: ${p.transaction_id}`, 20, 40);
-                                                                doc.text(`Student: ${p.Student?.User?.name}`, 20, 50);
-                                                                doc.text(`Date: ${new Date(p.payment_date).toLocaleDateString()}`, 20, 60);
-                                                                doc.text(`Payment Method: ${p.payment_method}`, 20, 70);
-                                                                doc.text(`Amount Paid: ₹${parseFloat(p.amount_paid).toFixed(2)}`, 20, 80);
-                                                                doc.text(`Status: ${p.status}`, 20, 90);
-                                                                doc.save(`Receipt_${p.transaction_id}.pdf`);
-                                                            });
-                                                        }}
+                                                        onClick={() => setViewingReceipt(p)}
                                                         className="btn btn-sm btn-secondary"
-                                                        style={{ backgroundColor: "#4f46e5", color: "white", padding: "4px 8px", fontSize: "0.75rem" }}
+                                                        style={{ backgroundColor: "#4f46e5", color: "white", padding: "4px 8px", fontSize: "0.75rem", border: 'none', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}
                                                     >
-                                                        ⬇ Receipt
+                                                        🧾 Receipt
                                                     </button>
                                                 )}
                                             </td>
@@ -1229,6 +1218,153 @@ function Fees() {
                     </div>
                 </div>
             )}
+
+            {/* ═══ RECEIPT MODAL ═══ */}
+            {(() => {
+                if (!viewingReceipt) return null;
+
+                let receiptLogoUrl = user?.Institute?.logo;
+                if (receiptLogoUrl && receiptLogoUrl.startsWith('/')) {
+                    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+                    const backendBase = apiUrl.replace(/\/api\/?$/, "");
+                    receiptLogoUrl = `${backendBase}${receiptLogoUrl}`;
+                }
+
+                return (
+                    <div className="modal-overlay" style={{ background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(6px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', position: 'fixed', inset: 0 }}>
+                        <div className="modal-content" style={{ maxWidth: '850px', width: '100%', padding: 0, overflow: 'hidden', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc' }}>
+                            <h3 style={{ margin: 0, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <span style={{ fontSize: '1.25rem' }}>📄</span> Receipt Preview
+                            </h3>
+                            <button onClick={() => setViewingReceipt(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: '#64748b', transition: 'color 0.2s' }} onMouseOver={e => e.target.style.color = '#ef4444'} onMouseOut={e => e.target.style.color = '#64748b'}>×</button>
+                        </div>
+                        
+                        <div style={{ overflowY: 'auto', flex: 1, padding: '2rem', background: '#e2e8f0' }}>
+                            {/* Printable Area Container */}
+                            <div id="printable-receipt" style={{ padding: '3rem', background: '#ffffff', color: '#0f172a', fontFamily: "'Inter', sans-serif", borderRadius: '8px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)' }}>
+                                
+                                <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+                                    {receiptLogoUrl ? (
+                                        <img src={receiptLogoUrl} alt="Institute Logo" style={{ width: '90px', height: '90px', margin: '0 auto 1rem', borderRadius: '50%', objectFit: 'contain', display: 'block', border: '2px solid #e2e8f0', background: '#fff' }} />
+                                    ) : (
+                                        <div style={{ width: '90px', height: '90px', margin: '0 auto 1rem', background: '#f8fafc', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #e2e8f0' }}>
+                                            <span style={{ fontSize: '3rem' }}>🏫</span>
+                                        </div>
+                                    )}
+                                    <h1 style={{ margin: 0, fontSize: '2.2rem', fontWeight: '800', letterSpacing: '0.05em', color: '#0f172a', textTransform: 'uppercase' }}>
+                                        {user?.Institute?.name || "Excel Public School"}
+                                    </h1>
+                                </div>
+
+                                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid #cbd5e1', paddingBottom: '2rem', marginBottom: '2rem' }}>
+                                    <div style={{ flex: 1, fontSize: '1rem', color: '#334155', lineHeight: '1.7' }}>
+                                        <p style={{ margin: 0 }}><strong>Address:</strong> {user?.Institute?.address || "123 Education Lane"}{user?.Institute?.city ? `, ${user.Institute.city}` : ''}{user?.Institute?.zip_code ? ` - ${user.Institute.zip_code}` : ''}</p>
+                                        <p style={{ margin: 0 }}><strong>Phone No:</strong> {user?.Institute?.phone || "+91 98765 43210"}</p>
+                                        <p style={{ margin: 0 }}><strong>Email Id:</strong> {user?.Institute?.email || "info@excelpublicschool.edu"}</p>
+                                    </div>
+                                    <div style={{ flex: 1, textAlign: 'right', fontSize: '1.1rem', fontWeight: '600', color: '#0f172a', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', alignItems: 'flex-end' }}>
+                                        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.75rem' }}>
+                                            <span style={{ paddingBottom: '2px' }}>Date:</span>
+                                            <span style={{ display: 'inline-block', width: '180px', borderBottom: '1.5px solid #0f172a' }}></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+                                    <span style={{ display: 'inline-block', padding: '0.5rem 2rem', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '20px', fontSize: '1.4rem', fontWeight: '700', color: '#0f172a', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                                        Fee Receipt
+                                    </span>
+                                </div>
+
+                                <div style={{ marginBottom: '2.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', background: '#f8fafc', padding: '2rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                    <div>
+                                        <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.95rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.05em' }}>Transaction ID</p>
+                                        <p style={{ margin: 0, fontWeight: '700', fontSize: '1.15rem', color: '#0f172a' }}>{viewingReceipt.transaction_id}</p>
+                                    </div>
+                                    <div>
+                                        <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.95rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.05em' }}>Receipt Date</p>
+                                        <p style={{ margin: 0, fontWeight: '700', fontSize: '1.15rem', color: '#0f172a' }}>{new Date(viewingReceipt.payment_date).toLocaleDateString('en-GB')}</p>
+                                    </div>
+                                    <div>
+                                        <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.95rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.05em' }}>Student Name</p>
+                                        <p style={{ margin: 0, fontWeight: '700', fontSize: '1.15rem', color: '#0f172a' }}>{viewingReceipt.Student?.User?.name}</p>
+                                    </div>
+                                    <div>
+                                        <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.95rem', color: '#64748b', textTransform: 'uppercase', fontWeight: '600', letterSpacing: '0.05em' }}>Roll Number</p>
+                                        <p style={{ margin: 0, fontWeight: '700', fontSize: '1.15rem', color: '#0f172a' }}>{viewingReceipt.Student?.roll_number}</p>
+                                    </div>
+                                </div>
+
+                                <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '3rem' }}>
+                                    <thead>
+                                        <tr style={{ background: '#f1f5f9' }}>
+                                            <th style={{ padding: '1rem', textAlign: 'left', borderBottom: '2px solid #cbd5e1', color: '#475569', fontWeight: '700', fontSize: '1.05rem' }}>Description</th>
+                                            <th style={{ padding: '1rem', textAlign: 'center', borderBottom: '2px solid #cbd5e1', color: '#475569', fontWeight: '700', fontSize: '1.05rem' }}>Payment Mode</th>
+                                            <th style={{ padding: '1rem', textAlign: 'right', borderBottom: '2px solid #cbd5e1', color: '#475569', fontWeight: '700', fontSize: '1.05rem' }}>Amount Paid</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td style={{ padding: '1.25rem 1rem', borderBottom: '1px solid #e2e8f0', color: '#0f172a', fontWeight: '600', fontSize: '1.1rem' }}>Academic Fee Collection</td>
+                                            <td style={{ padding: '1.25rem 1rem', borderBottom: '1px solid #e2e8f0', textAlign: 'center', color: '#334155', textTransform: 'capitalize', fontWeight: '500', fontSize: '1.1rem' }}>{viewingReceipt.payment_method}</td>
+                                            <td style={{ padding: '1.25rem 1rem', borderBottom: '1px solid #e2e8f0', textAlign: 'right', color: '#10b981', fontWeight: '800', fontSize: '1.3rem' }}>₹{parseFloat(viewingReceipt.amount_paid).toLocaleString()}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '4rem', paddingTop: '2rem', borderTop: '2px dashed #e2e8f0' }}>
+                                    <div style={{ fontStyle: 'italic', color: '#64748b', fontSize: '0.95rem' }}>
+                                        <p style={{ margin: '0 0 0.25rem 0' }}>* This is a computer-generated receipt.</p>
+                                        <p style={{ margin: 0 }}>* No physical signature is required.</p>
+                                    </div>
+                                    <div style={{ textAlign: 'center', paddingRight: '1rem' }}>
+                                        <div style={{ borderBottom: '1.5px solid #0f172a', width: '220px', marginBottom: '0.75rem' }}></div>
+                                        <span style={{ color: '#0f172a', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.9rem' }}>Authorized Signatory</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style={{ padding: '1.25rem 1.5rem', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                            <button onClick={() => setViewingReceipt(null)} className="btn btn-secondary" style={{ padding: '0.75rem 1.5rem', fontWeight: '600', background: '#fff', border: '1px solid #cbd5e1' }}>Close</button>
+                            <button 
+                                onClick={() => {
+                                    const printWindow = window.open('', '_blank', 'width=900,height=900');
+                                    const printContents = document.getElementById('printable-receipt').innerHTML;
+                                    printWindow.document.write(`
+                                        <html>
+                                        <head>
+                                            <title>Receipt_${viewingReceipt.transaction_id}</title>
+                                            <style>
+                                                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+                                                body { font-family: 'Inter', sans-serif; margin: 0; padding: 40px; color: #0f172a; -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #fff; }
+                                                * { box-sizing: border-box; }
+                                                @media print {
+                                                    body { padding: 0; }
+                                                    @page { margin: 1.5cm; }
+                                                }
+                                            </style>
+                                        </head>
+                                        <body onload="window.print(); setTimeout(() => window.close(), 500);">
+                                            ${printContents}
+                                        </body>
+                                        </html>
+                                    `);
+                                    printWindow.document.close();
+                                }} 
+                                className="btn btn-primary" 
+                                style={{ background: 'linear-gradient(135deg, #4f46e5, #3b82f6)', color: 'white', border: 'none', padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '600', boxShadow: '0 4px 6px -1px rgba(79, 70, 229, 0.2)' }}
+                                onMouseOver={e => e.target.style.boxShadow = '0 10px 15px -3px rgba(79, 70, 229, 0.3)'}
+                                onMouseOut={e => e.target.style.boxShadow = '0 4px 6px -1px rgba(79, 70, 229, 0.2)'}
+                            >
+                                <span style={{ fontSize: '1.2rem' }}>🖨️</span> Print Receipt
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        })()}
         </div>
     );
 }
