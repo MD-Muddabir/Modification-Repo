@@ -29,7 +29,16 @@ const APP_TYPE = String(import.meta.env.VITE_APP_VARIANT || "web").toLowerCase()
 
 function App() {
     useEffect(() => {
-        initCapacitor();
+        const initDefaults = async () => {
+            initCapacitor();
+            if (Capacitor.isNativePlatform()) {
+                const { SplashScreen } = await import("@capacitor/splash-screen");
+                setTimeout(async () => {
+                    await SplashScreen.hide();
+                }, 1000);
+            }
+        };
+        initDefaults();
     }, []);
 
     // ── Phase 1: Load mobile CSS conditionally ──────────────────────────

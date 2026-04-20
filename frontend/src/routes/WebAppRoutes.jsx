@@ -88,6 +88,8 @@ const ParentAssignments = lazy(() => import("../pages/parent/Assignments"));
 const NotFound = lazy(() => import("../pages/common/NotFound"));
 const Unauthorized = lazy(() => import("../pages/common/Unauthorized"));
 
+import { Capacitor } from "@capacitor/core";
+
 const PageLoader = () => (
   <div className="page-loader">
     <LoadingSpinner />
@@ -95,15 +97,17 @@ const PageLoader = () => (
 );
 
 export default function WebAppRoutes() {
+  const isNative = Capacitor.isNativePlatform();
+
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/pricing" element={<Home />} />
-        <Route path="/renew-plan" element={<Home />} />
-        <Route path="/checkout" element={<PaymentAndCheckout />} />
-        <Route path="/features" element={<Home />} />
-        <Route path="/about" element={<Home />} />
+        <Route path="/" element={isNative ? <Navigate to="/login" replace /> : <Home />} />
+        <Route path="/pricing" element={isNative ? <Navigate to="/login" replace /> : <Home />} />
+        <Route path="/renew-plan" element={isNative ? <Navigate to="/login" replace /> : <Home />} />
+        <Route path="/checkout" element={isNative ? <Navigate to="/login" replace /> : <PaymentAndCheckout />} />
+        <Route path="/features" element={isNative ? <Navigate to="/login" replace /> : <Home />} />
+        <Route path="/about" element={isNative ? <Navigate to="/login" replace /> : <Home />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/privacy" element={<Privacy />} />

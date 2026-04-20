@@ -7,6 +7,8 @@ const NetworkStatus = () => {
     const [serverDown, setServerDown] = useState(false);
 
     useEffect(() => {
+        let networkListener;
+
         const handleOnline = () => {
             setIsOnline(true);
             setShowBackOnline(true);
@@ -22,11 +24,29 @@ const NetworkStatus = () => {
             setServerDown(true);
         };
 
-        window.addEventListener("online", handleOnline);
-        window.addEventListener("offline", handleOffline);
-        window.addEventListener("offline_api_error", handleServerDown);
+        const setupNetwork = async () => {
+            const { Capacitor } = await import("@capacitor/core");
+            if (Capacitor.isNativePlatform()) {
+                const { Network } = await import("@capacitor/network");
+                const status = await Network.getStatus();
+                if (!status.connected) handleOffline();
+                networkListener = await Network.addListener('networkStatusChange', status => {
+                    if (status.connected) handleOnline();
+                    else handleOffline();
+                });
+            } else {
+                window.addEventListener("online", handleOnline);
+                window.addEventListener("offline", handleOffline);
+            }
+            window.addEventListener("offline_api_error", handleServerDown);
+        };
+
+        setupNetwork();
 
         return () => {
+            if (networkListener) {
+                networkListener.remove();
+            }
             window.removeEventListener("online", handleOnline);
             window.removeEventListener("offline", handleOffline);
             window.removeEventListener("offline_api_error", handleServerDown);

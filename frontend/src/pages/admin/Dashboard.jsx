@@ -10,6 +10,7 @@ import { AuthContext } from "../../context/AuthContext";
 import ThemeSelector from "../../components/ThemeSelector";
 import BlockedScreen from "./BlockedScreen";
 import InstituteLogo from "../../components/common/InstituteLogo";
+import SetupGuideModal from "./SetupGuideModal";
 import "./Dashboard.css";
 
 function AdminDashboard() {
@@ -31,6 +32,7 @@ function AdminDashboard() {
     const [planDetails, setPlanDetails] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+    const [showHelpModal, setShowHelpModal] = useState(false);
     const [blockedFeature, setBlockedFeature] = useState("");
     const [managerStats, setManagerStats] = useState(null);
 
@@ -270,6 +272,14 @@ function AdminDashboard() {
                     </div>
                 </div>
                 <div className="dashboard-header-right">
+                    <button 
+                        className="btn btn-primary" 
+                        onClick={() => setShowHelpModal(true)}
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', border: 'none', background: 'var(--primary-color)' }}
+                        title="Institute Setup Guide"
+                    >
+                        <span>❓</span> Guide
+                    </button>
                     <ThemeSelector />
                     <button onClick={logout} className="btn btn-danger">Logout</button>
                 </div>
@@ -651,6 +661,11 @@ function AdminDashboard() {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* ── Help Guide Modal ── */}
+            {showHelpModal && (
+                <SetupGuideModal onClose={() => setShowHelpModal(false)} />
             )}
         </div>
     );
