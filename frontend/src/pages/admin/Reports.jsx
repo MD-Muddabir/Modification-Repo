@@ -25,6 +25,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import AdminExpenses from "./Expenses";
+import { savePdfNative } from "../../utils/capacitorPermissions";
 
 ChartJS.register(
     CategoryScale,
@@ -177,7 +178,7 @@ function Reports() {
         setShowExportModal(true);
     };
 
-    const generatePDF = (title, columns, rows) => {
+    const generatePDF = async (title, columns, rows) => {
         const doc = new jsPDF();
         doc.text(title, 14, 15);
         autoTable(doc, {
@@ -185,7 +186,7 @@ function Reports() {
             body: rows,
             startY: 20
         });
-        doc.save(`${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`);
+        await savePdfNative(doc, `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`);
     };
 
     const generateExcel = (title, columns, rows, sheetName) => {

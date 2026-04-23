@@ -3,6 +3,7 @@ import api from "../../services/api";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import { resolveFileUrl } from "../../utils/resolveUrl";
 import { toast } from "react-hot-toast";
+import { downloadRemoteFile } from "../../utils/capacitorPermissions";
 
 function StudentNotes() {
     const [notes, setNotes] = useState([]);
@@ -86,8 +87,16 @@ function StudentNotes() {
         try {
             await api.post(`/notes/download/${note.id}`);
         } catch (_) { }
-        // resolveFileUrl handles both Cloudinary URLs and legacy /uploads paths
-        window.open(resolveFileUrl(note.file_url), "_blank");
+
+        // Determine a clean filename from the URL or note title
+        const fileUrl = resolveFileUrl(note.file_url);
+        const urlParts = note.file_url?.split('/') || [];
+        const rawFileName = urlParts[urlParts.length - 1] || `${note.title}.pdf`;
+        const safeFileName = rawFileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+
+        toast.loading("Downloading...", { id: "dl" });
+        await downloadRemoteFile(fileUrl, safeFileName);
+        toast.dismiss("dl");
     };
 
     if (loading) return <div style={{ padding: 40 }}><LoadingSpinner /></div>;

@@ -79,8 +79,6 @@ function SuperAdminDashboard() {
     const statCards = [
         { icon: '🏢', value: stats.totalInstitutes, label: 'Total Institutes', color: '#6366f1' },
         { icon: '✅', value: stats.activeInstitutes, label: 'Active Institutes', color: '#10b981' },
-        // { icon: '💰', value: `₹${safeRevenue.toLocaleString('en-IN')}`, label: 'Total Revenue', color: '#f59e0b' },
-        // { icon: '📊', value: `₹${safeMonthly.toLocaleString('en-IN')}`, label: 'Monthly Revenue', color: '#3b82f6' },
         { icon: '👨‍🎓', value: stats.totalStudents, label: 'Total Students', color: '#8b5cf6' },
         { icon: '👩‍🏫', value: stats.totalFaculty, label: 'Total Faculty', color: '#ec4899' },
         { icon: '🧑‍💼', value: stats.totalManagers, label: 'Total Managers', color: '#14b8a6' },
@@ -89,6 +87,12 @@ function SuperAdminDashboard() {
         { icon: '🎉', value: `₹${safeDiscount.toLocaleString('en-IN')}`, label: 'Platform Discounts', color: '#a855f7' },
         { icon: '📋', value: stats.totalPlans, label: 'Active Plans', color: '#06b6d4' },
     ];
+
+    // Determine values for landing page, fallback to 0 if undefined
+    const landingPageViews = stats.totalLandingPageViews || 0;
+    const landingPageRegs = stats.totalInstitutes || 0;
+    const landingPageConv = stats.activeInstitutes || 0;
+    const landingPageTrial = stats.totalFreeTrialUsers || 0;
 
     return (
         <div className="dashboard-container">
@@ -145,10 +149,10 @@ function SuperAdminDashboard() {
                 {lpPreviewOpen && (
                     <div style={{ marginTop: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px,1fr))', gap: '12px', animation: 'fadeIn 0.3s ease' }}>
                         {[
-                            { icon: '👁', label: 'Page Views', value: (stats.totalInstitutes * 47 + 1284).toLocaleString(), color: '#818cf8' },
-                            { icon: '📝', label: 'Registrations', value: stats.totalInstitutes, color: '#34d399' },
-                            { icon: '💳', label: 'Paid Conversions', value: stats.activeInstitutes, color: '#fbbf24' },
-                            { icon: '🆓', label: 'Free Trial', value: stats.totalFreeTrialUsers, color: '#f87171' },
+                            { icon: '👁', label: 'Page Views', value: landingPageViews.toLocaleString(), color: '#818cf8' },
+                            { icon: '📝', label: 'Registrations', value: landingPageRegs, color: '#34d399' },
+                            { icon: '💳', label: 'Paid Conversions', value: landingPageConv, color: '#fbbf24' },
+                            { icon: '🆓', label: 'Free Trial', value: landingPageTrial, color: '#f87171' },
                         ].map(s => (
                             <div key={s.label} style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(255,255,255,0.2)' }}>
                                 <div style={{ fontSize: '22px', marginBottom: '4px' }}>{s.icon}</div>

@@ -27,6 +27,21 @@ exports.submitLead = async (req, res) => {
     }
 };
 
+exports.trackPageView = async (req, res) => {
+    try {
+        const { LandingPageView } = require('../models');
+        await LandingPageView.create({
+            ip_address: req.ip || req.connection.remoteAddress,
+            user_agent: req.headers['user-agent'],
+            page_url: req.body.url || '/'
+        });
+        res.status(200).json({ success: true });
+    } catch (error) {
+        console.error("Page view tracking error:", error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+};
+
 exports.getLeads = async (req, res) => {
     try {
         const leads = await Lead.findAll({

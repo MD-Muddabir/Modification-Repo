@@ -5,6 +5,7 @@ import api from "../../services/api";
 import { AuthContext } from "../../context/AuthContext";
 import BackButton from "../../components/common/BackButton";
 import "../admin/Dashboard.css";
+import { savePdfNative } from "../../utils/capacitorPermissions";
 
 function ScanAttendance() {
     const { user } = useContext(AuthContext);
@@ -223,7 +224,8 @@ function ScanAttendance() {
             doc.setFontSize(5.5);
             doc.text('Official Student Identity Card', 42.5, 152.5, { align: 'center' });
 
-            doc.save(`QR_${studentName.replace(/\s+/g, '_')}.pdf`);
+            // Works on ALL platforms: native Share sheet on Android, browser download on web
+            await savePdfNative(doc, `ID_Card_${studentName.replace(/\s+/g, '_')}.pdf`);
         } catch (err) {
             console.error("Download error:", err);
             alert("Failed to download card: " + err.message);

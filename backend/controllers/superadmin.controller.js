@@ -71,12 +71,14 @@ exports.getDashboardStats = async (req, res) => {
         }
 
         // Phase 3: Total Platform Discounts (Student Fees + Institute Subscriptions)
-        const { StudentFee, Subscription: SubModel } = require("../models");
+        const { StudentFee, Subscription: SubModel, LandingPageView } = require("../models");
         const [studentDiscountRes, subDiscountRes] = await Promise.all([
             StudentFee.sum("discount_amount") || 0,
             SubModel.sum("discount_amount") || 0
         ]);
         const totalDiscount = parseFloat(studentDiscountRes) + parseFloat(subDiscountRes);
+
+        const totalLandingPageViews = await LandingPageView.count();
 
         res.json({
             totalInstitutes,
@@ -91,7 +93,8 @@ exports.getDashboardStats = async (req, res) => {
             totalPlans,
             totalPrivateSchools,
             totalFreeTrialUsers,
-            totalDiscount
+            totalDiscount,
+            totalLandingPageViews
         });
     } catch (error) {
         console.error("getDashboardStats error:", error);

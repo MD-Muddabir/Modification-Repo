@@ -55,6 +55,7 @@ const PublicEnquiry = require("./publicEnquiry");
 const InstituteDiscount = require("./instituteDiscount");
 
 const Lead = require("./lead");
+const LandingPageView = require("./landingPageView");
 
 // Associations
 
@@ -466,4 +467,5 @@ module.exports = {
     StudentFeePayment,
     OtpVerification,
     FacultySalary,
+    LandingPageView,
 };

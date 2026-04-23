@@ -6,6 +6,7 @@ import BackButton from "../../components/common/BackButton";
 import "../admin/Dashboard.css";
 import jsPDF from "jspdf";
 import { useRazorpayPayment } from "../../hooks/useRazorpayPayment";
+import { savePdfNative } from "../../utils/capacitorPermissions";
 
 function PayFees() {
     const { user } = useContext(AuthContext);
@@ -141,7 +142,7 @@ function PayFees() {
         }
     };
 
-    const generateReceipt = (payment) => {
+    const generateReceipt = async (payment) => {
         const doc = new jsPDF();
         doc.setFontSize(22);
         doc.text("Fee Payment Receipt", 105, 20, null, null, "center");
@@ -153,7 +154,7 @@ function PayFees() {
         doc.text(`Amount Paid: $${parseFloat(payment.amount_paid).toFixed(2)}`, 20, 70);
         doc.text(`Status: ${payment.status}`, 20, 80);
 
-        doc.save(`Receipt_${payment.transaction_id}.pdf`);
+        await savePdfNative(doc, `Receipt_${payment.transaction_id}.pdf`);
     };
 
     if (loading) return <div className="dashboard-container">Loading...</div>;

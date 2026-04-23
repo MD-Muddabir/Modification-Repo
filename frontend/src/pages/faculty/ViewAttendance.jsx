@@ -7,6 +7,7 @@ import "../faculty/Dashboard"; // Reuse dashboard UI
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import { savePdfNative } from "../../utils/capacitorPermissions";
 
 function ViewAttendance() {
     const { user } = useContext(AuthContext);
@@ -146,12 +147,12 @@ function ViewAttendance() {
         setShowExportModal(true);
     };
 
-    const confirmExport = () => {
-        exportGridData(exportType, exportFilter);
+    const confirmExport = async () => {
+        await exportGridData(exportType, exportFilter);
         setShowExportModal(false);
     };
 
-    const exportGridData = (type, filterStr) => {
+    const exportGridData = async (type, filterStr) => {
         const className = classes.find(c => String(c.id) === String(selectedClass))?.name || "Unknown Class";
         const subjectName = subjects.find(s => String(s.id) === String(selectedSubject))?.name || "Unknown Subject";
         const title = `Attendance Grid - ${className} (${subjectName}) - ${monthName} - ${filterStr.toUpperCase()}`;
@@ -209,7 +210,7 @@ function ViewAttendance() {
                 styles: { fontSize: 7, cellPadding: 1 },
                 headStyles: { fillColor: [66, 66, 66] }
             });
-            doc.save(`${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`);
+            await savePdfNative(doc, `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`);
         } else if (type === "Excel") {
             const worksheet = XLSX.utils.aoa_to_sheet([columns, ...rows]);
             const workbook = XLSX.utils.book_new();

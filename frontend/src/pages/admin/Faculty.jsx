@@ -11,6 +11,7 @@ import { AuthContext } from "../../context/AuthContext";
 import { QRCodeSVG, QRCodeCanvas } from "qrcode.react";
 import QRCode from "qrcode";
 import "./Dashboard.css";
+import { savePdfNative } from "../../utils/capacitorPermissions";
 
 function Faculty() {
     const { user } = useContext(AuthContext);
@@ -172,7 +173,7 @@ function Faculty() {
 
             const qrDataUrl = await QRCode.toDataURL(`FACULTY_QR_${qrFaculty.id}`, { width: 300, margin: 1 });
             await generateIdCard(doc, qrFaculty, logoBase64, user?.institute_name || '', user?.institute_phone || '', qrDataUrl);
-            doc.save(`${qrFaculty.User?.name || 'Faculty'}_ID_Card.pdf`);
+            await savePdfNative(doc, `${qrFaculty.User?.name || 'Faculty'}_ID_Card.pdf`);
         } catch (e) {
             alert('Failed to generate PDF: ' + e.message);
         } finally {
@@ -212,7 +213,7 @@ function Faculty() {
                 const qrDataUrl = await QRCode.toDataURL(`FACULTY_QR_${fm.id}`, { width: 300, margin: 1 });
                 await generateIdCard(doc, fm, logoBase64, user?.institute_name || '', user?.institute_phone || '', qrDataUrl);
             }
-            doc.save(`Bulk_Faculty_ID_Cards_${selectedFaculty.length}.pdf`);
+            await savePdfNative(doc, `Bulk_Faculty_ID_Cards_${selectedFaculty.length}.pdf`);
         } catch (e) {
             alert('Download failed: ' + e.message);
         } finally {

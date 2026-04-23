@@ -361,7 +361,7 @@ const syncDatabase = async () => {
 
     // Auto-sync other schema changes using alter for the explicit models to make sure everything matches
     try {
-      const { InstitutePublicProfile, InstituteGalleryPhoto, InstituteReview, PublicEnquiry, Subscription, Plan, User } = require('./models');
+      const { InstitutePublicProfile, InstituteGalleryPhoto, InstituteReview, PublicEnquiry, Subscription, Plan, User, LandingPageView } = require('./models');
       await InstitutePublicProfile.sync({ alter: true });
       await InstituteGalleryPhoto.sync({ alter: true });
       await InstituteReview.sync({ alter: true });
@@ -369,6 +369,7 @@ const syncDatabase = async () => {
       await Subscription.sync({ alter: true });
       await Plan.sync({ alter: true });
       await User.sync({ alter: true });  // ✅ picks up manager_type + manager_type_label
+      await LandingPageView.sync({ alter: true });
     } catch (e) { console.error("Error auto-syncing explicit models:", e); }
 
     await sequelize.sync({ alter: false });

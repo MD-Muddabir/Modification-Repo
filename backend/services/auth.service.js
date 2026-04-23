@@ -224,6 +224,7 @@ exports.getProfile = async (userId) => {
     const userData = user.toJSON();
     userData.features = features;
     userData.institute_name = user.Institute?.name;
+    userData.institute_status = user.Institute?.status;
     userData.institute_phone = user.Institute?.phone;
     userData.institute_logo = user.Institute?.logo || null;
     if (!userData.institute_logo) {

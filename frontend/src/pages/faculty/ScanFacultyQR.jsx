@@ -5,6 +5,7 @@ import QRCode from "qrcode";
 import api from "../../services/api";
 import { AuthContext } from "../../context/AuthContext";
 import "../admin/Dashboard.css";
+import { savePdfNative } from "../../utils/capacitorPermissions";
 
 function FacultyQRCode() {
     const { user } = useContext(AuthContext);
@@ -148,7 +149,7 @@ function FacultyQRCode() {
             doc.setTextColor(255,255,255); doc.setFont('helvetica', 'normal'); doc.setFontSize(5.5);
             doc.text('Official Educational Staff Identity Card', 42.5, 152.5, { align: 'center' });
 
-            doc.save(`${fName}_ID_Card.pdf`);
+            await savePdfNative(doc, `${fName}_ID_Card.pdf`);
         } catch (err) {
             alert('Failed to generate PDF: ' + err.message);
         } finally {

@@ -6,6 +6,7 @@ import { Html5Qrcode } from "html5-qrcode";
 import "./Dashboard.css";
 import ThemeSelector from "../../components/ThemeSelector";
 import { useScanSound } from "../../hooks/useScanSound";
+import { requestCameraPermission } from "../../utils/capacitorPermissions";
 
 function SmartAttendance() {
     const { user } = useContext(AuthContext);
@@ -79,6 +80,13 @@ function SmartAttendance() {
     const startScanningProcess = async () => {
         if (!selectedClass) return alert("Please select a class");
         if (!selectedSubject) return alert("Please select a subject");
+
+        // ── Step 1: Request camera permission (critical on Android) ──
+        const hasPermission = await requestCameraPermission();
+        if (!hasPermission) {
+            setCameraError("Camera permission denied. Please allow camera access in your device Settings → Apps → StudentSaaS-Universal → Permissions → Camera.");
+            return;
+        }
 
         // Unlock AudioContext on this user gesture (browser autoplay policy)
         unlockAudio();

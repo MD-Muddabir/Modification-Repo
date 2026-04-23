@@ -6,6 +6,7 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "./PublicPages.css";
+import api from "../../services/api";
 
 function LandingPage() {
     const [stats, setStats] = useState({
@@ -13,6 +14,12 @@ function LandingPage() {
         students: "5000+",
         satisfaction: "98%"
     });
+
+    useEffect(() => {
+        // Track page view for Analytics
+        api.post('/leads/page-view', { url: window.location.pathname })
+            .catch(err => console.error("Tracking error:", err));
+    }, []);
 
     return (
         <div className="landing-page">

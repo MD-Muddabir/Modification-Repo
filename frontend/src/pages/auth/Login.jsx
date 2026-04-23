@@ -50,6 +50,10 @@ function Login() {
       }
     }
     if (userObj) {
+      if (userObj.institute_status === "pending" && userObj.role === "admin") {
+        navigate("/checkout");
+        return;
+      }
       switch (userObj.role) {
         case "super_admin": navigate("/superadmin/dashboard"); break;
         case "admin": navigate("/admin/dashboard"); break;
@@ -106,6 +110,10 @@ function Login() {
           setErrors({ general: "Admin and Manager dashboards are not available on the mobile application." });
           return;
         }
+      }
+      if (user.institute_status === "pending" && user.role === "admin") {
+        navigate("/checkout");
+        return;
       }
       switch (user.role) {
         case "super_admin": navigate("/superadmin/dashboard"); break;

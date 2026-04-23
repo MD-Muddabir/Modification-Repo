@@ -8,20 +8,25 @@ export default function LandingPage() {
   const [tab, setTab] = useState("overview"); // overview | edit | enquiries
   const [loading, setLoading] = useState(false);
   const [actionMsg, setActionMsg] = useState("");
-  const [stats, setStats] = useState({
-    pageViews: 12540,
-    registrations: 342,
-    trialConversions: 89,
-    bounceRate: "42%"
-  });
+  const [dashboardStats, setDashboardStats] = useState(null);
 
   const [enquiries, setEnquiries] = useState([]);
 
   useEffect(() => {
+    fetchDashboardData();
     if (tab === "enquiries") {
       fetchEnquiries();
     }
   }, [tab]);
+
+  const fetchDashboardData = async () => {
+    try {
+      const res = await api.get("/superadmin/dashboard");
+      setDashboardStats(res.data);
+    } catch (error) {
+      console.error("Failed to fetch dashboard stats", error);
+    }
+  };
 
   const fetchEnquiries = async () => {
     try {
@@ -106,18 +111,25 @@ export default function LandingPage() {
         <div style={{ animation: "fadeIn 0.3s ease" }}>
           {/* Stats row */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
-            {[
-              { icon: "👁", label: "Page Views", value: stats.pageViews.toLocaleString() },
-              { icon: "📝", label: "Trial Registrations", value: stats.registrations },
-              { icon: "💳", label: "Paid Conversions", value: stats.trialConversions },
-              { icon: "📉", label: "Bounce Rate", value: stats.bounceRate },
-            ].map(s => (
-              <div key={s.label} style={{ background: "var(--card-bg)", border: "1px solid var(--border-color)", borderRadius: "12px", padding: "1.25rem", textAlign: "center" }}>
-                <div style={{ fontSize: "1.75rem" }}>{s.icon}</div>
-                <div style={{ fontSize: "1.5rem", fontWeight: 700, margin: ".25rem 0" }}>{s.value}</div>
-                <div style={{ fontSize: ".8rem", color: "var(--text-secondary)" }}>{s.label}</div>
-              </div>
-            ))}
+            {(() => {
+              const landingPageViews = dashboardStats?.totalLandingPageViews || 0;
+              const landingPageRegs = dashboardStats?.totalInstitutes || 0;
+              const landingPageConv = dashboardStats?.activeInstitutes || 0;
+              const conversionRate = landingPageViews > 0 ? ((landingPageRegs / landingPageViews) * 100).toFixed(1) + "%" : "0%";
+
+              return [
+                { icon: "👁", label: "Page Views", value: landingPageViews.toLocaleString() },
+                { icon: "📝", label: "Registrations", value: landingPageRegs },
+                { icon: "💳", label: "Paid Conversions", value: landingPageConv },
+                { icon: "📈", label: "Conversion Rate", value: conversionRate },
+              ].map(s => (
+                <div key={s.label} style={{ background: "var(--card-bg)", border: "1px solid var(--border-color)", borderRadius: "12px", padding: "1.25rem", textAlign: "center" }}>
+                  <div style={{ fontSize: "1.75rem" }}>{s.icon}</div>
+                  <div style={{ fontSize: "1.5rem", fontWeight: 700, margin: ".25rem 0" }}>{s.value}</div>
+                  <div style={{ fontSize: ".8rem", color: "var(--text-secondary)" }}>{s.label}</div>
+                </div>
+              ));
+            })()}
           </div>
 
           <div style={{ background: "var(--card-bg)", border: "1px solid var(--border-color)", borderRadius: "14px", padding: "1.5rem" }}>

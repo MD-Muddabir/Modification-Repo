@@ -41,6 +41,10 @@ function ProtectedRoute({ children, allowedRoles = [] }) {
     return <Navigate to="/unauthorized" replace />;
   }
 
+  if (user.institute_status === "pending" && user.role === "admin") {
+    return <Navigate to="/checkout" replace />;
+  }
+
   // User is authenticated and authorized
   return (
     <>

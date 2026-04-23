@@ -239,6 +239,7 @@ exports.login = async (req, res) => {
                 status: user.status,
                 institute_id: user.institute_id,
                 institute_name: user.Institute?.name,
+                institute_status: user.Institute?.status,
                 institute_phone: user.Institute?.phone,
                 institute_logo: instituteLogo,
                 subscription_end: user.Institute?.subscription_end,

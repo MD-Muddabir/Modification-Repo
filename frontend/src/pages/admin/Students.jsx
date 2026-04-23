@@ -11,6 +11,7 @@ import { AuthContext } from "../../context/AuthContext";
 import { QRCodeSVG, QRCodeCanvas } from "qrcode.react";
 import QRCode from "qrcode";
 import "./Dashboard.css";
+import { savePdfNative } from "../../utils/capacitorPermissions";
 
 function Students() {
     const { user } = useContext(AuthContext);
@@ -221,7 +222,7 @@ function Students() {
                 doc.text('Official Student Identity Card', 42.5, 152.5, { align: 'center' });
             }
 
-            doc.save(`Bulk_Student_ID_Cards_${selectedStudents.length}.pdf`);
+            await savePdfNative(doc, `Bulk_Student_ID_Cards_${selectedStudents.length}.pdf`);
         } catch (err) {
             console.error('Bulk PDF download error:', err);
             alert('Download failed: ' + err.message);
@@ -1040,7 +1041,7 @@ function Students() {
                                         doc.setFontSize(5.5);
                                         doc.text('Official Student Identity Card', 42.5, 152.5, { align: 'center' });
 
-                                        doc.save(`QR_${studentName.replace(/\s+/g, '_')}_${qrStudent.roll_number || qrStudent.id}.pdf`);
+                                        await savePdfNative(doc, `QR_${studentName.replace(/\s+/g, '_')}_${qrStudent.roll_number || qrStudent.id}.pdf`);
                                     } catch (err) {
                                         console.error('PDF download error:', err);
                                         alert('Download failed: ' + err.message);
