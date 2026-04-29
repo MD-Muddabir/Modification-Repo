@@ -211,7 +211,7 @@ function PricingPage() {
                 <div className="container">
                     <div className="footer-grid">
                         <div className="footer-col">
-                            <h4>EduManage</h4>
+                            <h4>ZF Solution</h4>
                             <p>Professional coaching center management software</p>
                         </div>
                         <div className="footer-col">
@@ -228,12 +228,12 @@ function PricingPage() {
                         </div>
                         <div className="footer-col">
                             <h4>Connect</h4>
-                            <a href="mailto:support@edumanage.com">support@edumanage.com</a>
+                            <a href="mailto:support@zfsolution.com">support@zfsolution.com</a>
                             <a href="tel:+911234567890">+91 123 456 7890</a>
                         </div>
                     </div>
                     <div className="footer-bottom">
-                        <p>&copy; 2026 EduManage. All rights reserved.</p>
+                        <p>&copy; 2026 ZF Solution. All rights reserved.</p>
                     </div>
                 </div>
             </footer>

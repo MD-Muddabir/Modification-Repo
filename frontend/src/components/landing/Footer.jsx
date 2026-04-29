@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import zfLogo from '../../assets/zf-logo.png';
 
 export default function Footer() {
   return (
@@ -6,7 +7,7 @@ export default function Footer() {
       <div className='lp-footer-grid'>
         <div>
           <Link to='/' className='lp-logo'>
-            <span className='lp-logo-icon'>🎓</span> Student SaaS
+            <img src={zfLogo} alt="ZF Solution" style={{ height: '52px', width: '52px', objectFit: 'contain' }} /> ZF Solution
           </Link>
           <p className='lp-footer-desc'>
             The all-in-one platform for coaching institutes. Manage students, attendance, fees, and exams seamlessly. Built for scale.
@@ -49,7 +50,7 @@ export default function Footer() {
         </div>
       </div>
       <div className='lp-footer-bottom'>
-        <span>© {new Date().getFullYear()} Student SaaS. All rights reserved.</span>
+        <span>© {new Date().getFullYear()} ZF Solution. All rights reserved.</span>
         <span>Made with ❤️ in Hyderabad, Telangana.</span>
       </div>
     </footer>

@@ -74,7 +74,7 @@ Text: School name, tagline (optional)
 Example Layout:
 [Gradient Background #667eea to #764ba2]
   → Logo (500x500 px, centered)
-  → 'EduManagePro' (below logo, 48px)
+  → 'ZF SolutionPro' (below logo, 48px)
   → 'Empowering Education' (tagline, 24px)
 
 Step 2: Create resources Folder Structure
@@ -106,8 +106,8 @@ Edit capacitor.config.ts:
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.edumanagepro.student',
-  appName: 'EduManagePro Student',
+  appId: 'com.ZF Solutionpro.student',
+  appName: 'ZF SolutionPro Student',
   webDir: 'build',
 
   plugins: {

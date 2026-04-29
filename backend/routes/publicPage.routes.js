@@ -35,7 +35,7 @@ if (isCloudinaryConfigured) {
     imageStorage = new CloudinaryStorage({
         cloudinary,
         params: {
-            folder: "student-saas/public-page",
+            folder: "zf-solution/public-page",
             allowed_formats: ["jpg", "jpeg", "png", "webp"],
             transformation: [
                 { width: 1400, height: 1400, crop: "limit" },

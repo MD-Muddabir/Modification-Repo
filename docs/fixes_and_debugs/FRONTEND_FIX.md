@@ -44,7 +44,7 @@ The Vite dev server should automatically reload. If not:
 
 You should now see:
 - Beautiful gradient login page
-- "🎓 Student SaaS" title
+- "🎓 ZF Solution" title
 - Email and password fields
 - "Sign In" button
 - "Register here" link

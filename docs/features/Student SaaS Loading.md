@@ -1,14 +1,14 @@
 
 
 🎓
-STUDENT SAAS
+ZF Solution
 Landing Page — Complete Implementation Guide
 From Basic Setup to Advanced Production Deployment
 Version 1.0  |  March 2026  |  Hyderabad, Telangana
 Available on  Web  •  Android  •  iOS
  
 Table of Contents
-This guide walks you through every phase of integrating, modifying, and deploying the Student SaaS public landing page — from adding it to your existing React project, to production-level optimisations and App Store-ready mobile landing pages.
+This guide walks you through every phase of integrating, modifying, and deploying the ZF Solution public landing page — from adding it to your existing React project, to production-level optimisations and App Store-ready mobile landing pages.
 Phase	Title	Level	Pages
 Phase 0	Project Setup & Prerequisites	Basic	4–6
 Phase 1	File Structure & Component Architecture	Basic	7–10
@@ -42,7 +42,7 @@ Deployment	Vercel / Netlify / AWS / cPanel	Hosting with CI/CD
 •	✅  Node.js v18 or higher installed (node -v to check)
 •	✅  npm v9 or higher (npm -v to check)
 •	✅  Git installed and a repository initialised
-•	✅  Your existing Student SaaS project running (npm run dev)
+•	✅  Your existing ZF Solution project running (npm run dev)
 •	✅  Vite configured (vite.config.js or vite.config.ts present)
 •	✅  Google Fonts accessible (or fallback fonts ready)
 
@@ -208,7 +208,7 @@ export default function Navbar() {
   return (
     <nav className={`lp-nav ${scrolled ? 'scrolled' : ''}`}>
       <a className='lp-logo' onClick={() => scrollTo('#home')}>
-        <span className='lp-logo-icon'>🎓</span> Student SaaS
+        <span className='lp-logo-icon'>🎓</span> ZF Solution
       </a>
       <ul className='lp-nav-links'>
         {NAV_LINKS.map(l => (
@@ -685,9 +685,9 @@ Phase 11 — SEO, Meta Tags & Performance Optimisation
 A beautiful landing page is wasted if it doesn't rank on Google. This phase covers all the technical SEO, Open Graph meta tags, structured data, and performance optimisations needed for a production-ready launch.
 11.1  index.html Meta Tags
 Tag	Value to Set
-<title>	Student SaaS — Manage Your Coaching Institute Like a Pro
+<title>	ZF Solution — Manage Your Coaching Institute Like a Pro
 description	The all-in-one platform for coaching institutes. Student management, attendance, fees, online exams & AI analytics. Free 14-day trial.
-og:title	Student SaaS — Coaching Institute Management Platform
+og:title	ZF Solution — Coaching Institute Management Platform
 og:description	Manage 200–3000+ students with attendance, fees, exams & AI analytics.
 og:image	/og-image.png  (1200×630px screenshot of the landing page)
 og:url	https://studentsaas.in
@@ -711,7 +711,7 @@ Add this to your index.html or inject via React Helmet. It helps Google display 
 {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": "Student SaaS",
+  "name": "ZF Solution",
   "applicationCategory": "EducationApplication",
   "operatingSystem": "Web, Android, iOS",
   "offers": {
@@ -728,7 +728,7 @@ Add this to your index.html or inject via React Helmet. It helps Google display 
 </script>
  
 Phase 12 — Production Deployment
-The final phase covers deploying your Student SaaS landing page to production. Three deployment methods are covered: Vercel (easiest), AWS S3 + CloudFront (scalable), and cPanel Shared Hosting (for existing hosting plans).
+The final phase covers deploying your ZF Solution landing page to production. Three deployment methods are covered: Vercel (easiest), AWS S3 + CloudFront (scalable), and cPanel Shared Hosting (for existing hosting plans).
 12.1  Option A — Vercel (Recommended)
 Vercel is the fastest path to production for React + Vite projects. It supports automatic CI/CD, custom domains, and edge caching out of the box.
 1.	Push your code to GitHub (git push origin main)
@@ -815,4 +815,4 @@ Location	Hyderabad, Telangana, India
 Business Hours	Monday–Saturday, 9 AM – 7 PM IST
 Website	www.studentsaas.in
 
-© 2026 Student SaaS. All rights reserved. Made with ❤️ in Hyderabad, Telangana.
+© 2026 ZF Solution. All rights reserved. Made with ❤️ in Hyderabad, Telangana.

@@ -1,4 +1,4 @@
-🖼️ Student SaaS - Image Upload Fix Guide
+🖼️ ZF Solution - Image Upload Fix Guide
 Professional Cloud Storage Implementation
 
 📋 TABLE OF CONTENTS
@@ -215,9 +215,9 @@ Go to: Settings → Upload
 Click: "Add upload preset"
 Configure:
 
-   Preset name: student-saas-uploads
+   Preset name: zf-solution-uploads
    Signing mode: Unsigned (for easier frontend uploads)
-   Folder: student-saas
+   Folder: zf-solution
    
    Transformations:
    - Format: Auto (best format for each browser)
@@ -317,7 +317,7 @@ const cloudinary = require("../config/cloudinary");
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
-        folder: "student-saas", // All images go in this folder
+        folder: "zf-solution", // All images go in this folder
         allowed_formats: ["jpg", "jpeg", "png", "gif", "webp"], // Allowed file types
         transformation: [
             { width: 1200, height: 1200, crop: "limit" }, // Max dimensions
@@ -632,7 +632,7 @@ const migrateImages = async () => {
             if (fs.existsSync(localPath)) {
                 // Upload to Cloudinary
                 const result = await cloudinary.uploader.upload(localPath, {
-                    folder: "student-saas",
+                    folder: "zf-solution",
                     public_id: `student-${student.id}-${Date.now()}`,
                 });
 
@@ -665,7 +665,7 @@ javascript<img src={`${API_URL}${student.profile_photo}`} alt="Profile" />
 // Example: http://localhost:8080/uploads/image.jpg
 After (Cloudinary URL):
 javascript<img src={student.profile_photo} alt="Profile" />
-// Example: https://res.cloudinary.com/abc123/image/upload/student-saas/image.jpg
+// Example: https://res.cloudinary.com/abc123/image/upload/zf-solution/image.jpg
 ✅ Just remove the API_URL prefix!
 
 Step 4.2: Update Upload Forms
@@ -750,7 +750,7 @@ Step 4.3: Add Image Optimization (Optional)
 Cloudinary allows on-the-fly transformations via URL!
 Example:
 javascript// Original Cloudinary URL
-const originalUrl = "https://res.cloudinary.com/abc123/image/upload/v12345/student-saas/image.jpg";
+const originalUrl = "https://res.cloudinary.com/abc123/image/upload/v12345/zf-solution/image.jpg";
 
 // Optimized versions (just change URL)
 
@@ -943,7 +943,7 @@ Go to Vercel dashboard → Your project
 Settings → Environment Variables
 Update or add:
 
-   VITE_API_URL=https://student-saas-backend.onrender.com
+   VITE_API_URL=https://zf-solution-backend.onrender.com
 
 Redeploy frontend
 
@@ -1201,7 +1201,7 @@ json{
   "data": {
     "id": 1,
     "name": "John Doe",
-    "profile_photo": "https://res.cloudinary.com/abc123/image/upload/v1234567890/student-saas/john-1234567890.jpg"
+    "profile_photo": "https://res.cloudinary.com/abc123/image/upload/v1234567890/zf-solution/john-1234567890.jpg"
   }
 }
 
@@ -1224,7 +1224,7 @@ Problem solved forever: ✅
 
 Document Version: 1.0
 Last Updated: April 2026
-Author: Student SaaS Documentation Team
+Author: ZF Solution Documentation Team
 
 🚀 QUICK START (TL;DR)
 Too long? Here's the 5-minute version:

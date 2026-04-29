@@ -51,7 +51,7 @@ if (isCloudinaryConfigured) {
         params: (req, file) => {
             const isImage = imageTypes.includes(file.mimetype);
             return {
-                folder: "student-saas/assignments",
+                folder: "zf-solution/assignments",
                 resource_type: isImage ? "image" : "raw",
                 public_id: `asg-${Date.now()}-${Math.round(Math.random() * 1e6)}`,
                 ...(isImage && {

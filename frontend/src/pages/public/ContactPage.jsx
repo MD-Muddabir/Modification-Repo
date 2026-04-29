@@ -121,7 +121,7 @@ function ContactPage() {
 
                     <div className="contact-info">
                         <div className="info-item">
-                            <strong>📧 Email:</strong> support@edumanage.com
+                            <strong>📧 Email:</strong> <a href="mailto:support@zfsolution.com">support@zfsolution.com</a>
                         </div>
                         <div className="info-item">
                             <strong>📞 Phone:</strong> +91 123 456 7890

@@ -14,7 +14,7 @@ function InstituteLogo({ size = "md" }) {
     const [imgError, setImgError] = useState(false);
 
     let logoUrl = user?.institute_logo;
-    
+
     // Resolve relative URL using the environment's backend server URL
     if (logoUrl && logoUrl.startsWith("/")) {
         const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";

@@ -8,6 +8,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { useRazorpayPayment } from "../../hooks/useRazorpayPayment";
 import "./PaymentPage.css";
+import zfLogo from "../../assets/zf-logo.png";
 
 function PaymentPage() {
     const [searchParams] = useSearchParams();
@@ -135,7 +136,7 @@ function PaymentPage() {
                         order_id: order.id,
                     },
                     userConfig: {
-                        institute_name: institute_name || instituteName || "EduManage SaaS",
+                        institute_name: institute_name || instituteName || "ZF Solution",
                         description: `Subscription for ${plan.name}`,
                         name: "Institute Admin",
                         email: "admin@example.com",
@@ -211,8 +212,8 @@ function PaymentPage() {
                 <div className="checkout-panel checkout-left">
                     {/* Logo + Brand */}
                     <div className="checkout-brand">
-                        <span className="checkout-brand-icon">🎓</span>
-                        <span className="checkout-brand-name">EduManage</span>
+                        <img src={zfLogo} alt="ZF Solution" className="checkout-brand-icon" style={{ height: '40px', width: '40px', objectFit: 'contain', borderRadius: '8px' }} />
+                        <span className="checkout-brand-name">ZF Solution</span>
                     </div>
 
                     {/* Plan Badge */}

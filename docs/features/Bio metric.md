@@ -1,9 +1,9 @@
 🔐
 BIOMETRIC ATTENDANCE
 Complete Feature Design & Implementation Guide
-Student SaaS — Multi-Tenant Coaching ERP Platform
+ZF Solution — Multi-Tenant Coaching ERP Platform
 Module	Biometric Attendance System
-Project	Student SaaS (MD-Muddabir/Student-SaaS)
+Project	ZF Solution (MD-Muddabir/zf-solution)
 Scope	Hardware + Backend + Frontend + Database
 Phases Covered	12 Implementation Phases
 Device Types	Fingerprint, Face, RFID, Mobile OTP
@@ -11,7 +11,7 @@ Integration	REST API + WebSocket + Cron Jobs
 Document Type	Architecture + Implementation Guide
  
 1. What is Biometric Attendance?
-Biometric Attendance is an automated attendance tracking system that identifies individuals using unique physical or behavioral characteristics instead of manual roll call or card swipes. In the context of Student SaaS, it replaces the manual attendance process with hardware devices that auto-mark attendance in real time, syncing directly with the backend database.
+Biometric Attendance is an automated attendance tracking system that identifies individuals using unique physical or behavioral characteristics instead of manual roll call or card swipes. In the context of ZF Solution, it replaces the manual attendance process with hardware devices that auto-mark attendance in real time, syncing directly with the backend database.
 
 The system works by enrolling (registering) a student's or faculty member's biometric data once, then verifying that data every time they enter or exit the premises. The verification result is sent to the SaaS backend via API, which records the attendance and triggers notifications.
 
@@ -33,7 +33,7 @@ Iris Scanner	IrisGuard / Crossmatch	₹30,000+	99.9%	2–3 sec	High security cam
 Mobile OTP / QR	Software only (no hardware)	₹0	~95%	2–5 sec	Remote/online institutes
 
 
-2.1 Recommended Device for Student SaaS
+2.1 Recommended Device for ZF Solution
 For a coaching institute SaaS, the ideal choice is a combination strategy:
 
 Use Case	Recommended Device	Why

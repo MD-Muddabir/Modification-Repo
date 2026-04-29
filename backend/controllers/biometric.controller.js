@@ -1010,7 +1010,7 @@ exports.exportExcel = async (req, res) => {
 
         const ExcelJS = require("exceljs");
         const workbook = new ExcelJS.Workbook();
-        workbook.creator = "Student SaaS Biometric";
+        workbook.creator = "ZF Solution Biometric";
         workbook.created = new Date();
 
         const sheet = workbook.addWorksheet("Biometric Attendance", {

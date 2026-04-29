@@ -1,9 +1,9 @@
 📝
 ASSIGNMENT SUBMISSION
 Complete Feature Design & Implementation Guide
-Student SaaS — Multi-Tenant Coaching ERP Platform
+ZF Solution — Multi-Tenant Coaching ERP Platform
 Module	Assignment Submission System
-Project	Student SaaS (MD-Muddabir/Student-SaaS)
+Project	ZF Solution (MD-Muddabir/zf-solution)
 Total Phases	14 Implementation Phases
 Roles Covered	Super Admin, Owner, Manager, Faculty, Student, Parent
 File Support	PDF, DOCX, Images, ZIP (configurable)
@@ -14,7 +14,7 @@ Integration	Connects with Marks, Attendance, Analytics modules
 1. What Is the Assignment Submission Module?
 The Assignment Submission Module is an end-to-end digital workflow that replaces physical assignment collection in coaching institutes. Faculty create assignments with deadlines, attach instructions or reference files, and publish them to specific classes and subjects. Students submit their work digitally before the deadline. Faculty review, grade, and provide written feedback. The entire lifecycle is tracked, audited, and visible to admins and parents.
 
-This module elevates Student SaaS from a basic ERP into a Learning Management System (LMS), making it comparable to platforms like Google Classroom, Teachmint, and MyClassCampus.
+This module elevates ZF Solution from a basic ERP into a Learning Management System (LMS), making it comparable to platforms like Google Classroom, Teachmint, and MyClassCampus.
 
 Why This Feature Is Commercially Important
 ✅  Institutes can go fully paperless — major selling point for premium plans

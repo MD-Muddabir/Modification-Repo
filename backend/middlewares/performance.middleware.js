@@ -12,7 +12,7 @@ const performanceLogger = (req, res, next) => {
     // Attach request ID for tracing
     req.requestId = requestId;
     res.setHeader("X-Request-Id", requestId);
-    res.setHeader("X-Powered-By", "Student-SaaS");
+    res.setHeader("X-Powered-By", "zf-solution");
 
     res.on("finish", () => {
         const duration = Date.now() - start;

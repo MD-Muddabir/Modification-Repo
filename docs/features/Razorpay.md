@@ -1,8 +1,8 @@
 💳
 RAZORPAY INTEGRATION
 Complete Payment System — Where, How & All Phases
-Student SaaS — Multi-Tenant Coaching ERP Platform
-Project	Student SaaS (MD-Muddabir/Student-SaaS)
+ZF Solution — Multi-Tenant Coaching ERP Platform
+Project	ZF Solution (MD-Muddabir/zf-solution)
 Razorpay SDK	razorpay ^2.9.x (already installed)
 Use Cases Covered	3 — Subscription, Fees, In-App Purchases
 Payment Modes	UPI, Cards, Net Banking, Wallets, EMI
@@ -443,7 +443,7 @@ export function useRazorpayPayment() {
       key:      key_id,  // RAZORPAY_KEY_ID from backend
       amount:   amount_paise,
       currency: 'INR',
-      name:     'Student SaaS',
+      name:     'ZF Solution',
       description,
       order_id: razorpay_order_id,
       handler: async (response) => {

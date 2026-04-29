@@ -16,7 +16,7 @@ if (isCloudinaryConfigured) {
     logoStorage = new CloudinaryStorage({
         cloudinary,
         params: {
-            folder: "student-saas/logos",
+            folder: "zf-solution/logos",
             allowed_formats: ["jpg", "jpeg", "png", "webp"],
             transformation: [{ width: 400, height: 400, crop: "limit" }]
         }

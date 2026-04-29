@@ -49,7 +49,7 @@ exports.register = async (req, res) => {
         // ❌ This fails because emailService is not defined
         await emailService.sendEmail(
             req.body.email,
-            "Welcome to Student SaaS",
+            "Welcome to ZF Solution",
             `<h2>Welcome ${req.body.instituteName}</h2>`
         );
 
@@ -278,7 +278,7 @@ await User.create({ name })
    EMAIL_PORT=587
    EMAIL_USER=your-email@gmail.com
    EMAIL_PASS=your-app-password
-   EMAIL_FROM=Student SaaS <noreply@studentsaas.com>
+   EMAIL_FROM=ZF Solution <noreply@studentsaas.com>
    ```
 
 3. **Uncomment in auth.controller.js:**
@@ -287,7 +287,7 @@ await User.create({ name })
    
    await emailService.sendEmail(
        req.body.email,
-       "Welcome to Student SaaS",
+       "Welcome to ZF Solution",
        `<h2>Welcome ${req.body.instituteName}</h2>`
    );
    ```

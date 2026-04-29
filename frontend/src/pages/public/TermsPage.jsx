@@ -21,7 +21,7 @@ const TermsPage = () => {
                     <section className="legal-section">
                         <h2>1. Acceptance of Terms</h2>
                         <p>
-                            By accessing or using the Student SaaS platform ("Service"), you agree to be bound by these Terms of Service. If you disagree with any part of the terms, then you do not have permission to access the Service.
+                            By accessing or using the ZF Solution platform ("Service"), you agree to be bound by these Terms of Service. If you disagree with any part of the terms, then you do not have permission to access the Service.
                         </p>
                     </section>
 
@@ -55,7 +55,7 @@ const TermsPage = () => {
                     <section className="legal-section">
                         <h2>5. Intellectual Property</h2>
                         <p>
-                            The Service and its original content (excluding Content provided by users), features, and functionality are and will remain the exclusive property of Student SaaS and its licensors. The Service is protected by copyright, trademark, and other laws. Our trademarks and trade dress may not be used in connection with any product or service without the prior written consent of Student SaaS.
+                            The Service and its original content (excluding Content provided by users), features, and functionality are and will remain the exclusive property of ZF Solution and its licensors. The Service is protected by copyright, trademark, and other laws. Our trademarks and trade dress may not be used in connection with any product or service without the prior written consent of ZF Solution.
                         </p>
                     </section>
 
@@ -72,7 +72,7 @@ const TermsPage = () => {
                     <section className="legal-section">
                         <h2>7. Limitation Of Liability</h2>
                         <p>
-                            In no event shall Student SaaS, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from (i) your access to or use of or inability to access or use the Service; (ii) any conduct or content of any third party on the Service; (iii) any content obtained from the Service; and (iv) unauthorized access, use or alteration of your transmissions or content, whether based on warranty, contract, tort (including negligence) or any other legal theory.
+                            In no event shall ZF Solution, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from (i) your access to or use of or inability to access or use the Service; (ii) any conduct or content of any third party on the Service; (iii) any content obtained from the Service; and (iv) unauthorized access, use or alteration of your transmissions or content, whether based on warranty, contract, tort (including negligence) or any other legal theory.
                         </p>
                     </section>
 

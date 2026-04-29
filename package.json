@@ -1,5 +1,5 @@
 {
-  "name": "student-saas-project",
+  "name": "zf-solution-project",
   "private": true,
   "scripts": {
     "install-all": "npm install && npm install --prefix backend && npm install --prefix frontend",

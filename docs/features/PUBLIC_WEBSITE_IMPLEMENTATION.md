@@ -331,18 +331,18 @@ app.use("/api/contact", require("./routes/contact.routes"));
 import { Helmet } from "react-helmet";
 
 <Helmet>
-    <title>EduManage - Coaching Center Management Software</title>
+    <title>ZF Solution - Coaching Center Management Software</title>
     <meta name="description" content="Transform your coaching center with smart student management, attendance tracking, and fee collection. Join 50+ institutes." />
     <meta name="keywords" content="coaching management software, institute ERP, student management SaaS, attendance tracking" />
     
     {/* Open Graph */}
-    <meta property="og:title" content="EduManage - Coaching Center Management" />
+    <meta property="og:title" content="ZF Solution - Coaching Center Management" />
     <meta property="og:description" content="Professional coaching center management software" />
     <meta property="og:type" content="website" />
     
     {/* Twitter Card */}
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="EduManage" />
+    <meta name="twitter:title" content="ZF Solution" />
 </Helmet>
 ```
 

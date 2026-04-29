@@ -21,8 +21,8 @@ exports.sendOtpEmail = async (to, otp, type) => {
   const isReset = type === 'password_reset';
 
   const subject = isReset
-    ? 'Password Reset OTP — Student SaaS'
-    : 'Verify Your Email — Student SaaS';
+    ? 'Password Reset OTP — ZF Solution'
+    : 'Verify Your Email — ZF Solution';
 
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;
@@ -43,7 +43,7 @@ exports.sendOtpEmail = async (to, otp, type) => {
       </p>
       <hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0;"/>
       <p style="color:#9CA3AF;font-size:12px;text-align:center;">
-        Student SaaS Platform — Automated Email
+        ZF Solution Platform — Automated Email
       </p>
     </div>
   `;

@@ -10,6 +10,7 @@ import { ThemeContext } from "../../context/ThemeContext";
 import ThemeSelector from "../../components/ThemeSelector";
 import { isMobileApp, MOBILE_ALLOWED_ROLE } from "../../config/appVariant";
 import "./Auth.css";
+import zfLogo from "../../assets/zf-logo.png";
 
 function mobileAppLabel() {
   if (!isMobileApp || !MOBILE_ALLOWED_ROLE) return null;
@@ -70,7 +71,7 @@ function Login() {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     if (errors[e.target.name] || errors.general) {
-        setErrors({});
+      setErrors({});
     }
   };
 
@@ -83,15 +84,15 @@ function Login() {
     if (!formData.password) localErrors.password = "Please enter your password";
 
     if (Object.keys(localErrors).length > 0) {
-        setErrors(localErrors);
-        setTimeout(() => {
-            const firstErrorElement = document.querySelector(".auth-input--error");
-            if (firstErrorElement) {
-                firstErrorElement.scrollIntoView({ behavior: "smooth", block: "center" });
-                firstErrorElement.focus({ preventScroll: true });
-            }
-        }, 50);
-        return;
+      setErrors(localErrors);
+      setTimeout(() => {
+        const firstErrorElement = document.querySelector(".auth-input--error");
+        if (firstErrorElement) {
+          firstErrorElement.scrollIntoView({ behavior: "smooth", block: "center" });
+          firstErrorElement.focus({ preventScroll: true });
+        }
+      }, 50);
+      return;
     }
 
     setLoading(true);
@@ -126,25 +127,25 @@ function Login() {
       }
     } catch (err) {
       const msg = err.response?.data?.message || "Login failed. Please check your credentials.";
-      
+
       const scrollToErr = () => {
         setTimeout(() => {
-            const firstErrorElement = document.querySelector(".auth-input--error, .auth-alert");
-            if (firstErrorElement) {
-                firstErrorElement.scrollIntoView({ behavior: "smooth", block: "center" });
-            }
+          const firstErrorElement = document.querySelector(".auth-input--error, .auth-alert");
+          if (firstErrorElement) {
+            firstErrorElement.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
         }, 50);
       };
 
       if (msg.toLowerCase().includes("not found") || msg.toLowerCase().includes("email")) {
-          setErrors({ email: "Email not registered. Please check again." });
-          scrollToErr();
+        setErrors({ email: "Email not registered. Please check again." });
+        scrollToErr();
       } else if (msg.toLowerCase().includes("incorrect password") || msg.toLowerCase().includes("credentials")) {
-          setErrors({ password: "Incorrect password. Please try again." });
-          scrollToErr();
+        setErrors({ password: "Incorrect password. Please try again." });
+        scrollToErr();
       } else {
-          setErrors({ general: msg });
-          scrollToErr();
+        setErrors({ general: msg });
+        scrollToErr();
       }
     } finally {
       setLoading(false);
@@ -167,8 +168,8 @@ function Login() {
         <div className="auth-card">
           {/* Logo / Brand */}
           <div className="auth-header">
-            <div className="auth-logo">🎓</div>
-            <h1 className="auth-title">Student SaaS</h1>
+            <div className="auth-logo"><img src={zfLogo} alt="ZF Solution" style={{ height: '65px', width: '65px', objectFit: 'contain' }} /></div>
+            <h1 className="auth-title">ZF Solution</h1>
             <p className="auth-subtitle">
               {mobileAppLabel() ? `${mobileAppLabel()} — ` : ""}
               Sign in to your account

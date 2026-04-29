@@ -1,4 +1,4 @@
-# 🧪 API Testing Guide - Student SaaS
+# 🧪 API Testing Guide - ZF Solution
 
 ## Quick Start Testing
 
@@ -101,7 +101,7 @@ Invoke-RestMethod -Uri "http://localhost:5000/api/students" -Method GET -Headers
 
 ## Testing with Postman
 
-1. **Import Collection**: Create a new collection "Student SaaS"
+1. **Import Collection**: Create a new collection "ZF Solution"
 2. **Set Base URL**: `http://localhost:5000`
 3. **Add Environment Variable**: `token` (will be set after login)
 4. **Test Sequence**:

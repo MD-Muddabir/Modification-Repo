@@ -1,5 +1,5 @@
 
-🎓 EduManage SaaS
+🎓 ZF Solution
 Institute Public Web Page
 Complete Implementation Guide — Basic to Advanced
 
@@ -12,7 +12,7 @@ Every institute that buys your SaaS plan gets their own unique public website. T
 
 https://yourdomain.com/i/bright-future-academy
   OR
-https://brightfuture.edumanage.in  (custom subdomain, advanced)
+https://brightfuture.ZF Solution.in  (custom subdomain, advanced)
 
 This page shows: Institute name, logo, courses, faculty, stats, testimonials, contact info, and an enquiry form. All data comes from the institute's admin dashboard. Different institute = different data = different looking website. But the page layout/design stays the same for all institutes.
 
@@ -182,7 +182,7 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const storage = new CloudinaryStorage({
   cloudinary,
-  params: { folder: 'edumanage/institutes', allowed_formats: ['jpg','png','webp'] }
+  params: { folder: 'ZF Solution/institutes', allowed_formats: ['jpg','png','webp'] }
 });
 
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB max
@@ -609,5 +609,5 @@ Testing
 
 
 
-EduManage SaaS — Built for institutes across India 🇮🇳
-Powered by EduManage SaaS Platform
+ZF Solution — Built for institutes across India 🇮🇳
+Powered by ZF Solution Platform

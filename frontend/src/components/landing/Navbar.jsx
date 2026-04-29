@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import zfLogo from '../../assets/zf-logo.png';
 
 const NAV_LINKS = [
   { label: 'Home', href: '#home' },
@@ -104,7 +105,7 @@ export default function Navbar() {
   return (
     <nav className={`lp-nav ${scrolled ? 'scrolled' : ''}`}>
       <Link to="/" className='lp-logo'>
-        <span className='lp-logo-icon'>🎓</span> Student SaaS
+        <img src={zfLogo} alt="ZF Solution" style={{ height: '60px', width: '60px', objectFit: 'contain' }} />Solution
       </Link>
 
       <ul className='lp-nav-links'>
@@ -133,7 +134,7 @@ export default function Navbar() {
       </div>
 
       <button className='lp-hamburger' onClick={() => setDrawer(true)}>
-        <span/><span/><span/>
+        <span /><span /><span />
       </button>
 
       {drawer && (

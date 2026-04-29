@@ -1,6 +1,6 @@
-# 🎓 Student SaaS – Comprehensive Project Report
+# 🎓 ZF Solution – Comprehensive Project Report
 
-This document outlines all critical details of the `Student-SaaS-App` project. It is broken down into four key sections covering website deployment, mobile application publishing, system features, and a technical breakdown of the frontend and backend architectures.
+This document outlines all critical details of the `zf-solution-App` project. It is broken down into four key sections covering website deployment, mobile application publishing, system features, and a technical breakdown of the frontend and backend architectures.
 
 ---
 

@@ -1,5 +1,5 @@
 
-Student SaaS Platform
+ZF Solution Platform
 Institute Delete & Suspend
 Complete Professional Implementation Guide
 Foreign Key Fix  │  Cascade Delete  │  Suspend / Restore  │  Confirmation Modal  │  All 48 Tables

@@ -1,5 +1,5 @@
 const fs = require('fs');
-const file = 'd:\\Modification\\Version 1.0.8 D\\Student-SaaS-App\\frontend\\src\\pages\\admin\\Expenses.jsx';
+const file = 'd:\\Modification\\Version 1.0.8 D\\zf-solution-App\\frontend\\src\\pages\\admin\\Expenses.jsx';
 let content = fs.readFileSync(file, 'utf8');
 
 const replacements = {

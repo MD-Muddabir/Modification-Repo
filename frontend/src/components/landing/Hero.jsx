@@ -69,7 +69,7 @@ export default function Hero() {
                 <span className='lp-mockup-dot' style={{ background: '#22c55e' }} />
               </div>
               <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--lp-text)' }}>
-                Student SaaS
+                ZF Solution
               </div>
             </div>
             <div style={{ marginBottom: '24px' }}>

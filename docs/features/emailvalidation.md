@@ -1,4 +1,4 @@
-Student SaaS Platform
+ZF Solution Platform
 OTP Email Verification System
 Register & Forgot Password — Complete Implementation Guide
 Version 1.0  |  April 2026
@@ -6,7 +6,7 @@ Stack	Node.js + Express	MySQL + Sequelize	React + Vite
 
  
 1. Overview & Purpose
-This document provides a complete step-by-step implementation guide for adding OTP (One-Time Password) email verification to your Student SaaS platform. It covers two critical flows: Registration with email OTP verification and Forgot Password with email OTP reset. Every edge case, security consideration, and database change required is documented in phases.
+This document provides a complete step-by-step implementation guide for adding OTP (One-Time Password) email verification to your ZF Solution platform. It covers two critical flows: Registration with email OTP verification and Forgot Password with email OTP reset. Every edge case, security consideration, and database change required is documented in phases.
 
 1.1 Why OTP Verification Is Essential
 •	Prevents fake registrations with invalid or other people's email addresses
@@ -108,7 +108,7 @@ EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_USER=youremail@gmail.com
 EMAIL_PASS=your_gmail_app_password
-EMAIL_FROM=Student SaaS <youremail@gmail.com>
+EMAIL_FROM=ZF Solution <youremail@gmail.com>
 OTP_EXPIRY_MINUTES=10
 OTP_MAX_ATTEMPTS=5
 OTP_MAX_RESEND=3
@@ -153,8 +153,8 @@ const transporter = nodemailer.createTransport({
 exports.sendOtpEmail = async (email, otp, type) => {
   const isReset = type === 'password_reset';
   const subject = isReset
-    ? 'Password Reset OTP - Student SaaS'
-    : 'Verify Your Email - Student SaaS';
+    ? 'Password Reset OTP - ZF Solution'
+    : 'Verify Your Email - ZF Solution';
 
   const html = `
     <div style='font-family:Arial;max-width:500px;margin:auto;padding:30px;

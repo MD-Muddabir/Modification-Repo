@@ -21,7 +21,7 @@ const PrivacyPage = () => {
                     <section className="legal-section">
                         <h2>1. Introduction</h2>
                         <p>
-                            Welcome to Student SaaS. We respect your privacy and are committed to protecting your personal data. This privacy policy will inform you as to how we look after your personal data when you visit our website or use our application ("Service") and tell you about your privacy rights and how the law protects you.
+                            Welcome to ZF Solution. We respect your privacy and are committed to protecting your personal data. This privacy policy will inform you as to how we look after your personal data when you visit our website or use our application ("Service") and tell you about your privacy rights and how the law protects you.
                         </p>
                     </section>
 

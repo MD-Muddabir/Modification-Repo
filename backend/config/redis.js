@@ -5,7 +5,7 @@
  *
  * Setup:
  *  1. Go to https://upstash.com → Create free account
- *  2. Create DB: student-saas-cache
+ *  2. Create DB: zf-solution-cache
  *  3. Add to .env:
  *     UPSTASH_REDIS_REST_URL=https://xxx.upstash.io
  *     UPSTASH_REDIS_REST_TOKEN=your_token

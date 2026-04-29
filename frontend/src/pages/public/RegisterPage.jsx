@@ -13,6 +13,7 @@ import { ThemeContext } from "../../context/ThemeContext";
 import ThemeSelector from "../../components/ThemeSelector";
 import "../auth/Auth.css";
 import "./Register.css";
+import zfLogo from "../../assets/zf-logo.png";
 
 function RegisterPage() {
     const navigate = useNavigate();
@@ -488,7 +489,7 @@ function RegisterPage() {
                 <div className="auth-container" style={{ maxWidth: "560px" }}>
                     <div className="auth-card reg-card">
                         <div className="auth-header">
-                            <div className="auth-logo">🏫</div>
+                            <div className="auth-logo"><img src={zfLogo} alt="ZF Solution" style={{ height: '56px', width: '56px', objectFit: 'contain' }} /></div>
                             <h1 className="auth-title">Register Your Institute</h1>
                             <p className="auth-subtitle">Join thousands of institutes. Start free, scale as you grow.</p>
 

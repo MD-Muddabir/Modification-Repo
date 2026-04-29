@@ -1,5 +1,5 @@
 
-Student SaaS Platform
+ZF Solution Platform
 MySQL → Neon (PostgreSQL) Migration
 Complete Professional Migration Guide — All 48 Tables
 Zero Data Loss  │  Production-Safe  │  Sequelize Compatible  │  Free Tier Ready
@@ -124,7 +124,7 @@ Free tier — no credit card required
 
 Step-by-step Neon setup
 1.	Go to neon.tech — click Sign Up. Use GitHub login for fastest setup.
-2.	Click Create Project. Name it: student-saas-production
+2.	Click Create Project. Name it: zf-solution-production
 3.	Select Region: Asia Pacific (Singapore) — closest to India for low latency
 4.	Database name: student_saas (same as your current MySQL DB name)
 5.	Click Create Project — takes about 10 seconds
@@ -1342,7 +1342,7 @@ Always use the pooled URL for your production backend on Render.
  
 10.  Complete Migration Checklist
 Phase	Area	Task	Status
-1	Neon	Create Neon account and new project — student-saas-production	To Do
+1	Neon	Create Neon account and new project — zf-solution-production	To Do
 1	Neon	Select Singapore region for lowest latency from India	To Do
 1	Neon	Copy both regular and pooled connection strings	To Do
 2	Backend	npm uninstall mysql2 && npm install pg pg-hstore	To Do

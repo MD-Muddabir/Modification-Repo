@@ -1,5 +1,5 @@
 Mobile Responsive Design Guide
-EduManagePro Capacitor Mobile Apps
+ZF SolutionPro Capacitor Mobile Apps
 CSS Transformation: Basic to Advanced
 SCOPE: Student, Parent, Faculty Dashboards Only
 Mobile Screens: 320px - 428px width

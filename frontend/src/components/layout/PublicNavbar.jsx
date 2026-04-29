@@ -1,12 +1,13 @@
 import { Link } from "react-router-dom";
 import ThemeSelector from "../ThemeSelector";
 import "../../pages/public/Public.css";
+import zfLogo from "../../assets/zf-logo.png";
 
 const PublicNavbar = () => {
     return (
         <nav className="public-navbar">
             <Link to="/" className="nav-brand">
-                🎓 Student SaaS
+                <img src={zfLogo} alt="ZF Solution" style={{ height: '60px', width: '60px', objectFit: 'contain', verticalAlign: 'middle', marginRight: '6px' }} />ZF Solution
             </Link>
             <div className="nav-links">
                 <Link to="/" className="nav-link">Home</Link>

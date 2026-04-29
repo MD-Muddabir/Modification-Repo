@@ -9,7 +9,7 @@ const axios = require("axios");
 const BACKEND_URL =
     process.env.BACKEND_URL ||
     process.env.RENDER_EXTERNAL_URL ||
-    "https://student-saas-backend.onrender.com";
+    "https://zf-solution-backend.onrender.com";
 
 let pingInterval = null;
 

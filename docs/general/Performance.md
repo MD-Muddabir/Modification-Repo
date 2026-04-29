@@ -1,4 +1,4 @@
-🚀 Student SaaS Performance Optimization Guide
+🚀 ZF Solution Performance Optimization Guide
 📊 Current Performance Analysis
 Identified Issues:
 
@@ -158,7 +158,7 @@ Impact: Prevents abuse, reduces server load
 File: Create utils/keepAlive.js
 javascriptconst axios = require("axios");
 
-const BACKEND_URL = process.env.BACKEND_URL || "https://student-saas-backend.onrender.com";
+const BACKEND_URL = process.env.BACKEND_URL || "https://zf-solution-backend.onrender.com";
 
 // Ping self every 14 minutes to prevent sleep
 const keepAlive = () => {
@@ -330,7 +330,7 @@ Use Upstash Redis (Free 10,000 commands/day):
 
 Go to https://upstash.com
 Sign up (free, no credit card)
-Create database: student-saas-cache
+Create database: zf-solution-cache
 Copy UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN
 
 
@@ -717,7 +717,7 @@ json{
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://student-saas-backend.onrender.com/api/$1"
+      "destination": "https://zf-solution-backend.onrender.com/api/$1"
     },
     {
       "source": "/(.*)",

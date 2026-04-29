@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import api from "../../services/api";
 import "./Auth.css";
+import zfLogo from "../../assets/zf-logo.png";
 
 function Register() {
   const navigate = useNavigate();
@@ -74,11 +75,11 @@ function Register() {
       formPayload.append("password", formData.password);
       formPayload.append("planId", formData.planId || "");
       if (formData.logo) {
-          formPayload.append("logo", formData.logo);
+        formPayload.append("logo", formData.logo);
       }
 
       await api.post("/auth/register", formPayload, {
-          headers: { "Content-Type": "multipart/form-data" }
+        headers: { "Content-Type": "multipart/form-data" }
       });
 
       setSuccess(true);
@@ -128,7 +129,7 @@ function Register() {
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-header">
-          <h1 className="auth-title">🎓 Student SaaS</h1>
+          <h1 className="auth-title"><img src={zfLogo} alt="ZF Solution" style={{ height: '65px', width: '65px', objectFit: 'contain', verticalAlign: 'middle', marginRight: '8px' }} />ZF Solution</h1>
           <p className="auth-subtitle">Create your institute account</p>
         </div>
 
@@ -217,10 +218,10 @@ function Register() {
               accept="image/*"
               className="form-input"
               onChange={(e) => {
-                  if (e.target.files && e.target.files[0]) {
-                      setFormData({ ...formData, logo: e.target.files[0] });
-                      setError("");
-                  }
+                if (e.target.files && e.target.files[0]) {
+                  setFormData({ ...formData, logo: e.target.files[0] });
+                  setError("");
+                }
               }}
               style={{ padding: "0.5rem" }}
             />

@@ -1,5 +1,5 @@
 
-Student SaaS Platform
+ZF Solution Platform
 Professional Manager Types System
 Fine-Grained Role & Permission Architecture
 Fees Manager  │  Data Manager  │  Academic Manager  │  Operations Manager  │  HR Manager  │  Custom Manager

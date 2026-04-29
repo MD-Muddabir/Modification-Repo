@@ -1,4 +1,4 @@
-EduManagePro
+ZF SolutionPro
 Mobile App Implementation Roadmap
 Complete Phase-by-Phase Guide
 STRATEGIC DECISION: Use Capacitor.js
@@ -24,7 +24,7 @@ Table of Contents
  
 1. Executive Summary & Why Capacitor
 The Strategic Decision
-As a 2025 fresher building EduManagePro, your primary goal is to start earning revenue as quickly as possible. The technology choice must serve this business objective, not the other way around.
+As a 2025 fresher building ZF SolutionPro, your primary goal is to start earning revenue as quickly as possible. The technology choice must serve this business objective, not the other way around.
 •	React Native: Requires rewriting your entire frontend from scratch. React Native uses different components (View, Text) instead of web components (div, p). 
 •	Flutter: Requires learning Dart and rebuilding everything.
 •	Capacitor.js: Wraps your existing React web app into native Android and iOS apps. Zero rewrites needed.
@@ -49,18 +49,18 @@ Admin Dashboard	NO	LOW	Principals and office staff work from computers. Complex 
 
 Implementation Approach: Three Separate Apps
 Build three separate mobile apps from your single React codebase:
-12.	EduManagePro Student (for students)
+12.	ZF SolutionPro Student (for students)
 ◦	Features: View attendance, homework, exam results, timetable, announcements
 ◦	Login: Student ID + password
-◦	Package name: com.edumanagepro.student
-13.	EduManagePro Parent (for parents)
+◦	Package name: com.ZF Solutionpro.student
+13.	ZF SolutionPro Parent (for parents)
 ◦	Features: Push notifications for child absence, fee reminders, view report cards, contact teachers
 ◦	Login: Parent mobile number + OTP or password
-◦	Package name: com.edumanagepro.parent
-14.	EduManagePro Teacher (for teachers)
+◦	Package name: com.ZF Solutionpro.parent
+14.	ZF SolutionPro Teacher (for teachers)
 ◦	Features: Quick attendance marking, view class schedule, post homework, basic grading
 ◦	Heavy tasks (detailed report generation, bulk grade upload) redirect to web version
-◦	Package name: com.edumanagepro.teacher
+◦	Package name: com.ZF Solutionpro.teacher
 
 Why Admin Stays Web-Only
 •	Admin tasks require large screens: generating 300-student report cards, bulk fee processing, timetable creation with drag-and-drop
@@ -81,7 +81,7 @@ Your Existing React Code (100% Reused)
 
 Project Structure
 Your project will have this structure after Capacitor integration:
-edumanagepro/
+ZF Solutionpro/
 ├── src/                    # Your React source code
 ├── public/                 # Static assets
 ├── build/                  # React production build
@@ -109,8 +109,8 @@ npm install @capacitor/core @capacitor/cli
 # Initialize Capacitor
 npx cap init
 # Follow prompts:
-App name: EduManagePro Student
-Package ID: com.edumanagepro.student
+App name: ZF SolutionPro Student
+Package ID: com.ZF Solutionpro.student
 Web directory: build
 # Add Android platform
 npm install @capacitor/android
@@ -154,7 +154,7 @@ npx cap open android
 
 3-4: Configure App Identity
 Edit android/app/src/main/AndroidManifest.xml:
-•	Set app name: EduManagePro Student
+•	Set app name: ZF SolutionPro Student
 •	Set app icon (create icon in android/app/src/main/res/)
 •	Set permissions: INTERNET, ACCESS_NETWORK_STATE
 •	Configure deep linking (for password reset emails)
@@ -167,8 +167,8 @@ Edit android/app/src/main/AndroidManifest.xml:
 
 3: Parent & Teacher Apps
 Repeat the same process for parent and teacher apps:
-•	Parent app: com.edumanagepro.parent
-•	Teacher app: com.edumanagepro.teacher
+•	Parent app: com.ZF Solutionpro.parent
+•	Teacher app: com.ZF Solutionpro.teacher
 •	Each gets its own Android Studio project in separate folders
 
 2-3 Deliverables
@@ -268,10 +268,10 @@ Screenshots	Minimum 2, maximum 8 (phone screenshots)
 
 4-5: Write Store Listing
 Example for Student App:
-Title: EduManagePro Student - School Management
+Title: ZF SolutionPro Student - School Management
 Short Description: Check your attendance, homework, and exam results instantly
 Full Description:
-EduManagePro Student helps students stay on top of their school life. View your daily attendance, check homework assignments, see exam results, and get instant notifications from your teachers — all in one app.
+ZF SolutionPro Student helps students stay on top of their school life. View your daily attendance, check homework assignments, see exam results, and get instant notifications from your teachers — all in one app.
 Features:
 • Real-time attendance tracking
 • Homework and assignment notifications

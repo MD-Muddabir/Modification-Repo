@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "./PublicPages.css";
 import api from "../../services/api";
+import zfLogo from "../../assets/zf-logo.png";
 
 function LandingPage() {
     const [stats, setStats] = useState({
@@ -28,7 +29,7 @@ function LandingPage() {
                 <div className="container">
                     <div className="nav-content">
                         <Link to="/" className="logo">
-                            🎓 <span>EduManage</span>
+                            <img src={zfLogo} alt="ZF Solution" style={{ height: '60px', width: '60px', objectFit: 'contain', verticalAlign: 'middle' }} /> ZF Solution
                         </Link>
                         <div className="nav-links">
                             <Link to="/features">Features</Link>
@@ -51,7 +52,7 @@ function LandingPage() {
                         </h1>
                         <p className="hero-subtitle">
                             Streamline student management, attendance tracking, and fee collection all in one powerful platform.
-                            Join 50+ coaching centers already growing with EduManage.
+                            Join 50+ coaching centers already growing with ZF Solution.
                         </p>
                         <div className="hero-cta">
                             <Link to="/register" className="btn-primary-large">
@@ -200,7 +201,7 @@ function LandingPage() {
                         <div className="testimonial-card">
                             <div className="testimonial-rating">⭐⭐⭐⭐⭐</div>
                             <p className="testimonial-text">
-                                "EduManage transformed how we run our coaching center. Attendance tracking is now effortless,
+                                "ZF Solution transformed how we run our coaching center. Attendance tracking is now effortless,
                                 and parents love the instant updates!"
                             </p>
                             <div className="testimonial-author">
@@ -238,7 +239,7 @@ function LandingPage() {
             <section className="final-cta-section">
                 <div className="container">
                     <h2 className="cta-title">Start Managing Your Institute Today</h2>
-                    <p className="cta-subtitle">Join hundreds of coaching centers already using EduManage</p>
+                    <p className="cta-subtitle">Join hundreds of coaching centers already using ZF Solution</p>
                     <div className="cta-buttons">
                         <Link to="/register" className="btn-primary-large">
                             🚀 Start Free Trial
@@ -256,7 +257,7 @@ function LandingPage() {
                 <div className="container">
                     <div className="footer-grid">
                         <div className="footer-col">
-                            <h4>EduManage</h4>
+                            <h4>ZF Solution</h4>
                             <p>Professional coaching center management software</p>
                         </div>
                         <div className="footer-col">
@@ -273,12 +274,12 @@ function LandingPage() {
                         </div>
                         <div className="footer-col">
                             <h4>Connect</h4>
-                            <a href="mailto:support@edumanage.com">support@edumanage.com</a>
+                            <a href="mailto:support@zfsolution.com">support@zfsolution.com</a>
                             <a href="tel:+911234567890">+91 123 456 7890</a>
                         </div>
                     </div>
                     <div className="footer-bottom">
-                        <p>&copy; 2026 EduManage. All rights reserved.</p>
+                        <p>&copy; 2026 ZF Solution. All rights reserved.</p>
                     </div>
                 </div>
             </footer>

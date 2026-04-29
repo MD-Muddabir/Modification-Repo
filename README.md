@@ -1,4 +1,4 @@
-# 🎓 Student SaaS – Multi-Tenant Coaching ERP System
+# 🎓 ZF Solution – Multi-Tenant Coaching ERP System
 
 A scalable, modular, multi-tenant SaaS platform for coaching institutes.
 
@@ -16,7 +16,7 @@ Built With:
 
 # 🏗 Project Architecture
 
-student-saas/
+zf-solution/
 │
 ├── backend/
 │ ├── config/

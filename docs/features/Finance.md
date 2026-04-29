@@ -1,5 +1,5 @@
 
-Student SaaS Platform
+ZF Solution Platform
 Finance & Expenses Module
 Complete Professional Implementation Guide
 Faculty Salary  │  Student Fees  │  Revenue  │  Profit & Loss  │  Analytics
@@ -9,7 +9,7 @@ Version 1.0  │  April 2026  │  Confidential
 
  
 1.  Module Overview & Architecture
-The Finance & Expenses module is the most sensitive module in your Student SaaS platform. It handles real money — student fee collections, faculty salaries, institute expenses, and your SaaS revenue. This document provides a complete, production-grade implementation blueprint covering database design, backend API, frontend UI, graphs, validations, role-based access, and edge cases.
+The Finance & Expenses module is the most sensitive module in your ZF Solution platform. It handles real money — student fee collections, faculty salaries, institute expenses, and your SaaS revenue. This document provides a complete, production-grade implementation blueprint covering database design, backend API, frontend UI, graphs, validations, role-based access, and edge cases.
 
 1.1  What This Module Covers
 #	Feature Area	Who Manages	Description
