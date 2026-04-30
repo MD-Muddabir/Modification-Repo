@@ -29,30 +29,39 @@ class OptimizedQueries {
      * @param {object} filters - optional: { classId, status, search }
      */
     static async getStudentsList(instituteId, page = 1, limit = 50, filters = {}) {
-        const { Student, Class } = getModels();
+        const { Student, User, Class } = getModels();
         const where = { institute_id: instituteId };
+        const userWhere = {};
 
-        if (filters.classId) where.class_id = filters.classId;
-        if (filters.status !== undefined) where.status = filters.status;
+        if (filters.status !== undefined) userWhere.status = filters.status;
         if (filters.search) {
-            where[Op.or] = [
+            userWhere[Op.or] = [
                 { name: { [Op.like]: `%${filters.search}%` } },
                 { email: { [Op.like]: `%${filters.search}%` } },
                 { phone: { [Op.like]: `%${filters.search}%` } },
             ];
         }
 
+        const classInclude = {
+            model: Class,
+            attributes: ["id", "name", "section"],
+            through: { attributes: [] },
+            required: Boolean(filters.classId),
+        };
+        if (filters.classId) classInclude.where = { id: filters.classId };
+
         return Student.findAndCountAll({
             where,
             include: [
                 {
-                    model: Class,
-                    as: "studentClass",
-                    attributes: ["id", "name"],
-                    required: false,
+                    model: User,
+                    attributes: ["id", "name", "email", "phone", "status"],
+                    where: userWhere,
+                    required: Boolean(filters.search || filters.status !== undefined),
                 },
+                classInclude,
             ],
-            attributes: ["id", "name", "email", "phone", "class_id", "status", "roll_number", "created_at"],
+            attributes: ["id", "user_id", "roll_number", "created_at"],
             limit,
             offset: (page - 1) * limit,
             order: [["created_at", "DESC"]],
@@ -126,10 +135,10 @@ class OptimizedQueries {
         return Subscription.findOne({
             where: {
                 institute_id: instituteId,
-                status: "active",
-                subscription_end: { [Op.gte]: new Date() },
+                payment_status: "paid",
+                end_date: { [Op.gte]: new Date() },
             },
-            attributes: ["id", "plan_id", "subscription_end", "status"],
+            attributes: ["id", "plan_id", "end_date", "payment_status"],
             raw: true,
         });
     }
@@ -142,27 +151,30 @@ class OptimizedQueries {
      * Get faculty list with assigned subjects (eager load).
      */
     static async getFacultyList(instituteId, page = 1, limit = 50) {
-        const { Faculty, Subject, Class } = getModels();
+        const { Faculty, User, Subject, Class } = getModels();
 
         return Faculty.findAndCountAll({
             where: { institute_id: instituteId },
             include: [
                 {
+                    model: User,
+                    attributes: ["id", "name", "email", "phone", "status"],
+                    required: true,
+                },
+                {
                     model: Subject,
-                    as: "subjects",
                     attributes: ["id", "name"],
                     required: false,
                     include: [
                         {
                             model: Class,
-                            as: "class",
-                            attributes: ["id", "name"],
+                            attributes: ["id", "name", "section"],
                             required: false,
                         },
                     ],
                 },
             ],
-            attributes: ["id", "name", "email", "phone", "subject", "status", "created_at"],
+            attributes: ["id", "user_id", "designation", "salary", "join_date", "created_at"],
             limit,
             offset: (page - 1) * limit,
             order: [["created_at", "DESC"]],
@@ -181,11 +193,11 @@ class OptimizedQueries {
         const { Plan } = getModels();
 
         return Plan.findAll({
-            where: { is_active: true },
+            where: { status: "active" },
             attributes: [
-                "id", "name", "price", "billing_cycle", "max_students",
-                "max_faculty", "features", "is_free_trial", "trial_days",
-                "feature_public_page"
+                "id", "name", "description", "price", "max_students",
+                "max_faculty", "max_classes", "max_admin_users",
+                "is_free_trial", "trial_days", "feature_public_page"
             ],
             order: [["price", "ASC"]],
             raw: true,
@@ -207,7 +219,6 @@ class OptimizedQueries {
             include: [
                 {
                     model: Subject,
-                    as: "subjects",
                     attributes: ["id", "name", "faculty_id"],
                     required: false,
                 },

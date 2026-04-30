@@ -49,11 +49,37 @@ function RegisterPage() {
     useEffect(() => {
         fetchPlans();
         fetchOtpMode();
-        const savedPlan = localStorage.getItem("selectedPlan");
-        if (savedPlan) setFormData(prev => ({ ...prev, planId: savedPlan }));
-
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    useEffect(() => {
+        if (plans.length > 0) {
+            const queryParams = new URLSearchParams(window.location.search);
+            const planParam = queryParams.get("plan");
+            const savedPlan = localStorage.getItem("selectedPlan");
+            
+            let selectedPlanId = "";
+            
+            if (planParam && planParam !== "free_trial") {
+                selectedPlanId = planParam;
+            } else if (planParam === "free_trial") {
+                 const freePlan = plans.find(p => p.is_free_trial || parseFloat(p.price) === 0);
+                 if (freePlan) selectedPlanId = freePlan.id;
+            } else if (savedPlan) {
+                selectedPlanId = savedPlan;
+            }
+            
+            // Default to Free Trial if nothing else is specified
+            if (!selectedPlanId) {
+                const freePlan = plans.find(p => p.is_free_trial || parseFloat(p.price) === 0);
+                if (freePlan) selectedPlanId = freePlan.id.toString();
+            }
+
+            if (selectedPlanId) {
+                setFormData(prev => ({ ...prev, planId: selectedPlanId.toString() }));
+            }
+        }
+    }, [plans]);
 
     // Countdown timer
     useEffect(() => {
@@ -261,16 +287,18 @@ function RegisterPage() {
                 setTimerActive(false);
                 const selectedPlan = plans.find(p => p.id === parseInt(formData.planId));
                 if (res.data.token) {
-                    localStorage.setItem("token", res.data.token);
-                    localStorage.setItem("user", JSON.stringify(res.data.user));
+                    sessionStorage.setItem("token", res.data.token);
+                    sessionStorage.setItem("user", JSON.stringify(res.data.user));
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("user");
                     setUser(res.data.user);
                 }
                 if (selectedPlan && selectedPlan.price > 0 && !selectedPlan.is_free_trial) {
                     alert("Registration successful! Redirecting to payment...");
                     navigate("/checkout");
                 } else {
-                    localStorage.removeItem("token");
-                    localStorage.removeItem("user");
+                    sessionStorage.removeItem("token");
+                    sessionStorage.removeItem("user");
                     const msg = selectedPlan?.is_free_trial
                         ? "Registration successful! Your free trial is active. Please login."
                         : "Registration successful! Please login to continue.";

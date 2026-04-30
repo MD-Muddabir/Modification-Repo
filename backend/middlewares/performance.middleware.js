@@ -29,6 +29,23 @@ const performanceLogger = (req, res, next) => {
         // Log slow requests in all environments
         if (duration > 1000) {
             console.warn(`⚠️  SLOW REQUEST: [${requestId}] ${method} ${url} → ${statusCode} took ${duration}ms`);
+            const { SlowRequestLog } = require("../models");
+            SlowRequestLog.create({
+                institute_id: req.user?.institute_id || null,
+                user_id: req.user?.id || null,
+                user_role: req.user?.role || null,
+                method,
+                path: url,
+                status_code: statusCode,
+                duration_ms: duration,
+                request_id: requestId,
+                ip_address: req.ip,
+                user_agent: req.get("user-agent") || null,
+            }).catch(err => {
+                if (process.env.NODE_ENV === "development") {
+                    console.warn("Slow request log write failed:", err.message);
+                }
+            });
         }
 
         // Log very slow requests as errors

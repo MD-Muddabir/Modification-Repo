@@ -3,12 +3,28 @@ import { loginUser } from "../services/auth.service";
 
 export const AuthContext = createContext();
 
+const persistSession = (token, user) => {
+  sessionStorage.setItem("token", token);
+  sessionStorage.setItem("user", JSON.stringify(user));
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
     const verifySession = async () => {
+      const legacyToken = localStorage.getItem("token");
+      const legacyUser = localStorage.getItem("user");
+      if (!sessionStorage.getItem("token") && legacyToken) {
+        sessionStorage.setItem("token", legacyToken);
+        if (legacyUser) sessionStorage.setItem("user", legacyUser);
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
+
       const token = sessionStorage.getItem("token");
       if (!token) {
         setIsInitializing(false);
@@ -59,8 +75,7 @@ export const AuthProvider = ({ children }) => {
     
     user.isPlanExpired = isExpired;
 
-    sessionStorage.setItem("token", token);
-    sessionStorage.setItem("user", JSON.stringify(user));
+    persistSession(token, user);
     sessionStorage.setItem("isPlanExpired", isExpired ? "true" : "false");
 
     setUser(user);

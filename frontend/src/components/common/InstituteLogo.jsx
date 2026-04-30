@@ -16,10 +16,13 @@ function InstituteLogo({ size = "md" }) {
     let logoUrl = user?.institute_logo;
 
     // Resolve relative URL using the environment's backend server URL
-    if (logoUrl && logoUrl.startsWith("/")) {
+    if (logoUrl && !logoUrl.startsWith("http") && !logoUrl.startsWith("data:")) {
+        const normalizedPath = logoUrl.replace(/\\/g, '/');
+        const pathWithSlash = normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`;
+        
         const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
         const backendBase = apiUrl.replace(/\/api\/?$/, ""); // strip /api
-        logoUrl = `${backendBase}${logoUrl}`;
+        logoUrl = `${backendBase}${pathWithSlash}`;
     }
 
     const name = user?.institute_name || user?.name || "I";

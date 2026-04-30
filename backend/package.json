@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
+    "migrate:safe": "node scripts/apply-startup-migrations.js",
     "fix-indexes": "node scripts/fix-indexes.js"
   },
   "dependencies": {

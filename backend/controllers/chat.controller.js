@@ -1,5 +1,5 @@
 const { ChatRoom, ChatMessage, ChatParticipant, User, Faculty, Student, Class, Subject } = require("../models");
-const { Op } = require("sequelize");
+const { Op, fn, col } = require("sequelize");
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────
 
@@ -181,36 +181,65 @@ exports.getRooms = async (req, res) => {
         const { type, faculty_id, subject_id, class_id, parent_id } = req.query;
 
         async function enhanceAndSortRooms(roomsArray) {
-            const result = [];
-            for (const r of roomsArray) {
+            if (!roomsArray.length) return [];
+
+            const roomIds = roomsArray.map(r => r.id);
+            const [messageStats, participants] = await Promise.all([
+                ChatMessage.findAll({
+                    where: { room_id: { [Op.in]: roomIds } },
+                    attributes: [
+                        "room_id",
+                        [fn("COUNT", col("id")), "message_count"],
+                        [fn("MAX", col("created_at")), "last_message_at"],
+                    ],
+                    group: ["room_id"],
+                    raw: true,
+                }),
+                ChatParticipant.findAll({
+                    where: { room_id: { [Op.in]: roomIds }, user_id: userId },
+                    attributes: ["room_id", "last_read_at"],
+                    raw: true,
+                }),
+            ]);
+
+            const statsByRoom = new Map(messageStats.map(row => [
+                Number(row.room_id),
+                {
+                    message_count: Number(row.message_count || 0),
+                    last_message_at: row.last_message_at,
+                },
+            ]));
+            const participantByRoom = new Map(participants.map(p => [Number(p.room_id), p]));
+
+            const unreadFilters = participants
+                .filter(p => p.last_read_at)
+                .map(p => ({
+                    room_id: Number(p.room_id),
+                    created_at: { [Op.gt]: p.last_read_at },
+                }));
+
+            const unreadRows = unreadFilters.length
+                ? await ChatMessage.findAll({
+                    where: { [Op.or]: unreadFilters },
+                    attributes: ["room_id", [fn("COUNT", col("id")), "unread_count"]],
+                    group: ["room_id"],
+                    raw: true,
+                })
+                : [];
+            const unreadByRoom = new Map(unreadRows.map(row => [Number(row.room_id), Number(row.unread_count || 0)]));
+
+            const result = roomsArray.map(r => {
                 const rData = r.toJSON();
-                const msgCount = await ChatMessage.count({ where: { room_id: r.id } });
+                const stats = statsByRoom.get(Number(r.id)) || { message_count: 0, last_message_at: null };
+                const participant = participantByRoom.get(Number(r.id));
+                rData.message_count = stats.message_count;
+                rData.unread_count = participant?.last_read_at
+                    ? (unreadByRoom.get(Number(r.id)) || 0)
+                    : stats.message_count;
+                rData.last_message_at = stats.last_message_at || r.created_at;
+                return rData;
+            });
 
-                const participant = await ChatParticipant.findOne({ where: { room_id: r.id, user_id: userId } });
-                let unreadCount = 0;
-
-                if (participant && participant.last_read_at) {
-                    unreadCount = await ChatMessage.count({
-                        where: {
-                            room_id: r.id,
-                            created_at: { [Op.gt]: participant.last_read_at }
-                        }
-                    });
-                } else {
-                    // Not joined or first time seeing: all messages are unread
-                    unreadCount = msgCount;
-                }
-
-                const lastMsg = await ChatMessage.findOne({
-                    where: { room_id: r.id },
-                    order: [['created_at', 'DESC']],
-                    attributes: ['created_at']
-                });
-                rData.message_count = msgCount;
-                rData.unread_count = unreadCount;
-                rData.last_message_at = lastMsg ? lastMsg.created_at : r.created_at;
-                result.push(rData);
-            }
             result.sort((a, b) => new Date(b.last_message_at).getTime() - new Date(a.last_message_at).getTime());
             return result;
         }

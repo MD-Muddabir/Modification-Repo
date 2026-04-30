@@ -37,7 +37,7 @@ function LandingPage() {
                             <Link to="/about">About</Link>
                             <Link to="/contact">Contact</Link>
                             <Link to="/login" className="btn-secondary">Login</Link>
-                            <Link to="/register" className="btn-primary">Start Free Trial</Link>
+                            <Link to="/register?plan=free_trial" className="btn-primary">Start Free Trial</Link>
                         </div>
                     </div>
                 </div>
@@ -55,7 +55,7 @@ function LandingPage() {
                             Join 50+ coaching centers already growing with ZF Solution.
                         </p>
                         <div className="hero-cta">
-                            <Link to="/register" className="btn-primary-large">
+                            <Link to="/register?plan=free_trial" className="btn-primary-large">
                                 🚀 Start Free Trial
                             </Link>
                             <Link to="/pricing" className="btn-secondary-large">
@@ -241,7 +241,7 @@ function LandingPage() {
                     <h2 className="cta-title">Start Managing Your Institute Today</h2>
                     <p className="cta-subtitle">Join hundreds of coaching centers already using ZF Solution</p>
                     <div className="cta-buttons">
-                        <Link to="/register" className="btn-primary-large">
+                        <Link to="/register?plan=free_trial" className="btn-primary-large">
                             🚀 Start Free Trial
                         </Link>
                         <Link to="/pricing" className="btn-secondary-large">

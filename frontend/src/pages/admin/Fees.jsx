@@ -226,7 +226,7 @@ function Fees() {
         }
         try {
             // Fetch all students in this class for individual student selection
-            const sRes = await api.get(`/students?class_id=${classId}&limit=500`);
+            const sRes = await api.get(`/students/lookup?class_id=${classId}&limit=200`);
             setAllStudentsForClass(sRes.data.data || []);
         } catch (err) {
             console.error('Failed to load students for class:', err);

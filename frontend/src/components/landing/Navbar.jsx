@@ -49,7 +49,7 @@ function MobileDrawer({ onClose, scrollTo, onLoginClick }) {
           >
             Login / Dashboard
           </button>
-          <Link to='/register' className='lp-btn-primary'>Get Started Free</Link>
+          <Link to='/register?plan=free_trial' className='lp-btn-primary'>Get Started Free</Link>
         </div>
       </aside>
     </>
@@ -89,8 +89,8 @@ export default function Navbar() {
   // Phase 1 Fix: Smart Login — if already logged in redirect to role dashboard, else go to /login
   const handleLoginClick = () => {
     try {
-      const token = localStorage.getItem('token');
-      const user = JSON.parse(localStorage.getItem('user') || 'null');
+      const token = sessionStorage.getItem('token') || localStorage.getItem('token');
+      const user = JSON.parse(sessionStorage.getItem('user') || localStorage.getItem('user') || 'null');
       if (token && user?.role) {
         navigate(getDashboardPath(user.role));
       } else {
@@ -130,7 +130,7 @@ export default function Navbar() {
         >
           Login
         </button>
-        <Link to='/register' className='lp-btn-primary'>Start Free Trial</Link>
+        <Link to='/register?plan=free_trial' className='lp-btn-primary'>Start Free Trial</Link>
       </div>
 
       <button className='lp-hamburger' onClick={() => setDrawer(true)}>

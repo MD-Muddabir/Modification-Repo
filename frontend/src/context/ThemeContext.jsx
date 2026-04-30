@@ -33,8 +33,8 @@ const applyClasses = (isDark, style) => {
 export const ThemeProvider = ({ children }) => {
     const { user } = useContext(AuthContext);
 
-    const [isDark, setIsDark] = useState(false);
-    const [themeStyle, setThemeStyle] = useState("simple");
+    const [isDark, setIsDark] = useState(true);
+    const [themeStyle, setThemeStyle] = useState("pro");
 
     const lsDarkKey = useCallback(() => darkKey(user), [user]);
     const lsStyleKey = useCallback(() => styleKey(user), [user]);
@@ -48,14 +48,14 @@ export const ThemeProvider = ({ children }) => {
     useEffect(() => {
         if (!user) {
             // Logged out → reset
-            setIsDark(false);
-            setThemeStyle("simple");
+            setIsDark(true);
+            setThemeStyle("pro");
             return;
         }
 
         // DB values supplied by the login response
-        const dbDark = user.theme_dark ?? false;
-        const dbStyle = user.theme_style ?? "simple";
+        const dbDark = user.theme_dark ?? true;
+        const dbStyle = user.theme_style ?? "pro";
 
         // Prefer localStorage cache (more recent than DB if user changed while offline)
         const dk = lsDarkKey();

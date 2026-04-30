@@ -4,7 +4,7 @@
  * Implements institute-level data isolation
  */
 
-const { Student, User, Class, Institute, Plan, Subject, StudentSubject, StudentClass, Faculty, StudentParent } = require("../models");
+const { sequelize, Student, User, Class, Institute, Plan, Subject, StudentSubject, StudentClass, Faculty, StudentParent } = require("../models");
 const { Op } = require("sequelize");
 const { hashPassword } = require("../utils/hashPassword");
 
@@ -15,6 +15,7 @@ const { hashPassword } = require("../utils/hashPassword");
  */
 
 exports.createStudent = async (req, res) => {
+    let transaction;
     try {
         const {
             name,
@@ -34,18 +35,23 @@ exports.createStudent = async (req, res) => {
 
         const institute_id = req.user.institute_id;
 
+        transaction = await sequelize.transaction();
 
         // Check Plan Limits
         const institute = await Institute.findByPk(institute_id, {
-            include: [{ model: Plan }]
+            include: [{ model: Plan }],
+            transaction,
         });
 
         if (institute && institute.Plan) {
-            const studentCount = await Student.count({ where: { institute_id } });
-            if (institute.Plan.student_limit !== null && studentCount >= institute.Plan.student_limit) {
+            const studentCount = await Student.count({ where: { institute_id }, transaction });
+            const limitStudents = institute.current_limit_students || institute.Plan.max_students;
+            if (limitStudents && studentCount >= limitStudents) {
+                await transaction.rollback();
+                transaction = null;
                 return res.status(403).json({
                     success: false,
-                    message: `Plan limit reached. Your plan allows a maximum of ${institute.Plan.student_limit} students. Upgrade your plan to add more.`
+                    message: `Plan limit reached. Your plan allows a maximum of ${limitStudents} students. Upgrade your plan to add more.`
                 });
             }
         }
@@ -53,9 +59,12 @@ exports.createStudent = async (req, res) => {
         // Check if student email already exists in this institute
         const existingUser = await User.findOne({
             where: { email, institute_id },
+            transaction,
         });
 
         if (existingUser) {
+            await transaction.rollback();
+            transaction = null;
             return res.status(409).json({
                 success: false,
                 message: "Student with this email already exists in your institute",
@@ -64,12 +73,16 @@ exports.createStudent = async (req, res) => {
 
         // Validate mandatory date fields BEFORE creating any DB records
         if (!date_of_birth || isNaN(new Date(date_of_birth))) {
+            await transaction.rollback();
+            transaction = null;
             return res.status(400).json({
                 success: false,
                 message: "Date of Birth is required and must be a valid date (YYYY-MM-DD).",
             });
         }
         if (!admission_date || isNaN(new Date(admission_date))) {
+            await transaction.rollback();
+            transaction = null;
             return res.status(400).json({
                 success: false,
                 message: "Admission Date is required and must be a valid date (YYYY-MM-DD).",
@@ -88,7 +101,7 @@ exports.createStudent = async (req, res) => {
             phone,
             password_hash,
             status: status || "active",
-        });
+        }, { transaction });
 
 
         // Create student record â€” if this fails, rollback the user to avoid orphan
@@ -103,10 +116,9 @@ exports.createStudent = async (req, res) => {
                 gender: gender ? gender.toLowerCase() : null,
                 address,
                 is_full_course: subject_ids && Array.isArray(subject_ids) ? subject_ids.includes("full_course") : false,
-            });
+            }, { transaction });
         } catch (studentError) {
             // Cleanup orphaned user so admin can retry with same email
-            await user.destroy();
             throw studentError;
         }
 
@@ -117,7 +129,7 @@ exports.createStudent = async (req, res) => {
                 class_id: parseInt(c_id),
                 institute_id: institute_id
             }));
-            await StudentClass.bulkCreate(studentClasses);
+            await StudentClass.bulkCreate(studentClasses, { transaction });
         }
 
         // Add subjects if provided
@@ -126,7 +138,8 @@ exports.createStudent = async (req, res) => {
 
             if (subject_ids.includes("full_course") && class_ids && class_ids.length > 0) {
                 const subjectsForClasses = await Subject.findAll({
-                    where: { institute_id, class_id: { [Op.in]: class_ids } }
+                    where: { institute_id, class_id: { [Op.in]: class_ids } },
+                    transaction,
                 });
                 const allSubIds = subjectsForClasses.map(s => s.id.toString());
                 actualSubjectIds = [...new Set([...actualSubjectIds, ...allSubIds])];
@@ -138,9 +151,12 @@ exports.createStudent = async (req, res) => {
                     subject_id: parseInt(sub_id),
                     institute_id: institute_id
                 }));
-                await StudentSubject.bulkCreate(studentSubjects);
+                await StudentSubject.bulkCreate(studentSubjects, { transaction });
             }
         }
+
+        await transaction.commit();
+        transaction = null;
 
         res.status(201).json({
             success: true,
@@ -156,6 +172,7 @@ exports.createStudent = async (req, res) => {
             },
         });
     } catch (error) {
+        if (transaction) await transaction.rollback();
         console.error("========== BACKEND ERROR ==========");
         console.error(error);
         console.error("Name:", error.name);
@@ -328,6 +345,62 @@ exports.getMe = async (req, res) => {
         });
     }
 };
+
+exports.getStudentLookup = async (req, res) => {
+    try {
+        const institute_id = req.user.institute_id;
+        const { class_id, search = "", limit = 100 } = req.query;
+        const maxLimit = Math.min(parseInt(limit, 10) || 100, 200);
+
+        const userWhereClause = search
+            ? {
+                [Op.or]: [
+                    { name: { [Op.like]: `%${search}%` } },
+                    { email: { [Op.like]: `%${search}%` } },
+                ],
+            }
+            : {};
+
+        const classInclude = {
+            model: Class,
+            attributes: ["id", "name", "section"],
+            through: { attributes: [] },
+            required: Boolean(class_id),
+        };
+
+        if (class_id) {
+            classInclude.where = { id: class_id };
+        }
+
+        const students = await Student.findAll({
+            where: { institute_id },
+            attributes: ["id", "roll_number"],
+            include: [
+                {
+                    model: User,
+                    attributes: ["id", "name", "email", "phone", "status"],
+                    where: userWhereClause,
+                    required: Boolean(search),
+                },
+                classInclude,
+            ],
+            order: [[User, "name", "ASC"]],
+            limit: maxLimit,
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Student lookup retrieved successfully",
+            data: students,
+        });
+    } catch (error) {
+        console.error("Student lookup error:", error);
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
 exports.getStudentById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -409,6 +482,7 @@ exports.getStudentById = async (req, res) => {
  * @access Admin, Faculty
  */
 exports.updateStudent = async (req, res) => {
+    let transaction;
     try {
         const { id } = req.params;
         const institute_id = req.user.institute_id;
@@ -427,12 +501,17 @@ exports.updateStudent = async (req, res) => {
             status
         } = req.body;
 
+        transaction = await sequelize.transaction();
+
         const student = await Student.findOne({
             where: { id, institute_id },
             include: [{ model: User }],
+            transaction,
         });
 
         if (!student) {
+            await transaction.rollback();
+            transaction = null;
             return res.status(404).json({
                 success: false,
                 message: "Student not found",
@@ -446,7 +525,7 @@ exports.updateStudent = async (req, res) => {
                 email: email || student.User.email,
                 phone: phone || student.User.phone,
                 status: status || student.User.status,
-            });
+            }, { transaction });
         }
 
         // Update student details
@@ -457,11 +536,11 @@ exports.updateStudent = async (req, res) => {
             gender: gender || student.gender,
             address: address || student.address,
             is_full_course: subject_ids && Array.isArray(subject_ids) ? subject_ids.includes("full_course") : student.is_full_course,
-        });
+        }, { transaction });
 
         // Update classes if provided
         if (class_ids && Array.isArray(class_ids)) {
-            await StudentClass.destroy({ where: { student_id: id } });
+            await StudentClass.destroy({ where: { student_id: id }, transaction });
 
             if (class_ids.length > 0) {
                 const studentClasses = class_ids.map(c_id => ({
@@ -469,14 +548,14 @@ exports.updateStudent = async (req, res) => {
                     class_id: parseInt(c_id),
                     institute_id: institute_id
                 }));
-                await StudentClass.bulkCreate(studentClasses);
+                await StudentClass.bulkCreate(studentClasses, { transaction });
             }
         }
 
         // Update subjects if provided
         if (subject_ids && Array.isArray(subject_ids)) {
             // Remove existing subjects for this student
-            await StudentSubject.destroy({ where: { student_id: id } });
+            await StudentSubject.destroy({ where: { student_id: id }, transaction });
 
             // Add new ones
             let actualSubjectIds = subject_ids.filter(sub_id => sub_id !== "full_course");
@@ -484,13 +563,14 @@ exports.updateStudent = async (req, res) => {
             if (subject_ids.includes("full_course")) {
                 let currentClassIds = class_ids;
                 if (!currentClassIds || currentClassIds.length === 0) {
-                    const studentClasses = await StudentClass.findAll({ where: { student_id: id } });
+                    const studentClasses = await StudentClass.findAll({ where: { student_id: id }, transaction });
                     currentClassIds = studentClasses.map(sc => sc.class_id);
                 }
 
                 if (currentClassIds && currentClassIds.length > 0) {
                     const subjectsForClasses = await Subject.findAll({
-                        where: { institute_id, class_id: { [Op.in]: currentClassIds } }
+                        where: { institute_id, class_id: { [Op.in]: currentClassIds } },
+                        transaction,
                     });
                     const allSubIds = subjectsForClasses.map(s => s.id.toString());
                     actualSubjectIds = [...new Set([...actualSubjectIds, ...allSubIds])];
@@ -503,9 +583,12 @@ exports.updateStudent = async (req, res) => {
                     subject_id: parseInt(sub_id),
                     institute_id: institute_id
                 }));
-                await StudentSubject.bulkCreate(studentSubjects);
+                await StudentSubject.bulkCreate(studentSubjects, { transaction });
             }
         }
+
+        await transaction.commit();
+        transaction = null;
 
         res.status(200).json({
             success: true,
@@ -513,6 +596,7 @@ exports.updateStudent = async (req, res) => {
             data: student,
         });
     } catch (error) {
+        if (transaction) await transaction.rollback();
         res.status(500).json({
             success: false,
             message: error.message,

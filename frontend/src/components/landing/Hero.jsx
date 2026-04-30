@@ -38,7 +38,7 @@ export default function Hero() {
           </p>
 
           <div className='lp-hero-actions reveal' style={{ transitionDelay: '0.3s' }}>
-            <Link to='/register' className='lp-btn-primary' style={{ padding: '14px 32px', fontSize: '15px', color: 'white' }}>
+            <Link to='/register?plan=free_trial' className='lp-btn-primary' style={{ padding: '14px 32px', fontSize: '15px', color: 'white' }}>
               Start Free Trial →
             </Link>
             {/* Phase 3: Now scrolls to #pricing on same page */}

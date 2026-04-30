@@ -265,9 +265,13 @@ function Students() {
     });
 
     useEffect(() => {
-        fetchStudents();
         fetchClasses();
     }, []);
+
+    useEffect(() => {
+        const id = setTimeout(fetchStudents, 250);
+        return () => clearTimeout(id);
+    }, [search, classFilter]);
 
     const hasPerm = (op) => {
         if (user?.role === 'admin' || user?.role === 'super_admin') return true;
@@ -282,7 +286,10 @@ function Students() {
 
     const fetchStudents = async () => {
         try {
-            const response = await api.get("/students?limit=10000");
+            const params = new URLSearchParams({ limit: "100" });
+            if (search.trim()) params.set("search", search.trim());
+            if (classFilter !== "all") params.set("class_id", classFilter);
+            const response = await api.get(`/students?${params.toString()}`);
             setStudents(response.data.data || []);
             setTotalCount(response.data.count || 0);
         } catch (error) {

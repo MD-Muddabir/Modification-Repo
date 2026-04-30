@@ -50,7 +50,7 @@ function Parents() {
 
     const fetchStudents = async () => {
         try {
-            const response = await api.get("/students?limit=1000");
+            const response = await api.get("/students/lookup?limit=200");
             setStudents(response.data.data || []);
         } catch (error) {
             console.error("Error fetching students:", error);

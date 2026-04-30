@@ -46,6 +46,8 @@ const Invoice = require("./invoice");
 const StudentFeePayment = require("./studentFeePayment");
 const OtpVerification = require("./otpVerification");
 const FacultySalary = require("./facultySalary");
+const AuditLog = require("./auditLog");
+const SlowRequestLog = require("./slowRequestLog");
 
 // Public Web Page Models
 const InstitutePublicProfile = require("./institutePublicProfile");
@@ -414,6 +416,19 @@ Faculty.hasMany(FacultySalary, { foreignKey: "faculty_id" });
 FacultySalary.belongsTo(User, { as: "paidBy", foreignKey: "paid_by" });
 User.hasMany(FacultySalary, { foreignKey: "paid_by" });
 
+// Operational Monitoring Associations
+AuditLog.belongsTo(Institute, { foreignKey: "institute_id" });
+Institute.hasMany(AuditLog, { foreignKey: "institute_id" });
+
+AuditLog.belongsTo(User, { foreignKey: "user_id" });
+User.hasMany(AuditLog, { foreignKey: "user_id" });
+
+SlowRequestLog.belongsTo(Institute, { foreignKey: "institute_id" });
+Institute.hasMany(SlowRequestLog, { foreignKey: "institute_id" });
+
+SlowRequestLog.belongsTo(User, { foreignKey: "user_id" });
+User.hasMany(SlowRequestLog, { foreignKey: "user_id" });
+
 module.exports = {
     sequelize,
     Plan,
@@ -468,4 +483,6 @@ module.exports = {
     OtpVerification,
     FacultySalary,
     LandingPageView,
+    AuditLog,
+    SlowRequestLog,
 };

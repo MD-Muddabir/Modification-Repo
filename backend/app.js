@@ -271,6 +271,8 @@ const { sequelize } = require("./models");
 
 const syncDatabase = async () => {
   try {
+    const runStartupMigrations = process.env.RUN_STARTUP_MIGRATIONS === "true";
+
     // Test database connection first
     await sequelize.authenticate();
     console.log("✅ Database connection established successfully");
@@ -287,6 +289,9 @@ const syncDatabase = async () => {
     // Plus a few one-time ALTERs wrapped in try/catch so they are
     // effectively no-ops once applied.
     // ─────────────────────────────────────────────────────────────────
+    if (runStartupMigrations) {
+    console.log("Startup schema migrations enabled via RUN_STARTUP_MIGRATIONS=true");
+
     try {
       await sequelize.query(`ALTER TABLE students ADD COLUMN is_full_course BOOLEAN DEFAULT false;`);
     } catch (e) { }
@@ -371,10 +376,14 @@ const syncDatabase = async () => {
       await User.sync({ alter: true });  // ✅ picks up manager_type + manager_type_label
       await LandingPageView.sync({ alter: true });
     } catch (e) { console.error("Error auto-syncing explicit models:", e); }
+    } else {
+      console.log("Startup schema migrations skipped. Set RUN_STARTUP_MIGRATIONS=true to apply ALTER/index maintenance.");
+    }
 
     await sequelize.sync({ alter: false });
     console.log("✅ Database synchronized successfully");
 
+    if (runStartupMigrations) {
     // Add indexes for performance (public page tables)
     try { await sequelize.query(`CREATE INDEX idx_profile_slug ON institute_public_profiles(slug);`); } catch (e) { }
     try { await sequelize.query(`CREATE INDEX idx_gallery_inst ON institute_gallery_photos(institute_id);`); } catch (e) { }
@@ -409,6 +418,7 @@ const syncDatabase = async () => {
     try { await sequelize.query(`CREATE INDEX idx_exams_inst ON exams(institute_id, class_id);`); } catch (e) { }
 
     console.log("✅ Phase 2.2: Performance indexes verified/created");
+    }
 
     // Seed plans if not exists
     const seedPlans = require("./seeders/seedPlans");

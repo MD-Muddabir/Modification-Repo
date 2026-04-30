@@ -16,6 +16,7 @@ router.get("/stats", allowRoles("super_admin", "admin", "faculty"), studentContr
 
 // CRUD Routes
 router.get("/me", allowRoles("student"), studentController.getMe);
+router.get("/lookup", allowRoles("super_admin", "admin", "faculty", "manager"), checkManagerPermission("students.read", ["fees", "attendance", "reports"]), cacheMiddleware(300), studentController.getStudentLookup);
 
 // ✅ Phase 3.4: Cache student list for 5 minutes (300s)
 router.post(

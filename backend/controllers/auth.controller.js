@@ -483,7 +483,8 @@ exports.verifyRegistrationOtp = async (req, res) => {
                 email:          result.adminUser.email,
                 role:           result.adminUser.role,
                 institute_id:   result.institute.id,
-                institute_name: result.institute.name
+                institute_name: result.institute.name,
+                institute_logo: result.institute.logo
             },
             data: {
                 institute_id: result.institute.id,
