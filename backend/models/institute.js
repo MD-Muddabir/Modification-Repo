@@ -120,6 +120,28 @@ const Institute = sequelize.define("Institute", {
         type: DataTypes.JSON,
         defaultValue: {}
     },
+
+    // ─── Lifetime Membership Fields ──────────────────────────────────────────
+    is_lifetime_member: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
+    lifetime_purchased_at: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
+    lifetime_plan_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true
+    },
+    founding_member: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
+    custom_subdomain: {
+        type: DataTypes.STRING(100),
+        allowNull: true
+    }
 });
 
 module.exports = Institute;

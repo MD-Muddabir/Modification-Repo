@@ -12,6 +12,7 @@ import { QRCodeSVG, QRCodeCanvas } from "qrcode.react";
 import QRCode from "qrcode";
 import "./Dashboard.css";
 import { savePdfNative } from "../../utils/capacitorPermissions";
+import BulkImportButton from "../../components/BulkImportButton";
 
 function Students() {
     const { user } = useContext(AuthContext);
@@ -35,6 +36,9 @@ function Students() {
     // Bulk selection state
     const [selectedStudents, setSelectedStudents] = useState([]);
     const [bulkDownloading, setBulkDownloading] = useState(false);
+    const [showCredentialsModal, setShowCredentialsModal] = useState(false);
+    const [credentialsData, setCredentialsData] = useState([]);
+    const [loadingCredentials, setLoadingCredentials] = useState(false);
 
     const handleSelectAll = (e) => {
         if (e.target.checked) {
@@ -233,6 +237,39 @@ function Students() {
         }
     };
 
+    const handleViewCredentials = async () => {
+        if (selectedStudents.length === 0) return;
+        setLoadingCredentials(true);
+        try {
+            const res = await api.post('/students/credentials', { student_ids: selectedStudents });
+            if (res.data.success) {
+                setCredentialsData(res.data.data);
+                setShowCredentialsModal(true);
+            }
+        } catch (err) {
+            console.error('Error fetching credentials:', err);
+            alert('Failed to fetch credentials');
+        } finally {
+            setLoadingCredentials(false);
+        }
+    };
+
+    const handleViewSingleCredentials = async (studentId) => {
+        setLoadingCredentials(true);
+        try {
+            const res = await api.post('/students/credentials', { student_ids: [studentId] });
+            if (res.data.success) {
+                setCredentialsData(res.data.data);
+                setShowCredentialsModal(true);
+            }
+        } catch (err) {
+            console.error('Error fetching credentials:', err);
+            alert('Failed to fetch credentials');
+        } finally {
+            setLoadingCredentials(false);
+        }
+    };
+
     // Fetch full student details (including parents) then open QR modal
     const handleViewQr = async (student) => {
         setQrLoading(true);
@@ -359,8 +396,19 @@ function Students() {
                 await api.put(`/students/${formData.id}`, formData);
                 alert("Student updated successfully");
             } else {
-                await api.post("/students", formData);
-                alert("Student added successfully");
+                const res = await api.post("/students", formData);
+                if (res.data.showPasswordOnScreen) {
+                    setCredentialsData([{
+                        id: res.data.data.student.id,
+                        roll_number: res.data.data.student.roll_number,
+                        name: res.data.data.user.name,
+                        email: res.data.data.user.email || 'N/A',
+                        password: res.data.initial_password
+                    }]);
+                    setShowCredentialsModal(true);
+                } else {
+                    alert("Student added successfully. Credentials sent to student's email.");
+                }
             }
             setShowModal(false);
             resetForm();
@@ -432,6 +480,11 @@ function Students() {
         });
         setAvailableSubjects([]);
         setEditMode(false);
+    };
+
+    const handleBulkSuccess = (result) => {
+        fetchStudents();
+        alert(`✅ ${result.inserted} student(s) imported successfully!${result.failed > 0 ? ` (${result.failed} rows had errors — check the report)` : ''}`);
     };
 
     const handleChange = (e) => {
@@ -506,12 +559,12 @@ function Students() {
                         ← Back
                     </Link>
                     {canCreate && (
-                        <button
-                            onClick={() => { resetForm(); setShowModal(true); }}
-                            className="btn btn-primary"
-                        >
-                            + Add Student
-                        </button>
+                        <>
+                            <BulkImportButton type="students" onSuccess={handleBulkSuccess} />
+                            <button onClick={() => { resetForm(); setShowModal(true); }} className="btn btn-primary">
+                                + Add Student
+                            </button>
+                        </>
                     )}
                 </div>
             </div>
@@ -587,14 +640,24 @@ function Students() {
                 <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                     <h3 className="card-title" style={{ margin: 0 }}>All Students ({filteredStudents.length})</h3>
                     {selectedStudents.length > 0 && (
-                        <button 
-                            className="btn btn-sm" 
-                            style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', fontWeight: 600, border: 'none', borderRadius: '6px' }}
-                            onClick={handleBulkDownloadCards}
-                            disabled={bulkDownloading}
-                        >
-                            {bulkDownloading ? '⏳ Generating PDF...' : `⬇ Download ${selectedStudents.length} Selected Cards`}
-                        </button>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button 
+                                className="btn btn-sm" 
+                                style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)', color: 'white', fontWeight: 600, border: 'none', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                                onClick={handleViewCredentials}
+                                disabled={loadingCredentials}
+                            >
+                                {loadingCredentials ? '⏳ Loading...' : `🔑 View ${selectedStudents.length} Credentials`}
+                            </button>
+                            <button 
+                                className="btn btn-sm" 
+                                style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', fontWeight: 600, border: 'none', borderRadius: '6px' }}
+                                onClick={handleBulkDownloadCards}
+                                disabled={bulkDownloading}
+                            >
+                                {bulkDownloading ? '⏳ Generating PDF...' : `⬇ Download ${selectedStudents.length} Cards`}
+                            </button>
+                        </div>
                     )}
                 </div>
                 <div className="table-container">
@@ -685,6 +748,13 @@ function Students() {
                                         </td>
                                         <td>
                                             <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                                                <button
+                                                    className="btn btn-sm"
+                                                    style={{ background: 'linear-gradient(135deg, #4f46e5, #4338ca)', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 600 }}
+                                                    onClick={() => handleViewSingleCredentials(student.id)}
+                                                >
+                                                    🔑 Credentials
+                                                </button>
                                                 <button
                                                     className="btn btn-sm"
                                                     style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 600 }}
@@ -1284,6 +1354,73 @@ function Students() {
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Credentials Modal */}
+            {showCredentialsModal && (
+                <div className="modal-overlay">
+                    <div className="modal-content" style={{ maxWidth: '800px', padding: '0' }}>
+                        <div className="modal-header" style={{ padding: '1.5rem', background: 'linear-gradient(135deg, #4f46e5, #4338ca)', color: 'white' }}>
+                            <h2 style={{ margin: 0, fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                🔑 Student Credentials
+                            </h2>
+                            <button onClick={() => setShowCredentialsModal(false)} className="close-btn" style={{ color: 'white' }}>&times;</button>
+                        </div>
+                        <div style={{ padding: '1.5rem' }}>
+                            <div className="table-container" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                                <table className="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Roll No</th>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>Initial Password</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {credentialsData.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>No credentials to display</td>
+                                            </tr>
+                                        ) : (
+                                            credentialsData.map(c => (
+                                                <tr key={c.id}>
+                                                    <td><span className="badge badge-secondary">{c.roll_number}</span></td>
+                                                    <td><strong>{c.name}</strong></td>
+                                                    <td>{c.email || 'N/A'}</td>
+                                                    <td>
+                                                        <code style={{ background: '#f3f4f6', padding: '0.3rem 0.5rem', borderRadius: '4px', color: '#111827', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                                                            {c.password}
+                                                        </code>
+                                                    </td>
+                                                    <td>
+                                                        <button 
+                                                            className="btn btn-sm"
+                                                            style={{ background: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db', borderRadius: '6px', padding: '0.3rem 0.6rem' }}
+                                                            onClick={() => {
+                                                                navigator.clipboard.writeText(`Roll No: ${c.roll_number}\nEmail: ${c.email || 'N/A'}\nPassword: ${c.password}`);
+                                                                // Simple visual feedback instead of alert if possible, but alert is fine for now
+                                                                alert('Copied to clipboard!');
+                                                            }}
+                                                        >
+                                                            📋 Copy
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div style={{ marginTop: '1.5rem', padding: '1rem', background: '#fef3c7', borderRadius: '8px', border: '1px solid #fcd34d', color: '#92400e', fontSize: '0.875rem', lineHeight: '1.4' }}>
+                                <strong>💡 Professional Tip:</strong> For security, these initial passwords are only visible until the student logs in for the first time. Once they change their password, the system wipes the initial password from the database.
+                            </div>
+                        </div>
+                        <div className="modal-footer" style={{ padding: '1.25rem', borderTop: '1px solid var(--border-color)' }}>
+                            <button onClick={() => setShowCredentialsModal(false)} className="btn btn-secondary">Close</button>
                         </div>
                     </div>
                 </div>

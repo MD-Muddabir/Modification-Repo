@@ -17,6 +17,7 @@ const allowRoles = require("../middlewares/role.middleware");
  */
 const { checkFacultyLimit } = require("../middlewares/planLimits.middleware");
 const checkManagerPermission = require("../middlewares/checkManagerPermission");
+const { bulkImportFaculty } = require('../controllers/bulkImport/bulkFaculty.controller');
 
 router.get("/me", verifyToken, checkSubscription, allowRoles("faculty"), facultyController.getMe);
 router.post("/", verifyToken, checkSubscription, allowRoles("admin", "manager"), checkManagerPermission("faculty.create"), checkFacultyLimit, facultyController.createFaculty);
@@ -48,5 +49,8 @@ router.put("/:id", verifyToken, checkSubscription, allowRoles("admin", "faculty"
  * @access  Admin only
  */
 router.delete("/:id", verifyToken, checkSubscription, allowRoles("admin", "manager"), checkManagerPermission("faculty.delete"), facultyController.deleteFaculty);
+
+// Bulk import route
+router.post("/bulk-import", verifyToken, checkSubscription, allowRoles("admin", "manager"), checkManagerPermission("faculty.create"), bulkImportFaculty);
 
 module.exports = router;

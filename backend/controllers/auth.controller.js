@@ -237,6 +237,7 @@ exports.login = async (req, res) => {
                 email: user.email,
                 role: user.role,
                 status: user.status,
+                is_first_login: user.is_first_login,
                 institute_id: user.institute_id,
                 institute_name: user.Institute?.name,
                 institute_status: user.Institute?.status,
@@ -265,6 +266,13 @@ exports.changePassword = async (req, res) => {
         const userId = req.user.id;
 
         await authService.changePassword(userId, oldPassword, newPassword);
+
+        // If it was their first login, clear the flag and the initial password
+        const { User } = require('../models');
+        await User.update({
+            is_first_login: false,
+            initial_password: null
+        }, { where: { id: userId } });
 
         res.status(200).json({
             success: true,

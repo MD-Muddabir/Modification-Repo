@@ -48,6 +48,7 @@ const OtpVerification = require("./otpVerification");
 const FacultySalary = require("./facultySalary");
 const AuditLog = require("./auditLog");
 const SlowRequestLog = require("./slowRequestLog");
+const BulkImportLog = require("./BulkImportLog")(require("../config/database"));
 
 // Public Web Page Models
 const InstitutePublicProfile = require("./institutePublicProfile");
@@ -429,6 +430,13 @@ Institute.hasMany(SlowRequestLog, { foreignKey: "institute_id" });
 SlowRequestLog.belongsTo(User, { foreignKey: "user_id" });
 User.hasMany(SlowRequestLog, { foreignKey: "user_id" });
 
+// BulkImportLog Associations
+BulkImportLog.belongsTo(Institute, { foreignKey: "institute_id" });
+Institute.hasMany(BulkImportLog, { foreignKey: "institute_id" });
+
+BulkImportLog.belongsTo(User, { as: "importer", foreignKey: "imported_by" });
+User.hasMany(BulkImportLog, { foreignKey: "imported_by" });
+
 module.exports = {
     sequelize,
     Plan,
@@ -485,4 +493,5 @@ module.exports = {
     LandingPageView,
     AuditLog,
     SlowRequestLog,
+    BulkImportLog,
 };

@@ -58,6 +58,7 @@ exports.getLeads = async (req, res) => {
                 institute: l.institute,
                 students: l.studentCount,
                 plan: l.plan,
+                message: l.message,
                 date: l.createdAt,
                 status: l.status
             }))

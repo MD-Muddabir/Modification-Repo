@@ -1,10 +1,30 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useScrollReveal } from '../../hooks/useScrollReveal';
 import toast from 'react-hot-toast';
 
 export default function Contact() {
   useScrollReveal('reveal', 0.1);
   const [loading, setLoading] = useState(false);
+  const [plans, setPlans] = useState([]);
+  const [plansLoading, setPlansLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : (import.meta.env.DEV ? 'http://localhost:5000' : 'https://institutes-saas.onrender.com')}/api/plans`);
+        const data = await response.json();
+        if (data.success || data.data) {
+          setPlans(data.data || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch plans for contact form', error);
+      } finally {
+        setPlansLoading(false);
+      }
+    };
+
+    fetchPlans();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -110,10 +130,20 @@ export default function Contact() {
             <div className='lp-form-group'>
               <label className='lp-label'>Plan Interest</label>
               <select name='plan' className='lp-input'>
-                <option>Starter</option>
-                <option>Basic</option>
-                <option>Professional</option>
-                <option>Enterprise</option>
+                {plansLoading ? (
+                  <option value="">Loading plans...</option>
+                ) : plans.length > 0 ? (
+                  plans.map(p => (
+                    <option key={p.id} value={p.name}>{p.name}</option>
+                  ))
+                ) : (
+                  <>
+                    <option>Starter</option>
+                    <option>Basic</option>
+                    <option>Professional</option>
+                    <option>Enterprise</option>
+                  </>
+                )}
               </select>
             </div>
           </div>

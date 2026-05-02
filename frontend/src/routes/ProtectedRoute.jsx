@@ -15,9 +15,10 @@ import ExpiredPlanBanner from "../components/common/ExpiredPlanBanner";
  * @param {Object} props - Component props
  * @param {React.ReactNode} props.children - Child components to render if authorized
  * @param {string[]} props.allowedRoles - Array of roles allowed to access this route
+ * @param {boolean} props.skipFirstLoginCheck - If true, doesn't redirect to change-password
  * @returns {React.ReactElement} Protected content or redirect
  */
-function ProtectedRoute({ children, allowedRoles = [] }) {
+function ProtectedRoute({ children, allowedRoles = [], skipFirstLoginCheck = false }) {
   const { user, isInitializing } = useContext(AuthContext);
   const token = sessionStorage.getItem("token");
 
@@ -34,6 +35,11 @@ function ProtectedRoute({ children, allowedRoles = [] }) {
   // Phase 7: Globally render the Blocked / Suspended screen for any blocked user
   if (user.status === 'blocked') {
     return <BlockedScreen />;
+  }
+
+  // Phase 9: Enforce mandatory password change on first login for students
+  if (user.role === 'student' && user.is_first_login && !skipFirstLoginCheck) {
+    return <Navigate to="/student/change-password" replace />;
   }
 
   // Check if user has required role

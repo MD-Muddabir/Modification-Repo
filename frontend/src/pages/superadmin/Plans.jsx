@@ -66,6 +66,11 @@ function Plans() {
         is_free_trial: false,
         trial_days: 0,
 
+        // Lifetime Plan
+        is_lifetime: false,
+        lifetime_price: "",
+        lifetime_slots_total: 100,
+
         razorpay_plan_id: "",
         is_popular: false
     };
@@ -98,6 +103,8 @@ function Plans() {
             payload.max_classes = parseInt(payload.max_classes);
             payload.max_admin_users = parseInt(payload.max_admin_users);
             payload.trial_days = parseInt(payload.trial_days || 0);
+            if (payload.lifetime_price) payload.lifetime_price = parseFloat(payload.lifetime_price);
+            if (payload.lifetime_slots_total) payload.lifetime_slots_total = parseInt(payload.lifetime_slots_total);
 
             if (editMode) {
                 await api.put(`/plans/${formData.id}`, payload);
@@ -180,7 +187,7 @@ function Plans() {
                     </div>
                 ) : (
                     plans.map((plan) => (
-                        <div key={plan.id} className="card" style={{ padding: "1.5rem", position: 'relative' }}>
+                        <div key={plan.id} className="card" style={{ padding: "1.5rem", position: 'relative', ...(plan.is_lifetime ? { border: '2px solid #7c3aed', background: 'linear-gradient(135deg, rgba(124,58,237,0.08), rgba(0,0,0,0))' } : {}) }}>
                             {plan.is_popular && (
                                 <div style={{
                                     position: 'absolute', top: 10, right: 10,
@@ -188,6 +195,11 @@ function Plans() {
                                     borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold'
                                 }}>
                                     Most Popular
+                                </div>
+                            )}
+                            {plan.is_lifetime && (
+                                <div style={{ position: 'absolute', top: 10, left: 10, background: 'linear-gradient(90deg,#7c3aed,#4f46e5)', color: '#fff', padding: '2px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                                    💎 LIFETIME
                                 </div>
                             )}
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: "1rem" }}>
@@ -430,6 +442,32 @@ function Plans() {
                                                 />
                                             </div>
                                         )}
+                                        {formData.is_lifetime && (
+                                            <>
+                                                <div className="limit-input-group">
+                                                    <label>💎 Lifetime Price (₹)</label>
+                                                    <input
+                                                        type="number"
+                                                        name="lifetime_price"
+                                                        className="form-input"
+                                                        value={formData.lifetime_price}
+                                                        onChange={handleChange}
+                                                        placeholder="19999"
+                                                    />
+                                                </div>
+                                                <div className="limit-input-group">
+                                                    <label>🔓 Total Slots</label>
+                                                    <input
+                                                        type="number"
+                                                        name="lifetime_slots_total"
+                                                        className="form-input"
+                                                        value={formData.lifetime_slots_total}
+                                                        onChange={handleChange}
+                                                        placeholder="100"
+                                                    />
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
 
@@ -494,6 +532,7 @@ function Plans() {
                                             { key: 'feature_transport', label: '🚌 Finances & Transport' },
                                             { key: 'is_free_trial', label: 'Start Free Trial' },
                                             { key: 'is_popular', label: 'Mark as Popular' },
+                                            { key: 'is_lifetime', label: '💎 Lifetime Plan (One-Time)' },
                                         ].map(feature => (
                                             <label key={feature.key} className="feature-checkbox">
                                                 <input

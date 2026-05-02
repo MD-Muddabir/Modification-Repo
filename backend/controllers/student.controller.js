@@ -90,7 +90,13 @@ exports.createStudent = async (req, res) => {
         }
 
         // Hash password
-        const password_hash = await hashPassword(password || "student123");
+        const { generateTempPassword } = require('../utils/passwordGenerator');
+        const tempPassword = generateTempPassword();
+        const password_hash = await hashPassword(tempPassword);
+
+        // Set temp password expiry (7 days)
+        const temp_password_expires_at = new Date();
+        temp_password_expires_at.setDate(temp_password_expires_at.getDate() + 7);
 
         // Create user account for student
         const user = await User.create({
@@ -101,6 +107,10 @@ exports.createStudent = async (req, res) => {
             phone,
             password_hash,
             status: status || "active",
+            is_first_login: true,
+            temp_password_expires_at,
+            credentials_sent_at: email ? new Date() : null,
+            initial_password: tempPassword
         }, { transaction });
 
 
@@ -158,9 +168,31 @@ exports.createStudent = async (req, res) => {
         await transaction.commit();
         transaction = null;
 
+        let emailSent = false;
+        let showPasswordOnScreen = true;
+
+        if (email) {
+            try {
+                const { sendStudentWelcomeEmail } = require('../services/email.service');
+                await sendStudentWelcomeEmail({
+                    to: email,
+                    studentName: name,
+                    instituteName: institute && institute.name ? institute.name : 'Your Institute',
+                    email,
+                    tempPassword
+                });
+                emailSent = true;
+                showPasswordOnScreen = false;
+            } catch (err) {
+                console.error('Failed to send welcome email:', err.message);
+            }
+        }
+
         res.status(201).json({
             success: true,
-            message: "Student created successfully",
+            message: 'Student created successfully',
+            showPasswordOnScreen,
+            initial_password: showPasswordOnScreen ? tempPassword : null,
             data: {
                 student,
                 user: {
@@ -694,6 +726,119 @@ exports.getStudentStats = async (req, res) => {
     }
 };
 
+
+/**
+ * Resend student credentials (generates a new password)
+ * @route POST /api/students/:id/resend-credentials
+ * @access Admin
+ */
+exports.resendStudentCredentials = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const institute_id = req.user.institute_id;
+
+        const student = await Student.findOne({
+            where: { id, institute_id },
+            include: [{ model: User }],
+        });
+
+        if (!student) {
+            return res.status(404).json({ success: false, message: "Student not found" });
+        }
+
+        // 5-minute cooldown check
+        const lastSent = student.User.credentials_sent_at;
+        if (lastSent && new Date() - new Date(lastSent) < 5 * 60 * 1000) {
+            return res.status(429).json({
+                success: false,
+                message: "Please wait 5 minutes before resending credentials."
+            });
+        }
+
+        // Generate new temporary password
+        const { generateTempPassword } = require('../utils/passwordGenerator');
+        const tempPassword = generateTempPassword();
+        const password_hash = await hashPassword(tempPassword);
+
+        const temp_password_expires_at = new Date();
+        temp_password_expires_at.setDate(temp_password_expires_at.getDate() + 7);
+
+        await student.User.update({
+            password_hash,
+            is_first_login: true,
+            temp_password_expires_at,
+            credentials_sent_at: new Date(),
+            initial_password: tempPassword
+        });
+
+        let emailSent = false;
+        let showPasswordOnScreen = true;
+
+        if (student.User.email) {
+            try {
+                const institute = await Institute.findByPk(institute_id);
+                const { sendStudentWelcomeEmail } = require('../services/email.service');
+                await sendStudentWelcomeEmail({
+                    to: student.User.email,
+                    studentName: student.User.name,
+                    instituteName: institute ? institute.name : "Your Institute",
+                    email: student.User.email,
+                    tempPassword
+                });
+                emailSent = true;
+                showPasswordOnScreen = false;
+            } catch (err) {
+                console.error("Failed to resend credentials email:", err.message);
+            }
+        }
+
+        res.status(200).json({
+            success: true,
+            message: emailSent ? "Credentials sent via email" : "Email failed, view credentials on screen",
+            showPasswordOnScreen,
+            initial_password: showPasswordOnScreen ? tempPassword : null
+        });
+
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+/**
+ * Get current initial passwords for selected students
+ * @route POST /api/students/credentials
+ * @access Admin
+ */
+exports.getStudentCredentials = async (req, res) => {
+    try {
+        const { student_ids } = req.body;
+        const institute_id = req.user.institute_id;
+
+        if (!Array.isArray(student_ids) || student_ids.length === 0) {
+            return res.status(400).json({ success: false, message: "No students selected" });
+        }
+
+        const students = await Student.findAll({
+            where: { id: { [Op.in]: student_ids }, institute_id },
+            include: [{ model: User, attributes: ['name', 'email', 'initial_password', 'is_first_login'] }]
+        });
+
+        const credentials = students.map(s => ({
+            id: s.id,
+            roll_number: s.roll_number,
+            name: s.User.name,
+            email: s.User.email,
+            password: s.User.initial_password || (s.User.is_first_login ? "Not Generated" : "Private (Changed by Student)")
+        }));
+
+        res.status(200).json({
+            success: true,
+            data: credentials
+        });
+
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 module.exports = exports;
-
-

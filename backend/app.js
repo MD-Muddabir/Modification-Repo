@@ -2,24 +2,24 @@
  * Main Application File
  * Configures Express server with middleware, routes, and error handling
  * Implements multi-tenant SaaS architecture for coaching institutes
- * ✅ Phase 1: Compression, Rate Limiting, Optimized CORS
- * ✅ Phase 6: Performance Monitoring
+ * âœ… Phase 1: Compression, Rate Limiting, Optimized CORS
+ * âœ… Phase 6: Performance Monitoring
  */
 
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-const compression = require("compression");               // ✅ Phase 1.2
-const rateLimit = require("express-rate-limit");          // ✅ Phase 1.4
-const performanceLogger = require("./middlewares/performance.middleware"); // ✅ Phase 6.1
+const compression = require("compression");               // âœ… Phase 1.2
+const rateLimit = require("express-rate-limit");          // âœ… Phase 1.4
+const performanceLogger = require("./middlewares/performance.middleware"); // âœ… Phase 6.1
 require("dotenv").config();
 
 const app = express();
 
 // ============================================
-// ✅ PHASE 1.2: RESPONSE COMPRESSION
+// âœ… PHASE 1.2: RESPONSE COMPRESSION
 // ============================================
-// Compress all HTTP responses — reduces payload size by ~70%
+// Compress all HTTP responses â€” reduces payload size by ~70%
 app.use(compression({
   level: 6,           // Compression level (0-9): 6 is best speed/size balance
   threshold: 1024,    // Only compress responses > 1KB
@@ -30,12 +30,12 @@ app.use(compression({
 }));
 
 // ============================================
-// ✅ PHASE 6.1: PERFORMANCE MONITORING
+// âœ… PHASE 6.1: PERFORMANCE MONITORING
 // ============================================
 app.use(performanceLogger);
 
 // ============================================
-// ✅ PHASE 1.4: RATE LIMITING
+// âœ… PHASE 1.4: RATE LIMITING
 // ============================================
 // Global rate limiter: 200 requests per 15 minutes per IP
 const globalLimiter = rateLimit({
@@ -43,7 +43,7 @@ const globalLimiter = rateLimit({
   max: 200,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { success: false, message: "Too many requests — please try again later." },
+  message: { success: false, message: "Too many requests â€” please try again later." },
   skip: (req) => req.ip === "127.0.0.1" || req.ip === "::1", // Don't limit localhost
 });
 app.use("/api/", globalLimiter);
@@ -55,12 +55,12 @@ const authLimiter = rateLimit({
   skipSuccessfulRequests: true,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { success: false, message: "Too many login attempts — please wait 15 minutes." },
+  message: { success: false, message: "Too many login attempts â€” please wait 15 minutes." },
 });
 app.use("/api/auth/login", authLimiter);
 
 // ============================================
-// ✅ PHASE 1.3: OPTIMIZED CORS CONFIGURATION
+// âœ… PHASE 1.3: OPTIMIZED CORS CONFIGURATION
 // ============================================
 
 /**
@@ -91,7 +91,7 @@ app.use(cors({
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"],
-  maxAge: 86400, // ✅ Cache preflight for 24 hours — reduces OPTIONS requests
+  maxAge: 86400, // âœ… Cache preflight for 24 hours â€” reduces OPTIONS requests
 }));
 
 
@@ -121,7 +121,7 @@ const isCloudinaryReady =
 if (!isCloudinaryReady) {
   // Serve local uploads only when Cloudinary is not set up (local dev fallback)
   app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-  console.log("📂 Serving local /uploads (Cloudinary not configured)");
+  console.log("ðŸ“‚ Serving local /uploads (Cloudinary not configured)");
 }
 
 
@@ -139,7 +139,7 @@ if (!isCloudinaryReady) {
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
-    message: "🎓 ZF Solution API is running",
+    message: "ðŸŽ“ ZF Solution API is running",
     version: "1.0.0",
     timestamp: new Date().toISOString(),
   });
@@ -185,6 +185,7 @@ app.use("/api/admin/public-page", require("./routes/publicPage.routes"));
 app.use("/api/admin/enquiries", require("./routes/enquiry.routes"));
 app.use("/api/public", require("./routes/publicSite.routes"));
 app.use("/api/leads", require("./routes/lead.routes"));
+app.use("/api/lifetime", require("./routes/lifetime.routes")); // Lifetime plan
 
 // ============================================
 // 404 HANDLER
@@ -210,7 +211,7 @@ app.use((req, res) => {
  * Catches all errors and returns standardized response
  */
 app.use((err, req, res, next) => {
-  console.error("❌ Error:", err);
+  console.error("âŒ Error:", err);
 
   // Sequelize validation errors
   if (err.name === "SequelizeValidationError") {
@@ -275,20 +276,20 @@ const syncDatabase = async () => {
 
     // Test database connection first
     await sequelize.authenticate();
-    console.log("✅ Database connection established successfully");
+    console.log("âœ… Database connection established successfully");
 
-    // ─────────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // NOTE: MySQL-specific index cleanup removed.
     // PostgreSQL manages indexes efficiently and does not suffer
     // from the same index duplication issues as MySQL.
-    // ─────────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-    // ─────────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // SAFE SYNC: alter:false only creates missing tables,
     // never modifies existing tables (prevents index duplication)
     // Plus a few one-time ALTERs wrapped in try/catch so they are
     // effectively no-ops once applied.
-    // ─────────────────────────────────────────────────────────────────
+    // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if (runStartupMigrations) {
     console.log("Startup schema migrations enabled via RUN_STARTUP_MIGRATIONS=true");
 
@@ -309,7 +310,7 @@ const syncDatabase = async () => {
       await sequelize.query(`ALTER TABLE subscriptions ADD COLUMN tax_amount DECIMAL(10,2) DEFAULT 0;`);
     } catch (e) { }
 
-    // Biometric attendance columns (PostgreSQL-compatible — use VARCHAR instead of ENUM)
+    // Biometric attendance columns (PostgreSQL-compatible â€” use VARCHAR instead of ENUM)
     try { await sequelize.query(`ALTER TABLE attendances ADD COLUMN marked_by_type VARCHAR(20) DEFAULT 'manual';`); } catch (e) { }
     try { await sequelize.query(`ALTER TABLE attendances ADD COLUMN biometric_punch_id BIGINT NULL;`); } catch (e) { }
     try { await sequelize.query(`ALTER TABLE attendances ADD COLUMN time_in TIME NULL;`); } catch (e) { }
@@ -317,10 +318,10 @@ const syncDatabase = async () => {
     try { await sequelize.query(`ALTER TABLE attendances ADD COLUMN is_late BOOLEAN DEFAULT false;`); } catch (e) { }
     try { await sequelize.query(`ALTER TABLE attendances ADD COLUMN late_by_minutes INT DEFAULT 0;`); } catch (e) { }
     try { await sequelize.query(`ALTER TABLE attendances ADD COLUMN is_half_day BOOLEAN DEFAULT false;`); } catch (e) { }
-    // Modify attendance status type to include half_day (PostgreSQL-safe — no-op if already correct)
+    // Modify attendance status type to include half_day (PostgreSQL-safe â€” no-op if already correct)
     try {
       await sequelize.query(`ALTER TABLE attendances ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'present';`);
-    } catch (e) { /* ignore — column already exists */ }
+    } catch (e) { /* ignore â€” column already exists */ }
 
     // Public Web Page feature columns
     try { await sequelize.query(`ALTER TABLE plans ADD COLUMN feature_public_page BOOLEAN DEFAULT false;`); } catch (e) { }
@@ -339,9 +340,9 @@ const syncDatabase = async () => {
     try { await sequelize.query(`ALTER TABLE institutes ADD COLUMN current_feature_finance BOOLEAN DEFAULT false;`); } catch (e) { }
     try { await sequelize.query(`ALTER TABLE institutes ADD COLUMN current_feature_salary BOOLEAN DEFAULT false;`); } catch (e) { }
     try { await sequelize.query(`ALTER TABLE institutes ADD COLUMN current_feature_mobile_app BOOLEAN DEFAULT false;`); } catch (e) { }
-    console.log("✅ Finance & Mobile module feature columns ensured");
+    console.log("âœ… Finance & Mobile module feature columns ensured");
 
-    // ── Manager Type columns (CreateManager.md — Phase 1 DB changes) ────────
+    // â”€â”€ Manager Type columns (CreateManager.md â€” Phase 1 DB changes) â”€â”€â”€â”€â”€â”€â”€â”€
     // PostgreSQL-safe: CREATE TYPE IF NOT EXISTS, then ADD COLUMN IF NOT EXISTS
     try {
       await sequelize.query(`
@@ -357,12 +358,61 @@ const syncDatabase = async () => {
     try {
       await sequelize.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS manager_type_label VARCHAR(50) DEFAULT NULL;`);
     } catch (e) { }
-    console.log("✅ Manager type columns ensured on users table");
+    console.log("âœ… Manager type columns ensured on users table");
+
+    // --- Lifetime Plan DB columns (Lifetime_Access.md Phase 1) ---
+    try { await sequelize.query(`ALTER TABLE plans ADD COLUMN IF NOT EXISTS is_lifetime BOOLEAN NOT NULL DEFAULT FALSE;`); } catch (e) { }
+    try { await sequelize.query(`ALTER TABLE plans ADD COLUMN IF NOT EXISTS lifetime_price DECIMAL(10,2) DEFAULT NULL;`); } catch (e) { }
+    try { await sequelize.query(`ALTER TABLE plans ADD COLUMN IF NOT EXISTS lifetime_slots_total INTEGER DEFAULT 100;`); } catch (e) { }
+    try { await sequelize.query(`ALTER TABLE plans ADD COLUMN IF NOT EXISTS lifetime_slots_used INTEGER DEFAULT 0;`); } catch (e) { }
+    try { await sequelize.query(`ALTER TABLE plans ADD COLUMN IF NOT EXISTS max_students_lifetime INTEGER DEFAULT -1;`); } catch (e) { }
+    try { await sequelize.query(`ALTER TABLE plans ADD COLUMN IF NOT EXISTS max_faculty_lifetime INTEGER DEFAULT -1;`); } catch (e) { }
+    try { await sequelize.query(`ALTER TABLE plans ADD COLUMN IF NOT EXISTS max_managers_lifetime INTEGER DEFAULT -1;`); } catch (e) { }
+    try { await sequelize.query(`ALTER TABLE plans ADD COLUMN IF NOT EXISTS lifetime_bonus_subdomain BOOLEAN DEFAULT TRUE;`); } catch (e) { }
+    try { await sequelize.query(`ALTER TABLE plans ADD COLUMN IF NOT EXISTS lifetime_bonus_priority_support BOOLEAN DEFAULT TRUE;`); } catch (e) { }
+    try { await sequelize.query(`ALTER TABLE plans ADD COLUMN IF NOT EXISTS lifetime_bonus_unlimited_export BOOLEAN DEFAULT TRUE;`); } catch (e) { }
+    try { await sequelize.query(`ALTER TABLE institutes ADD COLUMN IF NOT EXISTS is_lifetime_member BOOLEAN NOT NULL DEFAULT FALSE;`); } catch (e) { }
+    try { await sequelize.query(`ALTER TABLE institutes ADD COLUMN IF NOT EXISTS lifetime_purchased_at TIMESTAMPTZ DEFAULT NULL;`); } catch (e) { }
+    try { await sequelize.query(`ALTER TABLE institutes ADD COLUMN IF NOT EXISTS lifetime_plan_id INTEGER DEFAULT NULL;`); } catch (e) { }
+    try { await sequelize.query(`ALTER TABLE institutes ADD COLUMN IF NOT EXISTS founding_member BOOLEAN DEFAULT FALSE;`); } catch (e) { }
+    try { await sequelize.query(`ALTER TABLE institutes ADD COLUMN IF NOT EXISTS custom_subdomain VARCHAR(100) DEFAULT NULL;`); } catch (e) { }
+    try { await sequelize.query(`ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS cancelled_reason VARCHAR(200) DEFAULT NULL;`); } catch (e) { }
+    console.log('âœ… Lifetime plan columns ensured');
 
     // Free Trial columns
     try { await sequelize.query(`ALTER TABLE plans ADD COLUMN is_free_trial BOOLEAN DEFAULT false;`); } catch (e) { }
     try { await sequelize.query(`ALTER TABLE plans ADD COLUMN trial_days INT DEFAULT 14;`); } catch (e) { }
     try { await sequelize.query(`ALTER TABLE institutes ADD COLUMN has_used_trial BOOLEAN DEFAULT false;`); } catch (e) { }
+    // â”€â”€ Bulk Import Logs Table (bulk.md Phase 1) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    try {
+      await sequelize.query(`
+        CREATE TABLE IF NOT EXISTS bulk_import_logs (
+          id           SERIAL PRIMARY KEY,
+          institute_id INT NOT NULL REFERENCES institutes(id) ON DELETE CASCADE,
+          import_type  VARCHAR(20) NOT NULL,
+          imported_by  INT NOT NULL REFERENCES users(id),
+          total_rows   INT DEFAULT 0,
+          success_rows INT DEFAULT 0,
+          failed_rows  INT DEFAULT 0,
+          error_report JSONB,
+          status       VARCHAR(20) DEFAULT 'completed',
+          created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `);
+    } catch (e) { /* table already exists */ }
+    try { await sequelize.query(`CREATE INDEX IF NOT EXISTS idx_bulk_logs_institute ON bulk_import_logs(institute_id, created_at DESC);`); } catch (e) { }
+    console.log('âœ… bulk_import_logs table ensured');
+
+    // ── Phase 1: Student Password System ─────────────────────────────────────
+    try {
+      await sequelize.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_first_login BOOLEAN DEFAULT TRUE;`);
+      await sequelize.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS temp_password_expires_at TIMESTAMPTZ;`);
+      await sequelize.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS credentials_sent_at TIMESTAMPTZ;`);
+      await sequelize.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS initial_password VARCHAR(255);`);
+      console.log('✅ Student Password columns ensured');
+    } catch (e) {
+      console.error('Error adding Student Password columns:', e.message);
+    }
 
     // Auto-sync other schema changes using alter for the explicit models to make sure everything matches
     try {
@@ -373,7 +423,7 @@ const syncDatabase = async () => {
       await PublicEnquiry.sync({ alter: true });
       await Subscription.sync({ alter: true });
       await Plan.sync({ alter: true });
-      await User.sync({ alter: true });  // ✅ picks up manager_type + manager_type_label
+      await User.sync({ alter: true });  // âœ… picks up manager_type + manager_type_label
       await LandingPageView.sync({ alter: true });
     } catch (e) { console.error("Error auto-syncing explicit models:", e); }
     } else {
@@ -381,7 +431,7 @@ const syncDatabase = async () => {
     }
 
     await sequelize.sync({ alter: false });
-    console.log("✅ Database synchronized successfully");
+    console.log("âœ… Database synchronized successfully");
 
     if (runStartupMigrations) {
     // Add indexes for performance (public page tables)
@@ -390,7 +440,7 @@ const syncDatabase = async () => {
     try { await sequelize.query(`CREATE INDEX idx_reviews_inst ON institute_reviews(institute_id);`); } catch (e) { }
     try { await sequelize.query(`CREATE INDEX idx_enquiry_inst ON public_enquiries(institute_id, status, created_at);`); } catch (e) { }
 
-    // ✅ Phase 2.2: Critical Performance Indexes
+    // âœ… Phase 2.2: Critical Performance Indexes
     // Students - fast lookups by institute + class (most common query)
     try { await sequelize.query(`CREATE INDEX idx_students_inst_class ON students(institute_id, class_id);`); } catch (e) { }
     try { await sequelize.query(`CREATE INDEX idx_students_user ON students(user_id);`); } catch (e) { }
@@ -417,7 +467,7 @@ const syncDatabase = async () => {
     // Exams - institute + class lookups
     try { await sequelize.query(`CREATE INDEX idx_exams_inst ON exams(institute_id, class_id);`); } catch (e) { }
 
-    console.log("✅ Phase 2.2: Performance indexes verified/created");
+    console.log("âœ… Phase 2.2: Performance indexes verified/created");
     }
 
     // Seed plans if not exists
@@ -428,7 +478,7 @@ const syncDatabase = async () => {
     const createSuperAdmin = require("./seeders/createSuperAdmin");
     await createSuperAdmin();
   } catch (error) {
-    console.error("❌ Database error:", error.message);
+    console.error("âŒ Database error:", error.message);
     console.error("Please ensure PostgreSQL is running and database exists / credentials are correct");
   }
 };

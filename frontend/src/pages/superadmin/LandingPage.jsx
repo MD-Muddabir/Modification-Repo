@@ -203,6 +203,7 @@ export default function LandingPage() {
                     <th style={{ padding: "12px 16px", textAlign: "left", fontSize:'13px' }}>Mobile</th>
                     <th style={{ padding: "12px 16px", textAlign: "left", fontSize:'13px' }}>Institute & Size</th>
                     <th style={{ padding: "12px 16px", textAlign: "left", fontSize:'13px' }}>Plan Interest</th>
+                    <th style={{ padding: "12px 16px", textAlign: "left", fontSize:'13px' }}>Message</th>
                     <th style={{ padding: "12px 16px", textAlign: "left", fontSize:'13px' }}>Date</th>
                     <th style={{ padding: "12px 16px", textAlign: "left", fontSize:'13px' }}>Status</th>
                   </tr>
@@ -227,6 +228,13 @@ export default function LandingPage() {
                       </td>
                       <td style={{ padding: "12px 16px" }}>
                         <span style={{ display:'inline-block', padding:'4px 8px', background:'rgba(37,99,235,0.1)', color:'#2563EB', borderRadius:'4px', fontSize:'12px', fontWeight:'600'}}>{e.plan || 'Not selected'}</span>
+                      </td>
+                      <td style={{ padding: "12px 16px", fontSize: "12px", color: "var(--text-secondary)", maxWidth: "200px", wordWrap: "break-word" }}>
+                        {e.message ? (
+                          <div style={{ maxHeight: "60px", overflowY: "auto", paddingRight: "4px" }}>
+                            {e.message}
+                          </div>
+                        ) : '-'}
                       </td>
                       <td style={{ padding: "12px 16px", fontSize: "13px" }}>{new Date(e.date).toLocaleDateString("en-IN")}</td>
                       <td style={{ padding: "12px 16px" }}>

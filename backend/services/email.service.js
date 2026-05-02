@@ -63,3 +63,76 @@ exports.sendOtpEmail = async (to, otp, type) => {
   console.log(`✅ Real email sent to ${to} | ID: ${info.messageId}`);
   return info;
 };
+
+// Send welcome email with auto-generated credentials
+exports.sendStudentWelcomeEmail = async ({ to, studentName, instituteName, email, tempPassword }) => {
+  const transporter = createTransporter();
+
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;
+         border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+
+      <!-- Header -->
+      <div style="background:#1E3A5F;padding:28px 32px;">
+        <h1 style="color:#fff;margin:0;font-size:22px;">Welcome to ${instituteName}</h1>
+        <p style="color:#93C5FD;margin:6px 0 0;">Your student account is ready</p>
+      </div>
+
+      <!-- Body -->
+      <div style="padding:32px;">
+        <p style="color:#374151;font-size:15px;">Hi <strong>${studentName}</strong>,</p>
+        <p style="color:#374151;font-size:15px;">
+          Your student account has been created. Use the credentials below to login.
+        </p>
+
+        <!-- Credentials Box -->
+        <div style="background:#F8FAFC;border:1px solid #E2E8F0;
+             border-left:4px solid #2563EB;border-radius:8px;padding:20px;margin:20px 0;">
+          <p style="margin:0 0 10px;color:#6B7280;font-size:13px;
+             text-transform:uppercase;letter-spacing:1px;">Login Credentials</p>
+          <p style="margin:0 0 8px;color:#111827;font-size:15px;">
+            <span style="color:#6B7280;">Email:</span> <strong>${email}</strong>
+          </p>
+          <p style="margin:0;color:#111827;font-size:15px;">
+            <span style="color:#6B7280;">Password:</span>
+            <strong style="font-size:20px;letter-spacing:2px;color:#2563EB;">
+              ${tempPassword}
+            </strong>
+          </p>
+        </div>
+
+        <div style="background:#FEF3C7;border-radius:8px;padding:14px 18px;
+             border-left:4px solid #F59E0B;margin:20px 0;">
+          <p style="margin:0;color:#92400E;font-size:14px;">
+            You will be asked to change this password after your first login.
+          </p>
+        </div>
+
+        <p style="text-align:center;margin:28px 0 0;">
+          <a href="${process.env.FRONTEND_URL}/login"
+             style="background:#2563EB;color:#fff;padding:12px 32px;
+             border-radius:8px;text-decoration:none;font-size:15px;
+             font-weight:bold;">Login to Your Account</a>
+        </p>
+      </div>
+
+      <!-- Footer -->
+      <div style="background:#F1F5F9;padding:16px 32px;text-align:center;">
+        <p style="color:#9CA3AF;font-size:12px;margin:0;">
+          This is an automated message from ${instituteName} via Student SaaS.
+        </p>
+      </div>
+    </div>
+  `;
+
+  await transporter.verify();
+  const info = await transporter.sendMail({
+    from: process.env.EMAIL_FROM,
+    to,
+    subject: `Your Login Credentials — ${instituteName}`,
+    html,
+  });
+
+  console.log(`✅ Welcome email sent to ${to}`);
+  return info;
+};

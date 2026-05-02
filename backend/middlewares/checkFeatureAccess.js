@@ -32,6 +32,9 @@ const checkFeatureAccess = (featureName) => {
                 });
             }
 
+            // === LIFETIME BYPASS: Lifetime members have all features unlocked ===
+            if (institute.is_lifetime_member) return next();
+
             // Check if feature is enabled in the plan
             const featureValue = institute.Plan[featureName];
 

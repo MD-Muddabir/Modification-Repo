@@ -1,5 +1,7 @@
 const jwt = require("jsonwebtoken");
 const { User, Institute } = require("../models");
+const { sendError } = require("../utils/apiResponse");
+const { ROLES, STATUS } = require("../utils/constants");
 
 // Cache institute status in memory for 60 seconds to avoid hitting DB on every API request
 const statusCache = new Map();
@@ -21,7 +23,7 @@ const verifyToken = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
-    return res.status(401).json({ error: "Access denied" });
+    return sendError(res, "Access denied. No token provided.", 401);
   }
 
   const token = authHeader.split(" ")[1];
@@ -31,24 +33,28 @@ const verifyToken = async (req, res, next) => {
     req.user = decoded;
 
     // For managers, students, and parents: check live status from DB to enforce blocking in real-time
-    if (decoded.role === 'manager' || decoded.role === 'student' || decoded.role === 'parent') {
+    if (decoded.role === ROLES.MANAGER || decoded.role === ROLES.STUDENT || decoded.role === ROLES.PARENT) {
       const dbUser = await User.findByPk(decoded.id, {
-        attributes: ['id', 'status', 'permissions', 'role']
+        attributes: ['id', 'status', 'permissions', 'role', 'is_first_login']
       });
 
       if (!dbUser) {
-        return res.status(401).json({ error: "User not found" });
+        return sendError(res, "User not found", 401);
       }
 
-      if (dbUser.status === 'blocked') {
-        return res.status(403).json({
-          error: "Account blocked",
-          code: "ACCOUNT_BLOCKED",
-          message: "Your account has been blocked by the administrator. Please contact them to regain access."
-        });
+      if (dbUser.status === STATUS.BLOCKED) {
+        return sendError(res, "Your account has been blocked by the administrator. Please contact them to regain access.", 403, { code: "ACCOUNT_BLOCKED" });
       }
 
-      if (decoded.role === 'manager') {
+      // Enforce first login password change for students
+      if (decoded.role === ROLES.STUDENT && dbUser.is_first_login) {
+        // Allow access to change-password and logout endpoints
+        if (!req.path.includes('/change-password') && !req.path.includes('/logout')) {
+           return sendError(res, "You must change your password before accessing the system.", 403, { code: "FIRST_LOGIN", is_first_login: true });
+        }
+      }
+
+      if (decoded.role === ROLES.MANAGER) {
         // Refresh permissions from DB (in case admin updated them after login)
         req.user.permissions = dbUser.permissions;
         req.user.status = dbUser.status;
@@ -56,30 +62,22 @@ const verifyToken = async (req, res, next) => {
     }
 
     // ── Check if institute is suspended ─────────────────────────────────────
-    if (req.user.institute_id && req.user.role !== 'super_admin') {
+    if (req.user.institute_id && req.user.role !== ROLES.SUPER_ADMIN) {
       const instituteStatus = await getInstituteStatus(req.user.institute_id);
 
       if (!instituteStatus) {
-        return res.status(401).json({
-          success: false,
-          error: "Institute not found",
-          message: 'Institute not found. Please contact support.'
-        });
+        return sendError(res, "Institute not found. Please contact support.", 401);
       }
 
-      if (instituteStatus === 'suspended') {
-        return res.status(403).json({
-          success: false,
-          code: 'INSTITUTE_SUSPENDED',
-          error: 'Institute Suspended',
-          message: 'Your institute account has been suspended. Please contact support.'
-        });
+      if (instituteStatus === STATUS.BLOCKED || instituteStatus === 'suspended') {
+        return sendError(res, "Your institute account has been suspended. Please contact support.", 403, { code: 'INSTITUTE_SUSPENDED' });
       }
     }
 
     next();
   } catch (error) {
-    res.status(401).json({ error: "Invalid token" });
+    // Pass JWT errors to the global error middleware
+    next(error);
   }
 };
 

@@ -19,6 +19,7 @@ const Login = lazy(() => import("../pages/auth/Login"));
 const Register = lazy(() => import("../pages/public/RegisterPage"));
 const ForgotPassword = lazy(() => import("../pages/auth/ForgotPassword"));
 const SuspendedPage = lazy(() => import("../pages/public/SuspendedPage"));
+const ChangePassword = lazy(() => import("../pages/auth/ChangePassword"));
 
 const SuperAdminDashboard = lazy(() => import("../pages/superadmin/Dashboard"));
 const Institutes = lazy(() => import("../pages/superadmin/Institutes"));
@@ -57,6 +58,7 @@ const AdminManageFacultyAttendance = lazy(() => import("../pages/admin/AdminMana
 const AdminBiometric = lazy(() => import("../pages/admin/Biometric"));
 const AdminAssignments = lazy(() => import("../pages/admin/AdminAssignments"));
 const AdminPublicPage = lazy(() => import("../pages/admin/PublicPage"));
+const LifetimeAccess = lazy(() => import("../pages/admin/LifetimeAccess"));
 const FacultyViewAttendance = lazy(() => import("../pages/faculty/ViewAttendance"));
 
 const FacultyDashboard = lazy(() => import("../pages/faculty/Dashboard"));
@@ -115,6 +117,11 @@ export default function WebAppRoutes() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/suspended" element={<SuspendedPage />} />
+        <Route path="/student/change-password" element={
+          <ProtectedRoute allowedRoles={["student"]} skipFirstLoginCheck={true}>
+            <ChangePassword />
+          </ProtectedRoute>
+        } />
         <Route path="/i/:slug" element={<InstitutePage />} />
 
         <Route
@@ -171,6 +178,7 @@ export default function WebAppRoutes() {
                 <Route path="public-page" element={<AdminPublicPage />} />
                 <Route path="chat-monitor" element={<ChatApp />} />
                 <Route path="profile" element={<Profile />} />
+                <Route path="lifetime" element={<LifetimeAccess />} />
                 <Route path="*" element={<Navigate to="/admin/dashboard" />} />
               </Routes>
             </ProtectedRoute>

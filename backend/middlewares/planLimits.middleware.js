@@ -69,6 +69,9 @@ const checkStudentLimit = async (req, res, next) => {
             });
         }
 
+        // === LIFETIME BYPASS: unlimited access ===
+        if (institute.is_lifetime_member) return next();
+
         // Count current students
         const studentCount = await Student.count({
             where: { institute_id }
@@ -77,7 +80,8 @@ const checkStudentLimit = async (req, res, next) => {
         // Determine limit (Snapshot first, then Plan fallback)
         const limit_students = institute.current_limit_students || institute.Plan.max_students;
 
-        if (studentCount >= limit_students) {
+        // -1 = unlimited (lifetime override)
+        if (limit_students !== -1 && studentCount >= limit_students) {
             if (req.method === 'GET') return next();
             
             return res.status(403).json({
@@ -118,6 +122,9 @@ const checkFacultyLimit = async (req, res, next) => {
             });
         }
 
+        // === LIFETIME BYPASS: unlimited access ===
+        if (institute.is_lifetime_member) return next();
+
         // Count current faculty
         const facultyCount = await User.count({
             where: {
@@ -128,7 +135,8 @@ const checkFacultyLimit = async (req, res, next) => {
 
         const limit_faculty = institute.current_limit_faculty || institute.Plan.max_faculty;
 
-        if (facultyCount >= limit_faculty) {
+        // -1 = unlimited
+        if (limit_faculty !== -1 && facultyCount >= limit_faculty) {
             if (req.method === 'GET') return next();
             
             return res.status(403).json({
@@ -217,6 +225,9 @@ const checkAdminUserLimit = async (req, res, next) => {
             });
         }
 
+        // === LIFETIME BYPASS: unlimited access ===
+        if (institute.is_lifetime_member) return next();
+
         // Count current admin users
         const adminCount = await User.count({
             where: {
@@ -227,7 +238,8 @@ const checkAdminUserLimit = async (req, res, next) => {
 
         const limit_admins = institute.current_limit_admins || institute.Plan.max_admin_users;
 
-        if (adminCount >= limit_admins) {
+        // -1 = unlimited
+        if (limit_admins !== -1 && adminCount >= limit_admins) {
             if (req.method === 'GET') return next();
             
             return res.status(403).json({
@@ -268,6 +280,9 @@ const checkFeatureAccess = (featureName) => {
                     message: "Institute or plan not found"
                 });
             }
+
+            // === LIFETIME BYPASS: Lifetime members access ALL features always ===
+            if (institute.is_lifetime_member) return next();
 
             const plan = institute.Plan;
 
@@ -399,18 +414,26 @@ const getUsageStats = async (req, res) => {
             User.count({ where: { institute_id, role: 'admin' } })
         ]);
 
-        // Determine limits (Snapshot first, then Plan fallback)
+        // Determine limits (Snapshot first, then Plan fallback; -1 = unlimited)
         const limit_students = institute.current_limit_students || institute.Plan.max_students;
         const limit_faculty = institute.current_limit_faculty || institute.Plan.max_faculty;
         const limit_classes = institute.current_limit_classes || institute.Plan.max_classes;
         const limit_admins = institute.current_limit_admins || institute.Plan.max_admin_users;
+
+        // Helper: safe percentage (handles -1 unlimited)
+        const safePct = (cur, lim) => lim === -1 ? 0 : Math.round((cur / lim) * 100);
+        const safeRem = (cur, lim) => lim === -1 ? -1 : Math.max(0, lim - cur);
 
         res.json({
             success: true,
             data: {
                 institute: {
                     subscription_end: institute.subscription_end,
-                    has_used_trial: institute.has_used_trial
+                    has_used_trial: institute.has_used_trial,
+                    // Lifetime fields for frontend conditional logic
+                    is_lifetime_member: institute.is_lifetime_member || false,
+                    founding_member: institute.founding_member || false,
+                    lifetime_purchased_at: institute.lifetime_purchased_at || null
                 },
                 plan: {
                     name: institute.Plan.name,
@@ -421,27 +444,27 @@ const getUsageStats = async (req, res) => {
                 usage: {
                     students: {
                         current: studentCount,
-                        limit: limit_students,
-                        percentage: Math.round((studentCount / limit_students) * 100),
-                        remaining: Math.max(0, limit_students - studentCount)
+                        limit: limit_students === -1 ? '∞' : limit_students,
+                        percentage: safePct(studentCount, limit_students),
+                        remaining: safeRem(studentCount, limit_students)
                     },
                     faculty: {
                         current: facultyCount,
-                        limit: limit_faculty,
-                        percentage: Math.round((facultyCount / limit_faculty) * 100),
-                        remaining: Math.max(0, limit_faculty - facultyCount)
+                        limit: limit_faculty === -1 ? '∞' : limit_faculty,
+                        percentage: safePct(facultyCount, limit_faculty),
+                        remaining: safeRem(facultyCount, limit_faculty)
                     },
                     classes: {
                         current: classCount,
-                        limit: limit_classes,
-                        percentage: Math.round((classCount / limit_classes) * 100),
-                        remaining: Math.max(0, limit_classes - classCount)
+                        limit: limit_classes === -1 ? '∞' : limit_classes,
+                        percentage: safePct(classCount, limit_classes),
+                        remaining: safeRem(classCount, limit_classes)
                     },
                     admin_users: {
                         current: adminCount,
-                        limit: limit_admins,
-                        percentage: Math.round((adminCount / limit_admins) * 100),
-                        remaining: Math.max(0, limit_admins - adminCount)
+                        limit: limit_admins === -1 ? '∞' : limit_admins,
+                        percentage: safePct(adminCount, limit_admins),
+                        remaining: safeRem(adminCount, limit_admins)
                     }
                 },
                 features: computeFeatures(institute, institute.Plan)
