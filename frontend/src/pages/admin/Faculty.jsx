@@ -12,6 +12,7 @@ import { QRCodeSVG, QRCodeCanvas } from "qrcode.react";
 import QRCode from "qrcode";
 import "./Dashboard.css";
 import { savePdfNative } from "../../utils/capacitorPermissions";
+import BulkImportButton from "../../components/BulkImportButton";
 
 function Faculty() {
     const { user } = useContext(AuthContext);
@@ -346,6 +347,11 @@ function Faculty() {
         });
     };
 
+    const handleBulkSuccess = (result) => {
+        fetchFaculty();
+        alert(`✅ ${result.inserted} faculty member(s) imported successfully!${result.failed > 0 ? ` (${result.failed} rows had errors)` : ''}`);
+    };
+
     const filteredFaculty = faculty.filter(
         (f) =>
             f.User?.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -373,12 +379,12 @@ function Faculty() {
                         ← Back
                     </Link>
                     {canCreate && (
-                        <button
-                            onClick={() => { resetForm(); setShowModal(true); }}
-                            className="btn btn-primary btn-animated"
-                        >
-                            + Add Faculty
-                        </button>
+                        <>
+                            <BulkImportButton type="faculty" onSuccess={handleBulkSuccess} />
+                            <button onClick={() => { resetForm(); setShowModal(true); }} className="btn btn-primary btn-animated">
+                                + Add Faculty
+                            </button>
+                        </>
                     )}
                 </div>
             </div>

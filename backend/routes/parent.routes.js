@@ -3,6 +3,7 @@ const router = express.Router();
 const parentController = require("../controllers/parent.controller");
 const verifyToken = require("../middlewares/auth.middleware");
 const allowRoles = require("../middlewares/role.middleware");
+const { bulkImportParents } = require('../controllers/bulkImport/bulkParents.controller');
 
 // Parent Portal Routes
 router.get(
@@ -81,6 +82,14 @@ router.get(
     verifyToken,
     allowRoles("admin", "manager"),
     parentController.getParentById
+);
+
+// Bulk import route
+router.post(
+    "/bulk-import",
+    verifyToken,
+    allowRoles("admin", "manager"),
+    bulkImportParents
 );
 
 

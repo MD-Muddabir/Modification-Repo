@@ -16,6 +16,7 @@ function Institutes() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
+    const [lifetimeFilter, setLifetimeFilter] = useState("all");
     const [showModal, setShowModal] = useState(false);
     const [selectedInstitute, setSelectedInstitute] = useState(null);
 
@@ -99,10 +100,17 @@ function Institutes() {
         setShowModal(true);
     };
 
-    const filteredInstitutes = institutes.filter(inst =>
-        (inst.name && inst.name.toLowerCase().includes(search.toLowerCase())) ||
-        (inst.email && inst.email.toLowerCase().includes(search.toLowerCase()))
-    );
+    const filteredInstitutes = institutes.filter(inst => {
+        const matchSearch =
+            (inst.name && inst.name.toLowerCase().includes(search.toLowerCase())) ||
+            (inst.email && inst.email.toLowerCase().includes(search.toLowerCase()));
+        const matchLifetime =
+            lifetimeFilter === "all" ? true :
+            lifetimeFilter === "lifetime" ? inst.is_lifetime_member :
+            lifetimeFilter === "founding" ? inst.founding_member :
+            !inst.is_lifetime_member;
+        return matchSearch && matchLifetime;
+    });
 
     if (loading) {
         return <div className="dashboard-container">Loading...</div>;
@@ -143,6 +151,17 @@ function Institutes() {
                         <option value="suspended">Suspended</option>
                         <option value="expired">Expired</option>
                     </select>
+                    <select
+                        className="form-select"
+                        value={lifetimeFilter}
+                        onChange={(e) => setLifetimeFilter(e.target.value)}
+                        style={{ minWidth: "160px" }}
+                    >
+                        <option value="all">All Members</option>
+                        <option value="lifetime">💎 Lifetime Only</option>
+                        <option value="founding">🌟 Founding Only</option>
+                        <option value="regular">Regular Only</option>
+                    </select>
                 </div>
             </div>
 
@@ -174,6 +193,13 @@ function Institutes() {
                     <div className="stat-content">
                         <h3>{institutes.filter(i => i.status === 'expired').length}</h3>
                         <p>Expired</p>
+                    </div>
+                </div>
+                <div className="stat-card" style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)', color: '#fff' }}>
+                    <div className="stat-icon">💎</div>
+                    <div className="stat-content">
+                        <h3>{institutes.filter(i => i.is_lifetime_member).length}</h3>
+                        <p>Lifetime Members</p>
                     </div>
                 </div>
             </div>
@@ -209,7 +235,14 @@ function Institutes() {
                                         <td>{institute.name}</td>
                                         <td>{institute.email}</td>
                                         <td>{institute.phone || "N/A"}</td>
-                                        <td>{institute.Plan?.name || "No Plan"}</td>
+                                        <td>
+                                            {institute.is_lifetime_member ? (
+                                                <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                                    <span style={{ background: 'linear-gradient(90deg,#7c3aed,#4f46e5)', color: '#fff', padding: '2px 8px', borderRadius: 12, fontSize: 11, fontWeight: 700 }}>💎 LIFETIME</span>
+                                                    {institute.founding_member && <span style={{ background: '#f59e0b', color: '#fff', padding: '2px 8px', borderRadius: 12, fontSize: 10, fontWeight: 700 }}>🌟 FOUNDING</span>}
+                                                </span>
+                                            ) : institute.Plan?.name || "No Plan"}
+                                        </td>
                                         <td>
                                             <span className={`badge badge-${institute.status === 'active' ? 'success' :
                                                 institute.status === 'suspended' ? 'warning' : 'danger'

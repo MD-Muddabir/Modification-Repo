@@ -589,6 +589,25 @@ function AdminDashboard() {
                             <span className="action-title">Settings</span>
                         </div>
                     )}
+
+                    {/* Lifetime Access — only for non-lifetime admins */}
+                    {isAdmin && !planDetails?.institute?.is_lifetime_member && (
+                        <div
+                            onClick={() => navigate(`${basePath}/lifetime`)}
+                            className="action-card"
+                            style={{ cursor: 'pointer', background: 'linear-gradient(135deg, #1a0533, #4c1d95)', color: '#fff', border: '1px solid rgba(167,139,250,0.4)', position: 'relative' }}
+                        >
+                            <span className="action-icon">💎</span>
+                            <span className="action-title" style={{ color: '#fff' }}>Lifetime Access</span>
+                            <span style={{ position: 'absolute', top: 5, right: 5, fontSize: '10px', background: '#f59e0b', color: '#000', padding: '2px 6px', borderRadius: '6px', fontWeight: 700 }}>HOT</span>
+                        </div>
+                    )}
+                    {isAdmin && planDetails?.institute?.is_lifetime_member && (
+                        <div className="action-card" style={{ background: 'linear-gradient(135deg, #1a0533, #4c1d95)', color: '#fff', border: '1px solid rgba(167,139,250,0.4)', cursor: 'default' }}>
+                            <span className="action-icon">💎</span>
+                            <span className="action-title" style={{ color: '#e9d5ff', fontSize: '12px' }}>Lifetime Member ✓</span>
+                        </div>
+                    )}
                 </div>
             </div>
 

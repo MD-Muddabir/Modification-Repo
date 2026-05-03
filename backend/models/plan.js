@@ -187,6 +187,49 @@ const Plan = sequelize.define("Plan", {
     razorpay_plan_id: {
         type: DataTypes.STRING,
         allowNull: true
+    },
+
+    // ─── Lifetime Plan Fields ──────────────────────────────────────────────
+    is_lifetime: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
+    },
+    lifetime_price: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: true
+    },
+    lifetime_slots_total: {
+        type: DataTypes.INTEGER,
+        defaultValue: 100
+    },
+    lifetime_slots_used: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0
+    },
+    // -1 = unlimited for lifetime members
+    max_students_lifetime: {
+        type: DataTypes.INTEGER,
+        defaultValue: -1
+    },
+    max_faculty_lifetime: {
+        type: DataTypes.INTEGER,
+        defaultValue: -1
+    },
+    max_managers_lifetime: {
+        type: DataTypes.INTEGER,
+        defaultValue: -1
+    },
+    lifetime_bonus_subdomain: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true
+    },
+    lifetime_bonus_priority_support: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true
+    },
+    lifetime_bonus_unlimited_export: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true
     }
 }, {
     timestamps: true,

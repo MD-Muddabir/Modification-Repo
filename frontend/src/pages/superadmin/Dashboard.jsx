@@ -29,7 +29,8 @@ function SuperAdminDashboard() {
         totalPlans: 0,
         totalPrivateSchools: 0,
         totalFreeTrialUsers: 0,
-        totalDiscount: 0
+        totalDiscount: 0,
+        lifetime: null
     });
 
     const [recentInstitutes, setRecentInstitutes] = useState([]);
@@ -75,25 +76,7 @@ function SuperAdminDashboard() {
     const safeRevenue = Number(stats.totalRevenue) || 0;
     const safeMonthly = Number(stats.monthlyRevenue) || 0;
     const safeDiscount = Number(stats.totalDiscount) || 0;
-
-    const statCards = [
-        { icon: '🏢', value: stats.totalInstitutes, label: 'Total Institutes', color: '#6366f1' },
-        { icon: '✅', value: stats.activeInstitutes, label: 'Active Institutes', color: '#10b981' },
-        { icon: '👨‍🎓', value: stats.totalStudents, label: 'Total Students', color: '#8b5cf6' },
-        { icon: '👩‍🏫', value: stats.totalFaculty, label: 'Total Faculty', color: '#ec4899' },
-        { icon: '🧑‍💼', value: stats.totalManagers, label: 'Total Managers', color: '#14b8a6' },
-        { icon: '🏫', value: stats.totalPrivateSchools, label: 'Private Schools', color: '#f97316' },
-        { icon: '🆓', value: stats.totalFreeTrialUsers, label: 'Free Trial Users', color: '#84cc16' },
-        { icon: '🎉', value: `₹${safeDiscount.toLocaleString('en-IN')}`, label: 'Platform Discounts', color: '#a855f7' },
-        { icon: '📋', value: stats.totalPlans, label: 'Active Plans', color: '#06b6d4' },
-    ];
-
-    // Determine values for landing page, fallback to 0 if undefined
-    const landingPageViews = stats.totalLandingPageViews || 0;
-    const landingPageRegs = stats.totalInstitutes || 0;
-    const landingPageConv = stats.activeInstitutes || 0;
-    const landingPageTrial = stats.totalFreeTrialUsers || 0;
-
+
     return (
         <div className="dashboard-container">
             <div className="dashboard-header">
@@ -112,7 +95,20 @@ function SuperAdminDashboard() {
 
             {/* ── Statistics Grid ── */}
             <div className="stats-grid">
-                {statCards.map(s => (
+                {[
+                    { icon: '🏢', value: stats.totalInstitutes, label: 'Total Institutes', color: '#6366f1' },
+                    { icon: '✅', value: stats.activeInstitutes, label: 'Active Institutes', color: '#10b981' },
+                    { icon: '👨‍🎓', value: stats.totalStudents, label: 'Total Students', color: '#8b5cf6' },
+                    { icon: '👩‍🏫', value: stats.totalFaculty, label: 'Total Faculty', color: '#ec4899' },
+                    { icon: '🧑‍💼', value: stats.totalManagers, label: 'Total Managers', color: '#14b8a6' },
+                    { icon: '🏫', value: stats.totalPrivateSchools, label: 'Private Schools', color: '#f97316' },
+                    { icon: '🆓', value: stats.totalFreeTrialUsers, label: 'Free Trial Users', color: '#84cc16' },
+                    { icon: '🎉', value: `₹${Number(stats.totalDiscount||0).toLocaleString('en-IN')}`, label: 'Platform Discounts', color: '#a855f7' },
+                    { icon: '📋', value: stats.totalPlans, label: 'Active Plans', color: '#06b6d4' },
+                    { icon: '💎', value: stats.lifetime?.total_lifetime_institutes || 0, label: 'Lifetime Members', color: '#7c3aed' },
+                    { icon: '🌟', value: stats.lifetime?.founding_members || 0, label: 'Founding Members', color: '#f59e0b' },
+                    { icon: '🔓', value: stats.lifetime?.slots_remaining || 0, label: 'Slots Remaining', color: '#ef4444' },
+                ].map(s => (
                     <div key={s.label} className="stat-card" style={{ borderTop: `3px solid ${s.color}` }}>
                         <div className="stat-icon" style={{ background: `linear-gradient(135deg, ${s.color}22 0%, ${s.color}11 100%)`, color: s.color, boxShadow: `0 4px 12px ${s.color}33`, fontSize: '2rem' }}>{s.icon}</div>
                         <div className="stat-content">
@@ -145,14 +141,13 @@ function SuperAdminDashboard() {
                         </button>
                     </div>
                 </div>
-
                 {lpPreviewOpen && (
-                    <div style={{ marginTop: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px,1fr))', gap: '12px', animation: 'fadeIn 0.3s ease' }}>
+                    <div style={{ marginTop: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px,1fr))', gap: '12px' }}>
                         {[
-                            { icon: '👁', label: 'Page Views', value: landingPageViews.toLocaleString(), color: '#818cf8' },
-                            { icon: '📝', label: 'Registrations', value: landingPageRegs, color: '#34d399' },
-                            { icon: '💳', label: 'Paid Conversions', value: landingPageConv, color: '#fbbf24' },
-                            { icon: '🆓', label: 'Free Trial', value: landingPageTrial, color: '#f87171' },
+                            { icon: '👁', label: 'Page Views', value: (stats.totalLandingPageViews||0).toLocaleString(), color: '#818cf8' },
+                            { icon: '📝', label: 'Registrations', value: stats.totalInstitutes||0, color: '#34d399' },
+                            { icon: '💳', label: 'Paid Conversions', value: stats.activeInstitutes||0, color: '#fbbf24' },
+                            { icon: '🆓', label: 'Free Trial', value: stats.totalFreeTrialUsers||0, color: '#f87171' },
                         ].map(s => (
                             <div key={s.label} style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(255,255,255,0.2)' }}>
                                 <div style={{ fontSize: '22px', marginBottom: '4px' }}>{s.icon}</div>
@@ -163,6 +158,34 @@ function SuperAdminDashboard() {
                     </div>
                 )}
             </div>
+
+            {/* ── Lifetime Access Monitor ── */}
+            {stats.lifetime && (
+                <div className="card" style={{ marginBottom: '24px', background: 'linear-gradient(135deg, #4c1d95 0%, #6d28d9 50%, #7c3aed 100%)', color: '#fff', border: 'none' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                        <span style={{ fontSize: '32px' }}>💎</span>
+                        <div>
+                            <h2 style={{ margin: 0, fontSize: '18px', color: '#fff' }}>Lifetime Access Program</h2>
+                            <p style={{ margin: 0, color: '#c4b5fd', fontSize: '13px' }}>One-time payment — no recurring subscriptions</p>
+                        </div>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px,1fr))', gap: '12px' }}>
+                        {[
+                            { icon: '💎', label: 'Total Lifetime', value: stats.lifetime.total_lifetime_institutes, color: '#a78bfa' },
+                            { icon: '🌟', label: 'Founding Members', value: stats.lifetime.founding_members, color: '#fcd34d' },
+                            { icon: '🏦', label: 'Standard Lifetime', value: stats.lifetime.standard_lifetime, color: '#6ee7b7' },
+                            { icon: '🔓', label: 'Slots Remaining', value: `${stats.lifetime.slots_remaining} / ${stats.lifetime.slots_total}`, color: stats.lifetime.slots_remaining < 10 ? '#f87171' : '#6ee7b7' },
+                            { icon: '💰', label: 'Lifetime Revenue', value: `₹${(stats.lifetime.total_lifetime_revenue || 0).toLocaleString('en-IN')}`, color: '#fbbf24' },
+                        ].map(s => (
+                            <div key={s.label} style={{ background: 'rgba(255,255,255,0.1)', borderRadius: '12px', padding: '16px', border: '1px solid rgba(255,255,255,0.15)', backdropFilter: 'blur(10px)' }}>
+                                <div style={{ fontSize: '20px', marginBottom: '4px' }}>{s.icon}</div>
+                                <div style={{ fontSize: '22px', fontWeight: '800', color: s.color }}>{s.value}</div>
+                                <div style={{ fontSize: '12px', color: '#ddd6fe' }}>{s.label}</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* ── Quick Actions ── */}
             <div className="quick-actions">

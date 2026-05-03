@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import api from "../../services/api";
 import { AuthContext } from "../../context/AuthContext";
 import "./Dashboard.css";
+import BulkImportButton from "../../components/BulkImportButton";
 
 function Parents() {
     const { user } = useContext(AuthContext);
@@ -138,6 +139,12 @@ function Parents() {
         setFormData({ ...formData, student_ids: selected });
     };
 
+    const handleBulkSuccess = (result) => {
+        // Re-fetch the parent list to show newly imported parents
+        fetchParents();
+        alert(`âœ… ${result.inserted} parent(s) imported and linked to students successfully!${result.failed > 0 ? ` (${result.failed} rows had errors)` : ''}`);
+    };
+
     if (loading) {
         return <div className="dashboard-container">Loading...</div>;
     }
@@ -155,6 +162,7 @@ function Parents() {
                 <div className="dashboard-header-right">
                     <ThemeSelector />
                     <Link to="/admin/dashboard" className="btn btn-secondary">← Back</Link>
+                    <BulkImportButton type="parents" onSuccess={handleBulkSuccess} />
                     <button
                         onClick={() => { resetForm(); setShowModal(true); }}
                         className="btn btn-primary"

@@ -80,6 +80,11 @@ exports.getDashboardStats = async (req, res) => {
 
         const totalLandingPageViews = await LandingPageView.count();
 
+        // === Lifetime Member Stats ===
+        const totalLifetimeInstitutes = await Institute.count({ where: { is_lifetime_member: true } });
+        const totalFoundingMembers = await Institute.count({ where: { founding_member: true } });
+        const lifetimePlan = await Plan.findOne({ where: { is_lifetime: true } });
+
         res.json({
             totalInstitutes,
             activeInstitutes,
@@ -94,7 +99,17 @@ exports.getDashboardStats = async (req, res) => {
             totalPrivateSchools,
             totalFreeTrialUsers,
             totalDiscount,
-            totalLandingPageViews
+            totalLandingPageViews,
+            // Lifetime stats
+            lifetime: {
+                total_lifetime_institutes: totalLifetimeInstitutes,
+                founding_members: totalFoundingMembers,
+                standard_lifetime: totalLifetimeInstitutes - totalFoundingMembers,
+                slots_used: lifetimePlan?.lifetime_slots_used || 0,
+                slots_total: lifetimePlan?.lifetime_slots_total || 100,
+                slots_remaining: (lifetimePlan?.lifetime_slots_total || 100) - (lifetimePlan?.lifetime_slots_used || 0),
+                total_lifetime_revenue: totalFoundingMembers * 19999 + (totalLifetimeInstitutes - totalFoundingMembers) * 24999
+            }
         });
     } catch (error) {
         console.error("getDashboardStats error:", error);

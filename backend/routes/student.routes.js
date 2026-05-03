@@ -7,6 +7,7 @@ const allowRoles = require("../middlewares/role.middleware");
 const { checkStudentLimit } = require("../middlewares/planLimits.middleware");
 const checkManagerPermission = require("../middlewares/checkManagerPermission");
 const { cacheMiddleware, invalidateCache } = require("../middlewares/cache.middleware"); // ✅ Phase 3.4
+const { bulkImportStudents } = require('../controllers/bulkImport/bulkStudents.controller');
 
 // All routes require authentication and valid subscription
 router.use(verifyToken, checkSubscription);
@@ -35,5 +36,11 @@ router.get("/:id", allowRoles("super_admin", "admin", "faculty", "student", "man
 router.put("/:id", allowRoles("super_admin", "admin", "faculty", "student", "manager"), checkManagerPermission("students.update"), invalidateCache("cache:/api/students*"), studentController.updateStudent);
 router.delete("/:id", allowRoles("super_admin", "admin", "manager"), checkManagerPermission("students.delete"), invalidateCache("cache:/api/students*"), studentController.deleteStudent);
 
-module.exports = router;
+// Bulk import route
+router.post("/bulk-import", allowRoles("admin", "manager"), checkManagerPermission("students.create"), bulkImportStudents);
 
+// Password Management Routes
+router.post("/credentials", allowRoles("super_admin", "admin", "manager"), checkManagerPermission("students.read"), studentController.getStudentCredentials);
+router.post("/:id/resend-credentials", allowRoles("super_admin", "admin", "manager"), checkManagerPermission("students.update"), studentController.resendStudentCredentials);
+
+module.exports = router;
