@@ -299,7 +299,21 @@ exports.getStudentFees = async (req, res) => {
             return res.status(403).json({ success: false, message: "Unauthorized access" });
         }
 
-        const { FeesStructure, Subject } = require("../models");
+        const { FeesStructure, Subject, StudentFee, Student, Class } = require("../models");
+        const { syncSingleStudentFees } = require("./fees.controller");
+
+        const studentObj = await Student.findOne({
+            where: { id: student_id, institute_id: req.user.institute_id },
+            include: [{ model: Subject }, { model: Class }]
+        });
+
+        if (!studentObj) {
+            return res.status(404).json({ success: false, message: "Student record not found" });
+        }
+
+        // Sync fees to ensure the parent sees exactly the accurate and up-to-date fees
+        await syncSingleStudentFees(req.user.institute_id, studentObj);
+
         const fees = await StudentFee.findAll({
             where: { student_id, institute_id: req.user.institute_id },
             include: [
@@ -313,6 +327,7 @@ exports.getStudentFees = async (req, res) => {
 
         res.status(200).json({ success: true, data: fees });
     } catch (error) {
+        console.error("Error fetching student fees for parent:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -423,6 +438,125 @@ exports.deleteParent = async (req, res) => {
         await parent.destroy();
 
         res.status(200).json({ success: true, message: "Parent deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+/**
+ * Get current initial passwords for selected parents.
+ * @route POST /api/parents/credentials
+ * @access Admin
+ */
+exports.getParentCredentials = async (req, res) => {
+    try {
+        const { parent_ids } = req.body;
+        const institute_id = req.user.institute_id;
+
+        if (!Array.isArray(parent_ids) || parent_ids.length === 0) {
+            return res.status(400).json({ success: false, message: "No parents selected" });
+        }
+
+        const { generateTempPassword } = require('../utils/passwordGenerator');
+        const { hashPassword } = require("../utils/hashPassword");
+
+        const parents = await User.findAll({
+            where: { id: { [Op.in]: parent_ids }, institute_id, role: "parent" },
+            attributes: ['id', 'name', 'email', 'phone', 'initial_password', 'is_first_login']
+        });
+
+        const credentials = [];
+
+        for (const p of parents) {
+            let password = p.initial_password;
+            let status = 'active';
+
+            if (!password) {
+                if (!p.is_first_login) {
+                    status = 'changed';
+                    password = null;
+                } else {
+                    const tempPassword = generateTempPassword();
+                    const password_hash = await hashPassword(tempPassword);
+                    const tempExpiry = new Date();
+                    tempExpiry.setDate(tempExpiry.getDate() + 7);
+
+                    await p.update({
+                        password_hash,
+                        initial_password: tempPassword,
+                        is_first_login: true,
+                        temp_password_expires_at: tempExpiry,
+                        credentials_sent_at: new Date(),
+                    });
+
+                    password = tempPassword;
+                    status = 'generated';
+                }
+            }
+
+            credentials.push({
+                id: p.id,
+                identifier: p.phone || 'Parent',
+                name: p.name,
+                email: p.email,
+                password,
+                status,
+            });
+        }
+
+        res.status(200).json({ success: true, data: credentials });
+    } catch (error) {
+        console.error('getParentCredentials error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+/**
+ * Resend parent credentials
+ * @route POST /api/parents/:id/resend-credentials
+ * @access Admin
+ */
+exports.resendParentCredentials = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const institute_id = req.user.institute_id;
+
+        const parent = await User.findOne({
+            where: { id, institute_id, role: "parent" },
+        });
+
+        if (!parent) {
+            return res.status(404).json({ success: false, message: "Parent not found" });
+        }
+
+        const lastSent = parent.credentials_sent_at;
+        if (lastSent && new Date() - new Date(lastSent) < 5 * 60 * 1000) {
+            return res.status(429).json({ success: false, message: "Please wait 5 minutes before resending credentials." });
+        }
+
+        const { generateTempPassword } = require('../utils/passwordGenerator');
+        const { hashPassword } = require("../utils/hashPassword");
+        const tempPassword = generateTempPassword();
+        const password_hash = await hashPassword(tempPassword);
+
+        const tempExpiry = new Date();
+        tempExpiry.setDate(tempExpiry.getDate() + 7);
+
+        await parent.update({
+            password_hash,
+            is_first_login: true,
+            temp_password_expires_at: tempExpiry,
+            credentials_sent_at: new Date(),
+            initial_password: tempPassword
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Credentials generated successfully",
+            showPasswordOnScreen: true,
+            initial_password: tempPassword
+        });
+
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }

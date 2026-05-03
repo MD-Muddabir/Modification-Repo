@@ -34,6 +34,27 @@ const User = sequelize.define("User", {
         allowNull: true,
         defaultValue: null,
     },
+    // Student credential management fields
+    is_first_login: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+        allowNull: true,
+    },
+    temp_password_expires_at: {
+        type: DataTypes.DATE,
+        defaultValue: null,
+        allowNull: true,
+    },
+    credentials_sent_at: {
+        type: DataTypes.DATE,
+        defaultValue: null,
+        allowNull: true,
+    },
+    initial_password: {
+        type: DataTypes.STRING(255),
+        defaultValue: null,
+        allowNull: true,
+    },
 });
 
 module.exports = User;

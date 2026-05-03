@@ -50,6 +50,10 @@ router.put("/:id", verifyToken, checkSubscription, allowRoles("admin", "faculty"
  */
 router.delete("/:id", verifyToken, checkSubscription, allowRoles("admin", "manager"), checkManagerPermission("faculty.delete"), facultyController.deleteFaculty);
 
+// Credentials
+router.post("/credentials", verifyToken, allowRoles("admin", "manager"), facultyController.getFacultyCredentials);
+router.post("/:id/resend-credentials", verifyToken, allowRoles("admin", "manager"), facultyController.resendFacultyCredentials);
+
 // Bulk import route
 router.post("/bulk-import", verifyToken, checkSubscription, allowRoles("admin", "manager"), checkManagerPermission("faculty.create"), bulkImportFaculty);
 

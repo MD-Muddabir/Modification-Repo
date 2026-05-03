@@ -9,9 +9,14 @@ backend/.env*
 
 dist/
 build/
-android/
+
+# Ignore ONLY build outputs, not full android project
+frontend/android/app/build/
+frontend/android/.gradle/
+frontend/android/local.properties
+frontend/android/*.log
 
 *.log
 
 # Keep railway.json tracked (it is NOT a secret)
-!railway.json
+!railway.json

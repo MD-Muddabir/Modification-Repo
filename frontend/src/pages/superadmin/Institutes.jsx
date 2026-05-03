@@ -31,7 +31,7 @@ function Institutes() {
 
     const fetchInstitutes = async () => {
         try {
-            let url = "/institutes?limit=100";
+            let url = `/institutes?limit=200`;
             if (statusFilter !== "all") {
                 url += `&status=${statusFilter}`;
             }
@@ -102,13 +102,15 @@ function Institutes() {
 
     const filteredInstitutes = institutes.filter(inst => {
         const matchSearch =
+            !search ||
             (inst.name && inst.name.toLowerCase().includes(search.toLowerCase())) ||
             (inst.email && inst.email.toLowerCase().includes(search.toLowerCase()));
-        const matchLifetime =
-            lifetimeFilter === "all" ? true :
-            lifetimeFilter === "lifetime" ? inst.is_lifetime_member :
-            lifetimeFilter === "founding" ? inst.founding_member :
-            !inst.is_lifetime_member;
+
+        let matchLifetime = true;
+        if (lifetimeFilter === "lifetime") matchLifetime = inst.is_lifetime_member === true;
+        else if (lifetimeFilter === "founding") matchLifetime = inst.founding_member === true;
+        else if (lifetimeFilter === "regular") matchLifetime = !inst.is_lifetime_member;
+
         return matchSearch && matchLifetime;
     });
 
@@ -174,31 +176,35 @@ function Institutes() {
                         <p>Total Institutes</p>
                     </div>
                 </div>
-                <div className="stat-card">
+                <div className="stat-card" style={{ cursor: 'pointer' }} onClick={() => { setStatusFilter('active'); setLifetimeFilter('all'); }}>
                     <div className="stat-icon">✅</div>
                     <div className="stat-content">
                         <h3>{institutes.filter(i => i.status === 'active').length}</h3>
                         <p>Active</p>
                     </div>
                 </div>
-                <div className="stat-card">
+                <div className="stat-card" style={{ cursor: 'pointer' }} onClick={() => { setStatusFilter('suspended'); setLifetimeFilter('all'); }}>
                     <div className="stat-icon">⏸️</div>
                     <div className="stat-content">
                         <h3>{institutes.filter(i => i.status === 'suspended').length}</h3>
                         <p>Suspended</p>
                     </div>
                 </div>
-                <div className="stat-card">
+                <div className="stat-card" style={{ cursor: 'pointer' }} onClick={() => { setStatusFilter('expired'); setLifetimeFilter('all'); }}>
                     <div className="stat-icon">⏰</div>
                     <div className="stat-content">
                         <h3>{institutes.filter(i => i.status === 'expired').length}</h3>
                         <p>Expired</p>
                     </div>
                 </div>
-                <div className="stat-card" style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)', color: '#fff' }}>
+                <div
+                    className="stat-card"
+                    style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)', color: '#fff', cursor: 'pointer' }}
+                    onClick={() => { setStatusFilter('all'); setLifetimeFilter('lifetime'); }}
+                >
                     <div className="stat-icon">💎</div>
                     <div className="stat-content">
-                        <h3>{institutes.filter(i => i.is_lifetime_member).length}</h3>
+                        <h3>{institutes.filter(i => i.is_lifetime_member === true).length}</h3>
                         <p>Lifetime Members</p>
                     </div>
                 </div>
@@ -237,11 +243,13 @@ function Institutes() {
                                         <td>{institute.phone || "N/A"}</td>
                                         <td>
                                             {institute.is_lifetime_member ? (
-                                                <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                                    <span style={{ background: 'linear-gradient(90deg,#7c3aed,#4f46e5)', color: '#fff', padding: '2px 8px', borderRadius: 12, fontSize: 11, fontWeight: 700 }}>💎 LIFETIME</span>
+                                                <span style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                                                    <span style={{ background: 'linear-gradient(90deg,#7c3aed,#4f46e5)', color: '#fff', padding: '3px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>💎 LIFETIME</span>
                                                     {institute.founding_member && <span style={{ background: '#f59e0b', color: '#fff', padding: '2px 8px', borderRadius: 12, fontSize: 10, fontWeight: 700 }}>🌟 FOUNDING</span>}
                                                 </span>
-                                            ) : institute.Plan?.name || "No Plan"}
+                                            ) : (
+                                                <span>{institute.Plan?.name || '—'}</span>
+                                            )}
                                         </td>
                                         <td>
                                             <span className={`badge badge-${institute.status === 'active' ? 'success' :

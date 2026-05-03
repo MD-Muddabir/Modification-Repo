@@ -1,10 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { Capacitor } from "@capacitor/core";
 import "./NetworkStatus.css";
+
+const IS_NATIVE = Capacitor.isNativePlatform();
 
 const NetworkStatus = () => {
     const [isOnline, setIsOnline] = useState(navigator.onLine);
     const [showBackOnline, setShowBackOnline] = useState(false);
     const [serverDown, setServerDown] = useState(false);
+    const [retrying, setRetrying] = useState(false);
 
     useEffect(() => {
         let networkListener;
@@ -12,6 +16,7 @@ const NetworkStatus = () => {
         const handleOnline = () => {
             setIsOnline(true);
             setShowBackOnline(true);
+            setRetrying(false);
             setTimeout(() => setShowBackOnline(false), 4000); // Hide success toast after 4s
         };
 
@@ -53,6 +58,19 @@ const NetworkStatus = () => {
         };
     }, []);
 
+    // Phase 4: Retry handler for mobile offline screen
+    const handleRetry = useCallback(() => {
+        setRetrying(true);
+        // Give the network a moment to reconnect, then reload
+        setTimeout(() => {
+            if (navigator.onLine) {
+                window.location.reload();
+            } else {
+                setRetrying(false);
+            }
+        }, 1500);
+    }, []);
+
     if (serverDown) {
         return (
             <div className="server-down-overlay">
@@ -71,6 +89,35 @@ const NetworkStatus = () => {
                     <div className="server-status-bar">
                         <span className="server-dot"></span>
                         System Network Status: <span style={{color: '#ff4d4f', fontWeight: 'bold', marginLeft: '4px'}}>Offline</span>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Phase 4 (Mobile): Full-screen offline overlay for native platforms
+    if (IS_NATIVE && !isOnline) {
+        return (
+            <div className="mobile-offline-overlay">
+                <div className="mobile-offline-card">
+                    <div className="mobile-offline-icon-wrap">
+                        <div className="mobile-offline-icon">📡</div>
+                        <div className="mobile-offline-ring"></div>
+                    </div>
+                    <h2 className="mobile-offline-title">No Internet Connection</h2>
+                    <p className="mobile-offline-desc">
+                        You're currently offline. Please check your Wi-Fi or mobile data and try again.
+                    </p>
+                    <button
+                        className="mobile-offline-retry-btn"
+                        onClick={handleRetry}
+                        disabled={retrying}
+                    >
+                        {retrying ? "Checking…" : "Retry Connection 🔄"}
+                    </button>
+                    <div className="mobile-offline-status">
+                        <span className="mobile-offline-dot"></span>
+                        Network Status: <span style={{ color: "#ff4d4f", fontWeight: "700", marginLeft: "4px" }}>Offline</span>
                     </div>
                 </div>
             </div>

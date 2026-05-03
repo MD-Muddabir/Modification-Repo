@@ -93,4 +93,18 @@ router.post(
 );
 
 
+// Credentials
+router.post(
+    "/credentials",
+    verifyToken,
+    allowRoles("admin", "manager"),
+    parentController.getParentCredentials
+);
+router.post(
+    "/:id/resend-credentials",
+    verifyToken,
+    allowRoles("admin", "manager"),
+    parentController.resendParentCredentials
+);
+
 module.exports = router;
