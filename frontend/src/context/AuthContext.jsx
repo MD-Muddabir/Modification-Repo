@@ -1,5 +1,6 @@
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useContext } from "react";
 import { loginUser } from "../services/auth.service";
+import { BrandingContext } from "./BrandingContext";
 
 export const AuthContext = createContext();
 
@@ -13,6 +14,9 @@ const persistSession = (token, user) => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isInitializing, setIsInitializing] = useState(true);
+
+  // Access branding setters — BrandingProvider is mounted above us in App.jsx
+  const { setBranding, clearBranding } = useContext(BrandingContext);
 
   useEffect(() => {
     const verifySession = async () => {
@@ -46,6 +50,10 @@ export const AuthProvider = ({ children }) => {
            
            sessionStorage.setItem("isPlanExpired", isExpired ? "true" : "false");
            userData.isPlanExpired = isExpired;
+
+           // ── Dynamic branding: update with fresh profile data ──
+           setBranding(userData);
+
            setUser(userData);
         } else {
            logout();
@@ -59,6 +67,7 @@ export const AuthProvider = ({ children }) => {
     };
     
     verifySession();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const login = async (data) => {
@@ -78,6 +87,9 @@ export const AuthProvider = ({ children }) => {
     persistSession(token, user);
     sessionStorage.setItem("isPlanExpired", isExpired ? "true" : "false");
 
+    // ── Dynamic branding: save institute branding after login ──
+    setBranding(user);
+
     setUser(user);
   };
 
@@ -85,6 +97,10 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     sessionStorage.clear();
+
+    // ── Dynamic branding: reset to ZF defaults on logout ──
+    clearBranding();
+
     setUser(null);
   };
 

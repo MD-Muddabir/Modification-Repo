@@ -2,7 +2,7 @@ import { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
 import api from '../../services/api';
-import './Login.css'; // Reuse login styling or similar
+import './Auth.css';
 
 const ChangePassword = () => {
     const { user, setUser } = useContext(AuthContext);

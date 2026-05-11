@@ -13,6 +13,7 @@ import QRCode from "qrcode";
 import "./Dashboard.css";
 import { savePdfNative } from "../../utils/capacitorPermissions";
 import BulkImportButton from "../../components/BulkImportButton";
+import CredentialRow from "../../components/common/CredentialRow";
 
 function Faculty() {
     const { user } = useContext(AuthContext);
@@ -32,6 +33,11 @@ function Faculty() {
     const [qrFaculty, setQrFaculty] = useState(null);
     const [qrDownloading, setQrDownloading] = useState(false);
     const [qrLoading, setQrLoading] = useState(false);
+    
+    // Credentials state
+    const [showCredentialsModal, setShowCredentialsModal] = useState(false);
+    const [credentialsData, setCredentialsData] = useState([]);
+    const [loadingCredentials, setLoadingCredentials] = useState(false);
 
     const handleSelectAll = (e) => {
         if (e.target.checked) setSelectedFaculty(filteredFaculty.map(f => f.id));
@@ -52,6 +58,39 @@ function Faculty() {
         } finally {
             setQrLoading(false);
             setShowQrModal(true);
+        }
+    };
+
+    const handleViewCredentials = async () => {
+        if (selectedFaculty.length === 0) return;
+        setLoadingCredentials(true);
+        try {
+            const res = await api.post('/faculty/credentials', { faculty_ids: selectedFaculty });
+            if (res.data.success) {
+                setCredentialsData(res.data.data);
+                setShowCredentialsModal(true);
+            }
+        } catch (err) {
+            console.error('Error fetching credentials:', err);
+            alert('Failed to fetch credentials');
+        } finally {
+            setLoadingCredentials(false);
+        }
+    };
+
+    const handleViewSingleCredentials = async (facultyId) => {
+        setLoadingCredentials(true);
+        try {
+            const res = await api.post('/faculty/credentials', { faculty_ids: [facultyId] });
+            if (res.data.success) {
+                setCredentialsData(res.data.data);
+                setShowCredentialsModal(true);
+            }
+        } catch (err) {
+            console.error('Error fetching credentials:', err);
+            alert('Failed to fetch credentials');
+        } finally {
+            setLoadingCredentials(false);
         }
     };
 
@@ -286,11 +325,23 @@ function Faculty() {
                 await api.put(`/faculty/${formData.id}`, formData);
                 alert("Faculty updated successfully");
             } else {
-                await api.post("/faculty", {
+                const res = await api.post("/faculty", {
                     ...formData,
                     institute_id: user.institute_id,
                 });
-                alert("Faculty added successfully");
+                
+                if (res.data.showPasswordOnScreen) {
+                    setCredentialsData([{
+                        id: res.data.data.faculty.id,
+                        identifier: res.data.data.faculty.designation || 'Faculty',
+                        name: res.data.data.user.name,
+                        email: res.data.data.user.email || 'N/A',
+                        password: res.data.initial_password
+                    }]);
+                    setShowCredentialsModal(true);
+                } else {
+                    alert("Faculty added successfully");
+                }
             }
             setShowModal(false);
             resetForm();
@@ -439,14 +490,24 @@ function Faculty() {
                 <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                     <h3 className="card-title" style={{ margin: 0 }}>All Faculty ({filteredFaculty.length})</h3>
                     {selectedFaculty.length > 0 && (
-                        <button 
-                            className="btn btn-sm" 
-                            style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', fontWeight: 600, border: 'none', borderRadius: '6px' }}
-                            onClick={handleBulkDownloadCards}
-                            disabled={bulkDownloading}
-                        >
-                            {bulkDownloading ? '⏳ Generating PDF...' : `⬇ Download ${selectedFaculty.length} Selected Cards`}
-                        </button>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button 
+                                className="btn btn-sm" 
+                                style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)', color: 'white', fontWeight: 600, border: 'none', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                                onClick={handleViewCredentials}
+                                disabled={loadingCredentials}
+                            >
+                                {loadingCredentials ? '⏳ Loading...' : `🔑 View ${selectedFaculty.length} Credentials`}
+                            </button>
+                            <button 
+                                className="btn btn-sm" 
+                                style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', fontWeight: 600, border: 'none', borderRadius: '6px' }}
+                                onClick={handleBulkDownloadCards}
+                                disabled={bulkDownloading}
+                            >
+                                {bulkDownloading ? '⏳ Generating PDF...' : `⬇ Download ${selectedFaculty.length} Selected Cards`}
+                            </button>
+                        </div>
                     )}
                 </div>
                 <div className="table-container">
@@ -538,6 +599,13 @@ function Faculty() {
                                                 >
                                                     🔲 View QR
                                                 </button>
+                                                <button
+                                                    className="btn btn-sm"
+                                                    style={{ background: '#f3f4f6', color: '#4b5563', border: '1px solid #d1d5db', borderRadius: '6px', fontWeight: 600 }}
+                                                    onClick={() => handleViewSingleCredentials(facultyMember.id)}
+                                                >
+                                                    🔑 Keys
+                                                </button>
                                                 {canUpdate && (
                                                     <button
                                                         className="btn btn-sm btn-primary"
@@ -591,6 +659,7 @@ function Faculty() {
                                     </div>
                                 </div>
                                 <div className="aic-actions">
+                                    <button className="btn btn-sm" style={{ background: '#f3f4f6', color: '#4b5563' }} onClick={() => handleViewSingleCredentials(fm.id)}>🔑</button>
                                     {canUpdate && (
                                         <button className="btn btn-sm btn-primary" onClick={() => handleEdit(fm)}>Edit</button>
                                     )}
@@ -760,6 +829,83 @@ function Faculty() {
                                     </button>
                                 </>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Credentials Modal */}
+            {showCredentialsModal && (
+                <div className="modal-overlay" onClick={() => setShowCredentialsModal(false)} style={{ zIndex: 9999 }}>
+                    <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: '800px', width: '95%' }}>
+                        <div className="modal-header" style={{ background: 'linear-gradient(135deg, #4f46e5, #6366f1)', color: 'white', padding: '1.25rem 1.5rem', borderRadius: '12px 12px 0 0' }}>
+                            <div>
+                                <h3 style={{ margin: 0, color: 'white', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                    <span style={{ fontSize: '1.4rem' }}>🔑</span>
+                                    Faculty Credentials
+                                </h3>
+                                <p style={{ margin: '0.2rem 0 0 0', opacity: 0.9, fontSize: '0.85rem' }}>
+                                    Manage initial passwords for faculty members
+                                </p>
+                            </div>
+                            <button onClick={() => setShowCredentialsModal(false)} className="btn btn-sm" style={{ background: 'rgba(255,255,255,0.2)', color: 'white', border: 'none' }}>×</button>
+                        </div>
+                        
+                        <div className="modal-body" style={{ padding: '1.5rem', maxHeight: '60vh', overflowY: 'auto' }}>
+                            <div style={{ overflowX: 'auto', borderRadius: '8px', border: '1px solid var(--border-color, #e5e7eb)' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                                    <thead style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
+                                        <tr>
+                                            <th style={{ padding: '0.8rem 1rem', color: '#475569', fontWeight: 600 }}>Role</th>
+                                            <th style={{ padding: '0.8rem 1rem', color: '#475569', fontWeight: 600 }}>Name</th>
+                                            <th style={{ padding: '0.8rem 1rem', color: '#475569', fontWeight: 600 }}>Email</th>
+                                            <th style={{ padding: '0.8rem 1rem', color: '#475569', fontWeight: 600 }}>Password</th>
+                                            <th style={{ padding: '0.8rem 1rem', color: '#475569', fontWeight: 600 }}>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {credentialsData.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="5" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary, #6b7280)' }}>
+                                                    No credentials to display
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            credentialsData.map((c, idx) => (
+                                                <CredentialRow
+                                                    key={c.id}
+                                                    credential={c}
+                                                    identifier={c.identifier}
+                                                    isEven={idx % 2 === 0}
+                                                    onReset={async (facultyId) => {
+                                                        try {
+                                                            const res = await api.post(`/faculty/${facultyId}/resend-credentials`);
+                                                            if (res.data.success && res.data.initial_password) {
+                                                                setCredentialsData(prev => prev.map(x =>
+                                                                    x.id === facultyId
+                                                                        ? { ...x, password: res.data.initial_password, status: 'generated' }
+                                                                        : x
+                                                                ));
+                                                            } else {
+                                                                alert('Password reset successfully!');
+                                                            }
+                                                        } catch (err) {
+                                                            const msg = err.response?.data?.message || 'Failed to reset password';
+                                                            alert(msg);
+                                                        }
+                                                    }}
+                                                />
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div style={{ marginTop: '1.25rem', padding: '1rem 1.25rem', background: 'linear-gradient(135deg, #fef9c3, #fef3c7)', borderRadius: '10px', border: '1px solid #fcd34d', color: '#92400e', fontSize: '0.84rem', lineHeight: '1.5', display: 'flex', gap: '0.6rem', alignItems: 'flex-start' }}>
+                                <span style={{ fontSize: '1rem', flexShrink: 0 }}>💡</span>
+                                <span>
+                                    <strong>Security Note:</strong> Initial passwords are visible only until the faculty member logs in and changes their password.
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>

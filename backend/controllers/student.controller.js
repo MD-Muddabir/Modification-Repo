@@ -805,7 +805,9 @@ exports.resendStudentCredentials = async (req, res) => {
 };
 
 /**
- * Get current initial passwords for selected students
+ * Get current initial passwords for selected students.
+ * If a student has no initial_password (pre-existing student), auto-generates
+ * and persists a new temp password so the admin always gets a real credential.
  * @route POST /api/students/credentials
  * @access Admin
  */
@@ -818,18 +820,56 @@ exports.getStudentCredentials = async (req, res) => {
             return res.status(400).json({ success: false, message: "No students selected" });
         }
 
+        const { generateTempPassword } = require('../utils/passwordGenerator');
+
         const students = await Student.findAll({
             where: { id: { [Op.in]: student_ids }, institute_id },
-            include: [{ model: User, attributes: ['name', 'email', 'initial_password', 'is_first_login'] }]
+            include: [{ model: User, attributes: ['id', 'name', 'email', 'initial_password', 'is_first_login'] }]
         });
 
-        const credentials = students.map(s => ({
-            id: s.id,
-            roll_number: s.roll_number,
-            name: s.User.name,
-            email: s.User.email,
-            password: s.User.initial_password || (s.User.is_first_login ? "Not Generated" : "Private (Changed by Student)")
-        }));
+        const credentials = [];
+
+        for (const s of students) {
+            let password = s.User.initial_password;
+            let status = 'active'; // has a stored password
+
+            if (!password) {
+                if (!s.User.is_first_login) {
+                    // Student already changed their password — respect their privacy
+                    status = 'changed';
+                    password = null;
+                } else {
+                    // is_first_login is still true but initial_password is NULL.
+                    // This happens for students created before this feature was added.
+                    // Auto-generate a fresh temp password, hash it, and persist it.
+                    const tempPassword = generateTempPassword();
+                    const password_hash = await hashPassword(tempPassword);
+
+                    const tempExpiry = new Date();
+                    tempExpiry.setDate(tempExpiry.getDate() + 7);
+
+                    await s.User.update({
+                        password_hash,
+                        initial_password: tempPassword,
+                        is_first_login: true,
+                        temp_password_expires_at: tempExpiry,
+                        credentials_sent_at: new Date(),
+                    });
+
+                    password = tempPassword;
+                    status = 'generated'; // freshly generated now
+                }
+            }
+
+            credentials.push({
+                id: s.id,
+                roll_number: s.roll_number,
+                name: s.User.name,
+                email: s.User.email,
+                password,
+                status, // 'active' | 'generated' | 'changed'
+            });
+        }
 
         res.status(200).json({
             success: true,
@@ -837,8 +877,10 @@ exports.getStudentCredentials = async (req, res) => {
         });
 
     } catch (error) {
+        console.error('getStudentCredentials error:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
 
 module.exports = exports;
+

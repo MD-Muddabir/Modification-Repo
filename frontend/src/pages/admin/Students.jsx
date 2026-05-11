@@ -14,6 +14,9 @@ import "./Dashboard.css";
 import { savePdfNative } from "../../utils/capacitorPermissions";
 import BulkImportButton from "../../components/BulkImportButton";
 
+import CredentialRow from "../../components/common/CredentialRow";
+
+
 function Students() {
     const { user } = useContext(AuthContext);
     const [students, setStudents] = useState([]);
@@ -1360,71 +1363,98 @@ function Students() {
             )}
             {/* Credentials Modal */}
             {showCredentialsModal && (
-                <div className="modal-overlay">
-                    <div className="modal-content" style={{ maxWidth: '800px', padding: '0' }}>
-                        <div className="modal-header" style={{ padding: '1.5rem', background: 'linear-gradient(135deg, #4f46e5, #4338ca)', color: 'white' }}>
-                            <h2 style={{ margin: 0, fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                                🔑 Student Credentials
-                            </h2>
-                            <button onClick={() => setShowCredentialsModal(false)} className="close-btn" style={{ color: 'white' }}>&times;</button>
+                <div className="modal-overlay" onClick={() => setShowCredentialsModal(false)}>
+                    <div
+                        className="modal-content"
+                        onClick={e => e.stopPropagation()}
+                        style={{ maxWidth: '860px', padding: '0', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}
+                    >
+                        {/* Header */}
+                        <div style={{ padding: '1.5rem 2rem', background: 'linear-gradient(135deg, #4f46e5, #4338ca)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div>
+                                <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                    🔑 Student Credentials
+                                </h2>
+                                <p style={{ margin: '0.25rem 0 0', fontSize: '0.85rem', opacity: 0.85 }}>
+                                    {credentialsData.length} student{credentialsData.length !== 1 ? 's' : ''} · Passwords are shown only until students log in for the first time
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setShowCredentialsModal(false)}
+                                style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', width: 34, height: 34, borderRadius: '50%', cursor: 'pointer', fontSize: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                            >×</button>
                         </div>
-                        <div style={{ padding: '1.5rem' }}>
-                            <div className="table-container" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                                <table className="table">
+
+                        {/* Table */}
+                        <div style={{ padding: '1.5rem 2rem', background: 'var(--card-bg, #fff)' }}>
+                            <div style={{ maxHeight: '400px', overflowY: 'auto', borderRadius: '10px', border: '1px solid var(--border-color, #e5e7eb)' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
                                     <thead>
-                                        <tr>
-                                            <th>Roll No</th>
-                                            <th>Name</th>
-                                            <th>Email</th>
-                                            <th>Initial Password</th>
-                                            <th>Action</th>
+                                        <tr style={{ background: 'var(--sidebar-bg, #f8fafc)', position: 'sticky', top: 0, zIndex: 1 }}>
+                                            <th style={{ padding: '0.9rem 1rem', textAlign: 'left', fontWeight: 700, color: 'var(--text-secondary, #6b7280)', borderBottom: '1px solid var(--border-color, #e5e7eb)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Roll No</th>
+                                            <th style={{ padding: '0.9rem 1rem', textAlign: 'left', fontWeight: 700, color: 'var(--text-secondary, #6b7280)', borderBottom: '1px solid var(--border-color, #e5e7eb)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Name</th>
+                                            <th style={{ padding: '0.9rem 1rem', textAlign: 'left', fontWeight: 700, color: 'var(--text-secondary, #6b7280)', borderBottom: '1px solid var(--border-color, #e5e7eb)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Email</th>
+                                            <th style={{ padding: '0.9rem 1rem', textAlign: 'left', fontWeight: 700, color: 'var(--text-secondary, #6b7280)', borderBottom: '1px solid var(--border-color, #e5e7eb)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Initial Password</th>
+                                            <th style={{ padding: '0.9rem 1rem', textAlign: 'left', fontWeight: 700, color: 'var(--text-secondary, #6b7280)', borderBottom: '1px solid var(--border-color, #e5e7eb)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {credentialsData.length === 0 ? (
                                             <tr>
-                                                <td colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>No credentials to display</td>
+                                                <td colSpan="5" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary, #6b7280)' }}>
+                                                    No credentials to display
+                                                </td>
                                             </tr>
                                         ) : (
-                                            credentialsData.map(c => (
-                                                <tr key={c.id}>
-                                                    <td><span className="badge badge-secondary">{c.roll_number}</span></td>
-                                                    <td><strong>{c.name}</strong></td>
-                                                    <td>{c.email || 'N/A'}</td>
-                                                    <td>
-                                                        <code style={{ background: '#f3f4f6', padding: '0.3rem 0.5rem', borderRadius: '4px', color: '#111827', fontSize: '0.9rem', fontWeight: 'bold' }}>
-                                                            {c.password}
-                                                        </code>
-                                                    </td>
-                                                    <td>
-                                                        <button 
-                                                            className="btn btn-sm"
-                                                            style={{ background: '#f3f4f6', color: '#374151', border: '1px solid #d1d5db', borderRadius: '6px', padding: '0.3rem 0.6rem' }}
-                                                            onClick={() => {
-                                                                navigator.clipboard.writeText(`Roll No: ${c.roll_number}\nEmail: ${c.email || 'N/A'}\nPassword: ${c.password}`);
-                                                                // Simple visual feedback instead of alert if possible, but alert is fine for now
-                                                                alert('Copied to clipboard!');
-                                                            }}
-                                                        >
-                                                            📋 Copy
-                                                        </button>
-                                                    </td>
-                                                </tr>
+                                            credentialsData.map((c, idx) => (
+                                                <CredentialRow
+                                                    key={c.id}
+                                                    credential={c}
+                                                    identifier={c.roll_number}
+                                                    isEven={idx % 2 === 0}
+                                                    onReset={async (studentId) => {
+                                                        try {
+                                                            const res = await api.post(`/students/${studentId}/resend-credentials`);
+                                                            if (res.data.success && res.data.initial_password) {
+                                                                setCredentialsData(prev => prev.map(x =>
+                                                                    x.id === studentId
+                                                                        ? { ...x, password: res.data.initial_password, status: 'generated' }
+                                                                        : x
+                                                                ));
+                                                            } else {
+                                                                alert('Password reset successfully! Credentials were sent via email.');
+                                                            }
+                                                        } catch (err) {
+                                                            // Handle 429 cooldown gracefully
+                                                            const msg = err.response?.data?.message || 'Failed to reset password';
+                                                            alert(msg);
+                                                        }
+                                                    }}
+                                                />
                                             ))
                                         )}
                                     </tbody>
                                 </table>
                             </div>
-                            <div style={{ marginTop: '1.5rem', padding: '1rem', background: '#fef3c7', borderRadius: '8px', border: '1px solid #fcd34d', color: '#92400e', fontSize: '0.875rem', lineHeight: '1.4' }}>
-                                <strong>💡 Professional Tip:</strong> For security, these initial passwords are only visible until the student logs in for the first time. Once they change their password, the system wipes the initial password from the database.
+
+                            {/* Info Banner */}
+                            <div style={{ marginTop: '1.25rem', padding: '1rem 1.25rem', background: 'linear-gradient(135deg, #fef9c3, #fef3c7)', borderRadius: '10px', border: '1px solid #fcd34d', color: '#92400e', fontSize: '0.84rem', lineHeight: '1.5', display: 'flex', gap: '0.6rem', alignItems: 'flex-start' }}>
+                                <span style={{ fontSize: '1rem', flexShrink: 0 }}>💡</span>
+                                <span>
+                                    <strong>Security Note:</strong> Initial passwords are visible only until the student logs in and changes their password. After that, the password is wiped from the system.
+                                    Use <strong>🔄 Reset</strong> to generate a new credential for a student who forgot their password.
+                                </span>
                             </div>
                         </div>
-                        <div className="modal-footer" style={{ padding: '1.25rem', borderTop: '1px solid var(--border-color)' }}>
+
+                        {/* Footer */}
+                        <div style={{ padding: '1rem 2rem', borderTop: '1px solid var(--border-color, #e5e7eb)', background: 'var(--card-bg, #fff)', display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
                             <button onClick={() => setShowCredentialsModal(false)} className="btn btn-secondary">Close</button>
                         </div>
                     </div>
                 </div>
             )}
+
         </div>
     );
 }

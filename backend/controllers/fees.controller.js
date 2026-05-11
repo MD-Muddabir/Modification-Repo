@@ -153,6 +153,14 @@ exports.getAllFeeStructures = async (req, res) => {
                     const isEnrolled = !!(fee.subject_id && studentObj.Subjects?.find(s => s.id === fee.subject_id));
                     fee.is_enrolled = isEnrolled;
 
+                    // Handle individually assigned fees
+                    if (fee.individual_student_id) {
+                        if (fee.individual_student_id === studentObj.id) {
+                            filteredFees.push(fee);
+                        }
+                        continue;
+                    }
+
                     if (fee.subject_id) {
                         // Subject-specific fee
                         if (isEnrolled) {
@@ -164,14 +172,13 @@ exports.getAllFeeStructures = async (req, res) => {
                         }
                     } else {
                         // Full course / General fee
-                        if (studentObj.is_full_course) {
-                            filteredFees.push(fee);
-                        } else {
-                            // Student is not full course. Do not show fees that contain 'full' or 'course'
-                            const feeType = fee.fee_type ? fee.fee_type.toLowerCase() : '';
-                            if (!feeType.includes('course') && !feeType.includes('full')) {
+                        if (fee.fee_type === 'Tuition Fee') {
+                            if (studentObj.is_full_course) {
                                 filteredFees.push(fee);
                             }
+                        } else {
+                            // Other general fees like Transport, Exam, or Library apply to all in class
+                            filteredFees.push(fee);
                         }
                     }
                 }
@@ -415,12 +422,123 @@ exports.deleteFeeStructure = async (req, res) => {
     }
 };
 
+exports.syncSingleStudentFees = async (institute_id, studentObj) => {
+    try {
+        const { FeesStructure, StudentFee } = require("../models");
+        
+        const structures = await FeesStructure.findAll({ where: { institute_id }, raw: true });
+        const existingStudentFees = await StudentFee.findAll({ 
+            where: { institute_id, student_id: studentObj.id }, 
+            raw: true 
+        });
+
+        const toCreate = [];
+        const toDeleteIds = [];
+
+        const subjectIds = studentObj.Subjects ? studentObj.Subjects.map(sub => sub.id) : [];
+        const classIds = studentObj.Classes ? studentObj.Classes.map(c => c.id) : [];
+
+        for (const fs of structures) {
+            let applies = false;
+            if (fs.individual_student_id) {
+                if (studentObj.id === fs.individual_student_id) applies = true;
+            } else if (classIds.includes(fs.class_id)) {
+                if (fs.subject_id !== null) {
+                    if (subjectIds.includes(fs.subject_id)) {
+                        if (fs.fee_type === 'Tuition Fee' && studentObj.is_full_course) {
+                            applies = false;
+                        } else {
+                            applies = true;
+                        }
+                    }
+                } else {
+                    if (fs.fee_type === 'Tuition Fee') {
+                        if (studentObj.is_full_course) applies = true;
+                    } else {
+                        applies = true;
+                    }
+                }
+            }
+
+            const existingFeeDetails = existingStudentFees.find(f => f.fee_structure_id === fs.id);
+
+            if (applies) {
+                if (!existingFeeDetails) {
+                    toCreate.push({
+                        institute_id,
+                        student_id: studentObj.id,
+                        class_id: fs.class_id,
+                        fee_structure_id: fs.id,
+                        original_amount: fs.amount,
+                        discount_amount: 0,
+                        final_amount: fs.amount,
+                        paid_amount: 0,
+                        due_amount: fs.amount,
+                        status: 'pending'
+                    });
+                }
+            } else {
+                if (existingFeeDetails && parseFloat(existingFeeDetails.paid_amount) === 0) {
+                    toDeleteIds.push(existingFeeDetails.id);
+                }
+            }
+        }
+
+        if (toDeleteIds.length > 0) {
+            await StudentFee.destroy({ where: { id: toDeleteIds } });
+        }
+
+        if (toCreate.length > 0) {
+            await StudentFee.bulkCreate(toCreate);
+        }
+        
+        return true;
+    } catch (error) {
+        console.error("Error syncing student fees:", error);
+        return false;
+    }
+};
+
+exports.getMyFees = async (req, res) => {
+    try {
+        const institute_id = req.user.institute_id;
+        const { Student, Subject, Class, FeesStructure, StudentFee } = require("../models");
+
+        const studentObj = await Student.findOne({
+            where: { user_id: req.user.id, institute_id },
+            include: [{ model: Subject }, { model: Class }]
+        });
+
+        if (!studentObj) {
+            return res.status(404).json({ success: false, message: "Student record not found" });
+        }
+
+        // 1. Sync the fees for this student
+        await exports.syncSingleStudentFees(institute_id, studentObj);
+
+        // 2. Fetch the synced StudentFee records
+        const studentFees = await StudentFee.findAll({
+            where: { student_id: studentObj.id, institute_id },
+            include: [
+                { model: Class, attributes: ['name', 'section'] },
+                { model: FeesStructure, include: [{ model: Subject, required: false }] }
+            ],
+            order: [["id", "DESC"]]
+        });
+
+        res.status(200).json({ success: true, data: studentFees });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 exports.getAssignedStudentFees = async (req, res) => {
     try {
         const institute_id = req.user.institute_id;
 
         // Auto-sync missing StudentFees for all students/class fees
         // Doing a pass for both generic class fees AND specific enrolled subject fees
+
         const students = await Student.findAll({
             where: { institute_id },
             include: [{ model: Subject }, { model: Class }]

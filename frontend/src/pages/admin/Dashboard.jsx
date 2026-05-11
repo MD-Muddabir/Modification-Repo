@@ -285,8 +285,44 @@ function AdminDashboard() {
                 </div>
             </div>
 
+            {/* ══════════════ LIFETIME MEMBER BANNER ══════════════ */}
+            {planDetails?.institute?.is_lifetime_member && (
+                <div style={{
+                    marginTop: '2rem',
+                    padding: '1.25rem 1.75rem',
+                    background: 'linear-gradient(135deg, #1a0533 0%, #3b0764 50%, #4c1d95 100%)',
+                    border: '1px solid rgba(167,139,250,0.4)',
+                    borderRadius: '14px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: '1rem',
+                    boxShadow: '0 4px 20px rgba(124,58,237,0.3)'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <span style={{ fontSize: '2rem' }}>💎</span>
+                        <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.25rem' }}>
+                                <h3 style={{ margin: 0, color: '#fff', fontSize: '1.1rem', fontWeight: 700 }}>Lifetime Member</h3>
+                                {planDetails.institute.founding_member && (
+                                    <span style={{ background: '#f59e0b', color: '#000', fontSize: '10px', fontWeight: 800, padding: '2px 10px', borderRadius: '20px' }}>🌟 FOUNDING</span>
+                                )}
+                            </div>
+                            <p style={{ margin: 0, color: '#c4b5fd', fontSize: '0.88rem' }}>
+                                No recurring billing — ever.
+                                {planDetails.institute.lifetime_purchased_at && ` Member since ${new Date(planDetails.institute.lifetime_purchased_at).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}.`}
+                            </p>
+                        </div>
+                    </div>
+                    <span style={{ background: 'rgba(167,139,250,0.2)', color: '#e9d5ff', fontSize: '12px', fontWeight: 600, padding: '6px 16px', borderRadius: '20px', border: '1px solid rgba(167,139,250,0.35)' }}>
+                        ✓ All Features Unlocked
+                    </span>
+                </div>
+            )}
+
             {/* ══════════════ TRIAL BANNERS ══════════════ */}
-            {planDetails && planDetails.plan.is_free_trial && (
+            {planDetails && planDetails.plan.is_free_trial && !planDetails.institute?.is_lifetime_member && (
                 <div style={{ marginTop: '2rem' }}>
                     {getTrialDaysLeft() <= 0 ? (
                         <div style={{

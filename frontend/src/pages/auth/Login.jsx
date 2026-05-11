@@ -7,10 +7,10 @@ import { useState, useEffect, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { ThemeContext } from "../../context/ThemeContext";
+import { BrandingContext } from "../../context/BrandingContext";
 import ThemeSelector from "../../components/ThemeSelector";
 import { isMobileApp, MOBILE_ALLOWED_ROLE } from "../../config/appVariant";
 import "./Auth.css";
-import zfLogo from "../../assets/zf-logo.png";
 
 function mobileAppLabel() {
   if (!isMobileApp || !MOBILE_ALLOWED_ROLE) return null;
@@ -23,6 +23,7 @@ function Login() {
   const navigate = useNavigate();
   const { login, logout } = useContext(AuthContext);
   const { setTheme, isDark } = useContext(ThemeContext);
+  const branding = useContext(BrandingContext);
 
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -159,17 +160,35 @@ function Login() {
       <div className="auth-orb auth-orb--2" />
       <div className="auth-orb auth-orb--3" />
 
-      {/* Top-right theme controls — loginMode: only light/dark */}
-      <div className="auth-theme-controls">
-        <ThemeSelector loginMode />
-      </div>
+      {/* Top-right theme controls — hidden on mobile for cleaner UI */}
+      {!isMobileApp && (
+        <div className="auth-theme-controls">
+          <ThemeSelector loginMode />
+        </div>
+      )}
 
       <div className="auth-container">
         <div className="auth-card">
           {/* Logo / Brand */}
           <div className="auth-header">
-            <div className="auth-logo"><img src={zfLogo} alt="ZF Solution" style={{ height: '65px', width: '65px', objectFit: 'contain' }} /></div>
-            <h1 className="auth-title">ZF Solution</h1>
+            <div className="auth-logo">
+                <img 
+                    src={branding.logo} 
+                    alt={branding.name} 
+                    className="auth-logo-img"
+                />
+            </div>
+            <h1 
+              className="auth-title" 
+              style={isMobileApp && branding.color ? { 
+                  background: `linear-gradient(135deg, ${branding.color}, #a78bfa)`, 
+                  WebkitBackgroundClip: 'text', 
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+              } : {}}
+            >
+              {branding.name}
+            </h1>
             <p className="auth-subtitle">
               {mobileAppLabel() ? `${mobileAppLabel()} — ` : ""}
               Sign in to your account

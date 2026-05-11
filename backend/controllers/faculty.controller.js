@@ -367,4 +367,124 @@ exports.deleteFaculty = async (req, res) => {
     }
 };
 
+/**
+ * Get current initial passwords for selected faculty.
+ * @route POST /api/faculty/credentials
+ * @access Admin
+ */
+exports.getFacultyCredentials = async (req, res) => {
+    try {
+        const { faculty_ids } = req.body;
+        const institute_id = req.user.institute_id;
+
+        if (!Array.isArray(faculty_ids) || faculty_ids.length === 0) {
+            return res.status(400).json({ success: false, message: "No faculty selected" });
+        }
+
+        const { generateTempPassword } = require('../utils/passwordGenerator');
+        const { hashPassword } = require("../utils/hashPassword");
+
+        const faculty = await Faculty.findAll({
+            where: { id: { [Op.in]: faculty_ids }, institute_id },
+            include: [{ model: User, attributes: ['id', 'name', 'email', 'initial_password', 'is_first_login'] }]
+        });
+
+        const credentials = [];
+
+        for (const f of faculty) {
+            let password = f.User.initial_password;
+            let status = 'active';
+
+            if (!password) {
+                if (!f.User.is_first_login) {
+                    status = 'changed';
+                    password = null;
+                } else {
+                    const tempPassword = generateTempPassword();
+                    const password_hash = await hashPassword(tempPassword);
+                    const tempExpiry = new Date();
+                    tempExpiry.setDate(tempExpiry.getDate() + 7);
+
+                    await f.User.update({
+                        password_hash,
+                        initial_password: tempPassword,
+                        is_first_login: true,
+                        temp_password_expires_at: tempExpiry,
+                        credentials_sent_at: new Date(),
+                    });
+
+                    password = tempPassword;
+                    status = 'generated';
+                }
+            }
+
+            credentials.push({
+                id: f.id,
+                identifier: f.designation || 'Faculty',
+                name: f.User.name,
+                email: f.User.email,
+                password,
+                status,
+            });
+        }
+
+        res.status(200).json({ success: true, data: credentials });
+    } catch (error) {
+        console.error('getFacultyCredentials error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+/**
+ * Resend faculty credentials
+ * @route POST /api/faculty/:id/resend-credentials
+ * @access Admin
+ */
+exports.resendFacultyCredentials = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const institute_id = req.user.institute_id;
+
+        const faculty = await Faculty.findOne({
+            where: { id, institute_id },
+            include: [{ model: User }],
+        });
+
+        if (!faculty) {
+            return res.status(404).json({ success: false, message: "Faculty not found" });
+        }
+
+        const lastSent = faculty.User.credentials_sent_at;
+        if (lastSent && new Date() - new Date(lastSent) < 5 * 60 * 1000) {
+            return res.status(429).json({ success: false, message: "Please wait 5 minutes before resending credentials." });
+        }
+
+        const { generateTempPassword } = require('../utils/passwordGenerator');
+        const { hashPassword } = require("../utils/hashPassword");
+        const tempPassword = generateTempPassword();
+        const password_hash = await hashPassword(tempPassword);
+
+        const tempExpiry = new Date();
+        tempExpiry.setDate(tempExpiry.getDate() + 7);
+
+        await faculty.User.update({
+            password_hash,
+            is_first_login: true,
+            temp_password_expires_at: tempExpiry,
+            credentials_sent_at: new Date(),
+            initial_password: tempPassword
+        });
+
+        res.status(200).json({
+            success: true,
+            message: "Credentials generated successfully",
+            showPasswordOnScreen: true,
+            initial_password: tempPassword
+        });
+
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 module.exports = exports;

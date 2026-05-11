@@ -57,7 +57,7 @@ exports.getAllInstitutes = async (req, res) => {
     try {
         const { page = 1, limit = 10, search = "" } = req.query;
 
-        // Auto-update expired statuses
+        // Auto-update expired statuses — skip lifetime members (they never expire)
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
@@ -66,6 +66,7 @@ exports.getAllInstitutes = async (req, res) => {
             {
                 where: {
                     status: 'active',
+                    is_lifetime_member: { [Op.not]: true },
                     subscription_end: {
                         [Op.lt]: today
                     }
@@ -87,6 +88,13 @@ exports.getAllInstitutes = async (req, res) => {
         // Add status filter to query if provided
         if (req.query.status && req.query.status !== 'all') {
             whereClause.status = req.query.status;
+        }
+
+        // Add lifetime_member filter to query if provided
+        if (req.query.lifetime_member === 'true') {
+            whereClause.is_lifetime_member = true;
+        } else if (req.query.lifetime_member === 'false') {
+            whereClause.is_lifetime_member = { [Op.not]: true };
         }
 
         const { count, rows } = await Institute.findAndCountAll({

@@ -1,59 +1,67 @@
-import { Capacitor } from '@capacitor/core';
-import { PushNotifications } from '@capacitor/push-notifications';
-import toast from 'react-hot-toast';
+/**
+ * pushNotifications.js — Phase 5 & 6: Safe push notification helpers.
+ *
+ * This module exports standalone utility functions.
+ * For React integration, use the `usePushNotifications` hook instead.
+ *
+ * CRASH NOTE: PushNotifications.register() is NOT called here.
+ * Without google-services.json it will crash the Android runtime.
+ * See usePushNotifications.js for the full crash-safe implementation.
+ */
 
-export const initPushNotifications = async () => {
-    // We only register push notifications on Native platforms
-    if (!Capacitor.isNativePlatform()) {
-        console.warn('Push notifications are not natively supported on the web.');
-        return;
-    }
+import { Capacitor } from '@capacitor/core';
+
+const FCM_TOKEN_KEY = 'fcm_device_token';
+
+/**
+ * Request push notification permission.
+ * Returns true if granted, false otherwise.
+ * Safe on web — returns false immediately.
+ */
+export const requestPushPermission = async () => {
+    if (!Capacitor.isNativePlatform()) return false;
 
     try {
-        // Request permission to use push notifications
-        // iOS will prompt user and return if they granted permission or not
-        // Android will just grant without prompting
-        const result = await PushNotifications.requestPermissions();
-
-        if (result.receive === 'granted') {
-            // Register with Apple / Google to receive push via APNS/FCM
-            PushNotifications.register();
-        } else {
-            // Show some error or info user to enable it from settings
-            console.warn('Push notification permission denied');
+        const { PushNotifications } = await import('@capacitor/push-notifications');
+        let perm = await PushNotifications.checkPermissions();
+        if (perm.receive !== 'granted') {
+            perm = await PushNotifications.requestPermissions();
         }
+        return perm.receive === 'granted';
+    } catch (err) {
+        console.warn('[Push] requestPushPermission error:', err?.message);
+        return false;
+    }
+};
 
-        // On success, we should be able to receive notifications
-        PushNotifications.addListener('registration',
-            (token) => {
-                console.log('Push registration success, token: ' + token.value);
-                // TODO: Send this token to backend to register for targeted notifications
-            }
-        );
+/**
+ * Add a listener for incoming push notifications (while app is open).
+ * Returns a cleanup function.
+ */
+export const onPushReceived = (callback) => {
+    if (!Capacitor.isNativePlatform()) return () => {};
 
-        // Some issue with our setup and push will not work
-        PushNotifications.addListener('registrationError',
-            (error) => {
-                console.error('Error on registration: ' + JSON.stringify(error));
-            }
-        );
+    let handle = null;
 
-        // Show us the notification payload if the app is open on our device
-        PushNotifications.addListener('pushNotificationReceived',
-            (notification) => {
-                console.log('Push received: ' + JSON.stringify(notification));
-                toast(`New Notification: ${notification.title}`);
-            }
-        );
+    import('@capacitor/push-notifications').then(({ PushNotifications }) => {
+        PushNotifications.addListener('pushNotificationReceived', callback)
+            .then((h) => { handle = h; })
+            .catch(() => {});
+    }).catch(() => {});
 
-        // Method called when tapping on a notification
-        PushNotifications.addListener('pushNotificationActionPerformed',
-            (notification) => {
-                console.log('Push action performed: ' + JSON.stringify(notification));
-                // TODO: Deep linking based on notification data
-            }
-        );
-    } catch (error) {
-        console.error('Failed to initialize push notifications', error);
+    return () => {
+        handle?.remove?.();
+    };
+};
+
+/**
+ * Retrieve the stored FCM token (sync, from localStorage).
+ * Returns null if not available.
+ */
+export const getStoredFcmToken = () => {
+    try {
+        return localStorage.getItem(FCM_TOKEN_KEY) ?? null;
+    } catch {
+        return null;
     }
 };

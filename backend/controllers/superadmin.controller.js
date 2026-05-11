@@ -743,7 +743,9 @@ exports.upgradePlan = async (req, res) => {
 
         const startDate = new Date();
         const endDate = new Date();
-        endDate.setMonth(endDate.getMonth() + durationMonths);
+        // If it's a lifetime plan, we don't really have an end date, but we can set it far in the future
+        // or just let it be ignored since lifetime institutes never expire.
+        endDate.setMonth(endDate.getMonth() + (newPlan.is_lifetime ? 1200 : durationMonths));
 
         // Check for active discounts for this institute
         const activeDiscount = await InstituteDiscount.findOne({
@@ -803,8 +805,18 @@ exports.upgradePlan = async (req, res) => {
             current_feature_api_access: newPlan.feature_api_access,
             current_feature_public_page: newPlan.feature_public_page,
             current_feature_assignment: newPlan.feature_assignment || false,
-            current_feature_transport: newPlan.feature_transport || false
+            current_feature_transport: newPlan.feature_transport || false,
+            
+            // Sync lifetime flags
+            is_lifetime_member: newPlan.is_lifetime || false,
+            lifetime_purchased_at: newPlan.is_lifetime ? startDate : null,
+            lifetime_plan_id: newPlan.is_lifetime ? newPlanId : null
         });
+
+        // If it was a lifetime plan, increment the slots
+        if (newPlan.is_lifetime) {
+            await newPlan.increment('lifetime_slots_used');
+        }
 
         res.json({
             message: "Plan upgraded successfully",
