@@ -483,7 +483,9 @@ const syncDatabase = async () => {
   }
 };
 
-// Sync database on startup
-syncDatabase();
+// Sync database on startup (only in development/production, NOT in tests)
+if (process.env.NODE_ENV !== "test") {
+  syncDatabase();
+}
 
 module.exports = app;
